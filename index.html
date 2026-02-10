@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SFMC Cost Management Application</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-container">
+        <h1>SFMC Cost Management Application</h1>
+
+        <!-- Login Page -->
+        <div id="loginPage" class="page active">
+            <div class="login-form-container">
+                <h2>Login</h2>
+                <input type="text" id="username" placeholder="Username" class="form-control-login">
+                <input type="password" id="password" placeholder="Password" class="form-control-login">
+                <button id="loginButton" class="login-button">Login</button>
+                <p id="loginMessage" class="message"></p>
+            </div>
+        </div>
+
+        <!-- Main Page (displayed after login) -->
+        <div id="mainPage" class="page hidden">
+            <h2 id="welcomeMessage"></h2>
+            
+            <!-- Maison User View -->
+            <div id="maisonView" class="user-view hidden">
+                
+                <!-- Email Management Section -->
+                <div id="emailManagementSection" class="email-management-section">
+                    <h3>Manage Your Email</h3>
+                    <p id="emailDisplay" class="hidden">Your registered email: <span id="registeredEmailValue"></span></p>
+                    <div id="emailForm" class="email-form hidden">
+                        <div class="email-input-group">
+                            <label for="userEmailInput">Email Address:</label>
+                            <input type="email" id="userEmailInput" class="form-control" placeholder="Enter your email address">
+                        </div>
+                        <div class="email-buttons">
+                            <button id="submitEmailButton" class="email-action-button">Register Email</button>
+                            <button id="cancelEditEmailButton" class="email-action-button hidden">Cancel</button>
+                        </div>
+                    </div>
+                    <button id="editEmailButton" class="email-action-button hidden">Edit Email</button>
+                    <p id="emailMessage" class="message"></p>
+                </div>
+
+                <button id="logoutButton">Logout</button>
+                
+                <!-- Submit Monthly Data Section -->
+                <h3>Submit Monthly Data</h3>
+                
+                <div class="monthly-data-section">
+                    <div class="data-tips">
+                        <p class="tips-title">📌 Submission Guidelines:</p>
+                        <ul class="tips-list">
+                            <li>Please enter the <strong>actual quantity used</strong> for each metric</li>
+                            <li>You can update data for any month as needed</li>
+                            <li>All submissions require admin approval</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="year-month-selection">
+                        <div class="selection-item">
+                            <label for="dataYearSelect">Select Year:</label>
+                            <select id="dataYearSelect" class="form-control year-select">
+                                <!-- Options will be populated by JavaScript -->
+                            </select>
+                        </div>
+                        <div class="selection-item">
+                            <label for="dataMonthSelect">Select Month:</label>
+                            <select id="dataMonthSelect" class="form-control month-select">
+                                <option value="01">January</option>
+                                <option value="02">February</option>
+                                <option value="03">March</option>
+                                <option value="04">April</option>
+                                <option value="05">May</option>
+                                <option value="06">June</option>
+                                <option value="07">July</option>
+                                <option value="08">August</option>
+                                <option value="09">September</option>
+                                <option value="10">October</option>
+                                <option value="11">November</option>
+                                <option value="12">December</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="metrics-input-container">
+                        <div class="metric-input-item">
+                            <label for="emailInput">Email:</label>
+                            <input type="number" id="emailInput" class="form-control metric-input" placeholder="Quantity" min="0" value="">
+                        </div>
+                        <div class="metric-input-item">
+                            <label for="smsInput">SMS:</label>
+                            <input type="number" id="smsInput" class="form-control metric-input" placeholder="Quantity" min="0" value="">
+                        </div>
+                        <div class="metric-input-item">
+                            <label for="whatsappInput">WhatsApp:</label>
+                            <input type="number" id="whatsappInput" class="form-control metric-input" placeholder="Quantity" min="0" value="">
+                        </div>
+                        <div class="metric-input-item">
+                            <label for="contactsInput">Contacts:</label>
+                            <input type="number" id="contactsInput" class="form-control metric-input" placeholder="Quantity" min="0" value="">
+                        </div>
+                    </div>
+                    
+                    <p id="validationMessage" class="message"></p>
+                    
+                    <label for="maisonNotesInput">Notes (optional, max 200 characters):</label>
+                    <textarea id="maisonNotesInput" class="form-control notes-textarea" placeholder="Add any notes about your submission..." maxlength="200" rows="3"></textarea>
+                    <p id="notesCharCount" class="char-count">0/200</p>
+                    
+                    <button id="submitDataButton">Submit Data</button>
+                    <p id="maisonSubmitMessage" class="message"></p>
+                </div>
+
+                <h3>My Current Data</h3>
+                <div id="maisonDataTableContainer" class="table-container">
+                    <!-- Maison current data will be displayed here -->
+                </div>
+
+                <h3>My Historical Actions</h3>
+                <div id="maisonHistoryTableContainer" class="table-container">
+                    <!-- Maison historical actions log will be displayed here -->
+                </div>
+            </div>
+
+            <!-- Admin View -->
+            <div id="adminView" class="user-view hidden">
+                
+                <!-- Budget Management Section -->
+                <div class="budget-management-section">
+                    <h3>Set Annual Budget</h3>
+                    <div class="budget-form-row">
+                        <div class="budget-form-item">
+                            <label for="budgetYearSelect">Year:</label>
+                            <select id="budgetYearSelect" class="form-control">
+                                <!-- Options will be populated by JavaScript -->
+                            </select>
+                        </div>
+                        <div class="budget-form-item">
+                            <label for="budgetMaisonSelect">Maison:</label>
+                            <select id="budgetMaisonSelect" class="form-control">
+                                <!-- Options will be populated by JavaScript -->
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="budget-inputs-container">
+                        <div class="budget-input-item">
+                            <label for="emailBudgetInput">Email Budget:</label>
+                            <input type="number" id="emailBudgetInput" class="form-control" placeholder="Enter email budget" min="0" value="0">
+                        </div>
+                        <div class="budget-input-item">
+                            <label for="smsBudgetInput">SMS Budget:</label>
+                            <input type="number" id="smsBudgetInput" class="form-control" placeholder="Enter SMS budget" min="0" value="0">
+                        </div>
+                        <div class="budget-input-item">
+                            <label for="whatsappBudgetInput">WhatsApp Budget:</label>
+                            <input type="number" id="whatsappBudgetInput" class="form-control" placeholder="Enter WhatsApp budget" min="0" value="0">
+                        </div>
+                        <div class="budget-input-item">
+                            <label for="contactsBudgetInput">Contacts Budget:</label>
+                            <input type="number" id="contactsBudgetInput" class="form-control" placeholder="Enter Contacts budget" min="0" value="0">
+                        </div>
+                    </div>
+
+                    <button id="submitBudgetButton">Submit Budget</button>
+                    <p id="budgetSubmitMessage" class="message"></p>
+                </div>
+
+                <!-- Overview of All Maisons Data -->
+                <h3>Overview of All Maisons Monthly Data</h3>
+                <div id="overviewDataTableContainer" class="table-container">
+                    <!-- All maisons data will be displayed here -->
+                </div>
+                <button id="exportOverviewDataButton">Export Overview Data (CSV)</button>
+
+                <!-- Annual Forecast vs Budget -->
+                <h3>Annual Forecast vs Budget</h3>
+                <div class="year-selection-container">
+                    <label for="forecastYearSelect">Select Year:</label>
+                    <select id="forecastYearSelect" class="form-control year-select">
+                        <!-- Options will be populated by JavaScript -->
+                    </select>
+                </div>
+                <div id="forecastTableContainer" class="table-container forecast-table-container">
+                    <!-- Forecast table will be displayed here -->
+                </div>
+                <button id="exportForecastButton">Export Forecast Data (CSV)</button>
+
+                <!-- Email Broadcast Section -->
+                <div id="emailBroadcastSection" class="email-broadcast-section">
+                    <h3>Send Email to Users via Outlook</h3>
+                    <p>Select users from the list below and compose email in Outlook.</p>
+                    
+                    <div class="user-selection-header">
+                        <label>Select Recipients:</label>
+                        <div class="selection-controls">
+                            <button id="selectAllButton" class="selection-button">Select All</button>
+                            <button id="deselectAllButton" class="selection-button">Deselect All</button>
+                            <input type="text" id="userSearchInput" class="user-search-input" placeholder="Search users...">
+                        </div>
+                    </div>
+                    
+                    <div id="userListContainer" class="user-list-container">
+                        <p class="loading-text">Loading users...</p>
+                    </div>
+                    
+                    <label for="emailSubjectInput">Email Subject:</label>
+                    <input type="text" id="emailSubjectInput" class="form-control" placeholder="Enter email subject">
+                    
+                    <label for="emailContentInput">Email Content:</label>
+                    <textarea id="emailContentInput" class="form-control email-textarea" placeholder="Enter email content" rows="6"></textarea>
+                    
+                    <div class="email-action-buttons">
+                        <button id="openOutlookButton" class="email-broadcast-button">Open in Outlook</button>
+                        <button id="copyEmailsButton" class="email-broadcast-button-secondary">Copy Email List</button>
+                    </div>
+                    <p id="emailBroadcastMessage" class="message"></p>
+                    <p id="recipientCountDisplay" class="recipient-count"></p>
+                </div>
+
+                <h3>All Historical Actions Log</h3>
+                <div id="adminHistoryTableContainer" class="table-container">
+                    <!-- Admin historical actions log will be displayed here -->
+                </div>
+                <button id="exportHistoryDataButton">Export History Data (CSV)</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

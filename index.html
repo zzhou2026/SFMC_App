@@ -49,72 +49,98 @@
                 <button id="logoutButton">Logout</button>
                 
                 <!-- Submit Monthly Data Section -->
-                <h3>Submit Monthly Data</h3>
-                
-                <div class="monthly-data-section">
-                    <div class="data-tips">
-                        <p class="tips-title">📌 Submission Guidelines:</p>
-                        <ul class="tips-list">
-                            <li>Please enter the <strong>actual quantity used</strong> for each metric</li>
-                            <li>You can update data for any month as needed</li>
-                            <li>All submissions require admin approval</li>
-                        </ul>
-                    </div>
-                    
-                    <div class="year-month-selection">
-                        <div class="selection-item">
-                            <label for="dataYearSelect">Select Year:</label>
-                            <select id="dataYearSelect" class="form-control year-select">
-                                <!-- Options will be populated by JavaScript -->
-                            </select>
-                        </div>
-                        <div class="selection-item">
-                            <label for="dataMonthSelect">Select Month:</label>
-                            <select id="dataMonthSelect" class="form-control month-select">
-                                <option value="01">January</option>
-                                <option value="02">February</option>
-                                <option value="03">March</option>
-                                <option value="04">April</option>
-                                <option value="05">May</option>
-                                <option value="06">June</option>
-                                <option value="07">July</option>
-                                <option value="08">August</option>
-                                <option value="09">September</option>
-                                <option value="10">October</option>
-                                <option value="11">November</option>
-                                <option value="12">December</option>
-                            </select>
-                        </div>
-                    </div>
-                    
-                    <div class="metrics-input-container">
-                        <div class="metric-input-item">
-                            <label for="emailInput">Email:</label>
-                            <input type="number" id="emailInput" class="form-control metric-input" placeholder="Quantity" min="0" value="">
-                        </div>
-                        <div class="metric-input-item">
-                            <label for="smsInput">SMS:</label>
-                            <input type="number" id="smsInput" class="form-control metric-input" placeholder="Quantity" min="0" value="">
-                        </div>
-                        <div class="metric-input-item">
-                            <label for="whatsappInput">WhatsApp:</label>
-                            <input type="number" id="whatsappInput" class="form-control metric-input" placeholder="Quantity" min="0" value="">
-                        </div>
-                        <div class="metric-input-item">
-                            <label for="contactsInput">Contacts:</label>
-                            <input type="number" id="contactsInput" class="form-control metric-input" placeholder="Quantity" min="0" value="">
-                        </div>
-                    </div>
-                    
-                    <p id="validationMessage" class="message"></p>
-                    
-                    <label for="maisonNotesInput">Notes (optional, max 200 characters):</label>
-                    <textarea id="maisonNotesInput" class="form-control notes-textarea" placeholder="Add any notes about your submission..." maxlength="200" rows="3"></textarea>
-                    <p id="notesCharCount" class="char-count">0/200</p>
-                    
-                    <button id="submitDataButton">Submit Data</button>
-                    <p id="maisonSubmitMessage" class="message"></p>
-                </div>
+<h3>Submit Monthly Data</h3>
+
+<div class="monthly-data-section">
+    <!-- Fiscal Year Tabs -->
+    <div class="fiscal-year-tabs">
+        <button class="fy-tab-button" data-year="2025">FY2025</button>
+        <button class="fy-tab-button active" data-year="2026">FY2026</button>
+        <button class="fy-tab-button" data-year="2027">FY2027</button>
+    </div>
+    
+    <!-- Monthly Data Table -->
+    <div class="monthly-data-table-container">
+        <table class="monthly-data-table" id="monthlyDataTable">
+            <thead>
+                <tr>
+                    <th>Month</th>
+                    <th>Email</th>
+                    <th>SMS</th>
+                    <th>WhatsApp</th>
+                    <th>Contacts</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody id="monthlyDataTableBody">
+                <!-- Rows will be populated by JavaScript -->
+            </tbody>
+        </table>
+    </div>
+    
+    <p id="monthlyDataMessage" class="message"></p>
+    
+    <!-- Tips Section -->
+    <div class="data-tips-bottom">
+        <p class="tips-title">💡 Tips:</p>
+        <ul class="tips-list">
+            <li>Click <strong>[Submit]</strong> or <strong>[Update]</strong> button to open submission dialog</li>
+            <li>Use [Update] to modify submitted data (will reset to Pending status)</li>
+            <li>All submissions require admin approval</li>
+        </ul>
+    </div>
+</div>
+
+<!-- Modal Dialog for Data Submission -->
+<div id="submissionModal" class="modal hidden">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 id="modalTitle">Submit Data for Month</h3>
+            <span class="modal-close" id="modalClose">&times;</span>
+        </div>
+        <div class="modal-body">
+            <input type="hidden" id="modalYear" value="">
+            <input type="hidden" id="modalMonth" value="">
+            
+            <div class="modal-form-group">
+                <label for="modalEmailInput">Email:</label>
+                <input type="number" id="modalEmailInput" class="form-control" placeholder="Enter quantity" min="0" value="">
+            </div>
+            
+            <div class="modal-form-group">
+                <label for="modalSmsInput">SMS:</label>
+                <input type="number" id="modalSmsInput" class="form-control" placeholder="Enter quantity" min="0" value="">
+            </div>
+            
+            <div class="modal-form-group">
+                <label for="modalWhatsappInput">WhatsApp:</label>
+                <input type="number" id="modalWhatsappInput" class="form-control" placeholder="Enter quantity" min="0" value="">
+            </div>
+            
+            <div class="modal-form-group">
+                <label for="modalContactsInput">Contacts:</label>
+                <input type="number" id="modalContactsInput" class="form-control" placeholder="Enter quantity" min="0" value="">
+            </div>
+            
+            <div class="modal-form-group">
+                <label for="modalNotesInput">Notes (optional, max 200 characters):</label>
+                <textarea id="modalNotesInput" class="form-control" placeholder="Add any notes..." maxlength="200" rows="3"></textarea>
+                <p id="modalNotesCharCount" class="char-count">0/200</p>
+            </div>
+            
+            <div id="modalAdminNotesSection" class="modal-admin-notes hidden">
+                <label>Admin Feedback:</label>
+                <div id="modalAdminNotesDisplay" class="admin-notes-display"></div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button id="modalCancelButton" class="modal-button-secondary">Cancel</button>
+            <button id="modalSubmitButton" class="modal-button-primary">Submit</button>
+        </div>
+    </div>
+</div>
+
 
                 <h3>My Current Data</h3>
                 <div id="maisonDataTableContainer" class="table-container">

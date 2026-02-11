@@ -9,6 +9,8 @@ document.addEventListener('DOMContentLoaded', () => {
     let allUsers = [];
     let searchTerm = '';
     let currentYear = new Date().getFullYear();
+    let currentFiscalYear = 2026; // Default to FY2026
+    let monthlyDataCache = {}; // Cache for monthly data
 
     // ===== 工具函数 =====
     const showPage = page => {
@@ -32,6 +34,234 @@ document.addEventListener('DOMContentLoaded', () => {
             return isNaN(d) ? ts : d.toLocaleString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
         } catch { return ts; }
     };
+// Generate 12 months for a fiscal year (Feb to Jan)
+const getFiscalYearMonths = (fiscalYear) => {
+    const months = [];
+    for (let i = 2; i <= 12; i++) {
+        months.push({ year: fiscalYear, month: String(i).padStart(2, '0') });
+    }
+    months.push({ year: fiscalYear + 1, month: '01' });
+    return months;
+};
+
+// Format month for display (e.g., "2026-02")
+const formatMonth = (year, month) => `${year}-${month}`;
+
+// Get month name
+const getMonthName = (month) => {
+    const names = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    return names[parseInt(month) - 1];
+};
+// === Modal Control Functions ===
+const openModal = (year, month, existingData = null) => {
+    const modal = $('submissionModal');
+    const modalTitle = $('modalTitle');
+    
+    $('modalYear').value = year;
+    $('modalMonth').value = month;
+    
+    modalTitle.textContent = `${existingData ? 'Update' : 'Submit'} Data for ${formatMonth(year, month)}`;
+    
+    // Populate form with existing data or clear
+    $('modalEmailInput').value = existingData ? existingData.EmailCount : '';
+    $('modalSmsInput').value = existingData ? existingData.SMSCount : '';
+    $('modalWhatsappInput').value = existingData ? existingData.WhatsAppCount : '';
+    $('modalContactsInput').value = existingData ? existingData.ContactsCount : '';
+    $('modalNotesInput').value = existingData ? (existingData.MaisonNotes || '') : '';
+    
+    // Update character count
+    const notesLength = $('modalNotesInput').value.length;
+    $('modalNotesCharCount').textContent = `${notesLength}/200`;
+    
+    // Show admin notes if rejected
+    if (existingData && existingData.ApprovalStatus === 'Rejected' && existingData.AdminNotes) {
+        $('modalAdminNotesSection').classList.remove('hidden');
+        $('modalAdminNotesDisplay').textContent = existingData.AdminNotes;
+    } else {
+        $('modalAdminNotesSection').classList.add('hidden');
+    }
+    
+    // Update submit button text
+    $('modalSubmitButton').textContent = existingData ? 'Update' : 'Submit';
+    
+    modal.classList.remove('hidden');
+};
+
+const closeModal = () => {
+    const modal = $('submissionModal');
+    modal.classList.add('hidden');
+    
+    // Clear form
+    $('modalEmailInput').value = '';
+    $('modalSmsInput').value = '';
+    $('modalWhatsappInput').value = '';
+    $('modalContactsInput').value = '';
+    $('modalNotesInput').value = '';
+    $('modalNotesCharCount').textContent = '0/200';
+    $('modalAdminNotesSection').classList.add('hidden');
+};
+// === Render Monthly Data Table ===
+const renderMonthlyDataTable = async () => {
+    const tbody = $('monthlyDataTableBody');
+    if (!tbody) return;
+    
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 20px;">Loading...</td></tr>';
+    
+    const months = getFiscalYearMonths(currentFiscalYear);
+    
+    // Fetch existing data for this fiscal year
+    const res = await api('getMaisonSfmcData', { submittedBy: currentUser.username });
+    
+    // Build data map for quick lookup
+    const dataMap = {};
+    if (res.success && res.data) {
+        res.data.forEach(record => {
+            const key = `${record.Year}-${record.Month}`;
+            dataMap[key] = record;
+        });
+    }
+    
+    // Render table rows
+    let html = '';
+    months.forEach(({ year, month }) => {
+        const key = formatMonth(year, month);
+        const existingData = dataMap[key];
+        
+        const monthDisplay = `${year}-${month}`;
+        const status = existingData ? existingData.ApprovalStatus : '-';
+        const statusClass = status === 'Approved' ? 'status-approved' : 
+                           status === 'Pending' ? 'status-pending' : 
+                           status === 'Rejected' ? 'status-rejected' : '';
+        
+        const emailVal = existingData ? existingData.EmailCount : '';
+        const smsVal = existingData ? existingData.SMSCount : '';
+        const whatsappVal = existingData ? existingData.WhatsAppCount : '';
+        const contactsVal = existingData ? existingData.ContactsCount : '';
+        
+        const buttonText = existingData ? 'Update' : 'Submit';
+        const buttonClass = existingData ? 'action-button-table update-button' : 'action-button-table';
+        
+        // Status cell with info icon for rejected items
+        let statusCell = `<span class="status-cell ${statusClass}">${status}</span>`;
+        if (status === 'Rejected' && existingData.AdminNotes) {
+            statusCell += ` <span class="status-info-icon" title="${existingData.AdminNotes}">ⓘ</span>`;
+        }
+        
+        html += `
+            <tr data-year="${year}" data-month="${month}">
+                <td class="month-cell">${monthDisplay}</td>
+                <td><input type="number" class="month-input" data-field="email" value="${emailVal}" min="0" readonly></td>
+                <td><input type="number" class="month-input" data-field="sms" value="${smsVal}" min="0" readonly></td>
+                <td><input type="number" class="month-input" data-field="whatsapp" value="${whatsappVal}" min="0" readonly></td>
+                <td><input type="number" class="month-input" data-field="contacts" value="${contactsVal}" min="0" readonly></td>
+                <td>${statusCell}</td>
+                <td>
+                    <button class="${buttonClass}" 
+                            data-year="${year}" 
+                            data-month="${month}"
+                            data-has-data="${existingData ? 'true' : 'false'}">
+                        ${buttonText}
+                    </button>
+                </td>
+            </tr>
+        `;
+    });
+    
+    tbody.innerHTML = html;
+    
+    // Cache the data
+    monthlyDataCache[currentFiscalYear] = dataMap;
+};
+// === Tab Switching ===
+const switchFiscalYearTab = (fiscalYear) => {
+    currentFiscalYear = fiscalYear;
+    
+    // Update tab buttons
+    document.querySelectorAll('.fy-tab-button').forEach(btn => {
+        if (parseInt(btn.dataset.year) === fiscalYear) {
+            btn.classList.add('active');
+        } else {
+            btn.classList.remove('active');
+        }
+    });
+    
+    // Re-render table
+    renderMonthlyDataTable();
+};
+
+// === Handle Modal Submit ===
+const handleModalSubmit = async () => {
+    const year = parseInt($('modalYear').value);
+    const month = $('modalMonth').value;
+    const emailCount = $('modalEmailInput').value.trim();
+    const smsCount = $('modalSmsInput').value.trim();
+    const whatsappCount = $('modalWhatsappInput').value.trim();
+    const contactsCount = $('modalContactsInput').value.trim();
+    const maisonNotes = $('modalNotesInput').value.trim();
+    
+    // Validation: all fields must be filled
+    if (!emailCount || !smsCount || !whatsappCount || !contactsCount) {
+        alert('Please fill in all four metrics (Email, SMS, WhatsApp, Contacts).');
+        return;
+    }
+    
+    const emailNum = parseInt(emailCount);
+    const smsNum = parseInt(smsCount);
+    const whatsappNum = parseInt(whatsappCount);
+    const contactsNum = parseInt(contactsCount);
+    
+    // Validation: no negative numbers
+    if (emailNum < 0 || smsNum < 0 || whatsappNum < 0 || contactsNum < 0) {
+        alert('Quantities cannot be negative!');
+        return;
+    }
+    
+    // Confirmation dialog
+    let confirmMsg = `You are about to submit the following data:\n\n`;
+    confirmMsg += `Year-Month: ${year}-${month}\n`;
+    confirmMsg += `Email: ${emailNum}\n`;
+    confirmMsg += `SMS: ${smsNum}\n`;
+    confirmMsg += `WhatsApp: ${whatsappNum}\n`;
+    confirmMsg += `Contacts: ${contactsNum}\n`;
+    
+    if (maisonNotes) {
+        confirmMsg += `\nYour Notes: ${maisonNotes}\n`;
+    }
+    
+    confirmMsg += '\nDo you want to proceed?';
+    
+    if (!confirm(confirmMsg)) {
+        return;
+    }
+    
+    // Submit data
+    const res = await api('submitSfmcData', {
+        maisonName: currentUser.maisonName,
+        year: year,
+        month: month,
+        emailCount: emailNum,
+        smsCount: smsNum,
+        whatsappCount: whatsappNum,
+        contactsCount: contactsNum,
+        submittedBy: currentUser.username,
+        maisonNotes: maisonNotes
+    });
+    
+    if (res.success) {
+        msg($('monthlyDataMessage'), 'Data submitted successfully!', true);
+        closeModal();
+        
+        // Refresh table and history
+        renderMonthlyDataTable();
+        loadTable('maison', $('maisonDataTableContainer'), { submittedBy: currentUser.username });
+        loadTable('maisonHistory', $('maisonHistoryTableContainer'), { submittedBy: currentUser.username });
+        
+        // Clear message after 3 seconds
+        setTimeout(() => clr($('monthlyDataMessage')), 3000);
+    } else {
+        alert('Failed to submit data: ' + res.message);
+    }
+};
 
     // ===== API 调用 =====
     const api = async (act, data = {}) => {
@@ -661,21 +891,26 @@ document.addEventListener('DOMContentLoaded', () => {
                     $('maisonView').classList.remove('hidden'); 
                     $('adminView').classList.add('hidden');
                     
-                    popYearSelectors();
+                    // Initialize fiscal year to current year
+                    const now = new Date();
+                    const currentMonth = now.getMonth() + 1; // 1-12
+                    // If current month is Jan, we're in previous fiscal year
+                    currentFiscalYear = currentMonth === 1 ? now.getFullYear() - 1 : now.getFullYear();
                     
-                    // 清空输入框
-                    $('emailInput').value = '';
-                    $('smsInput').value = '';
-                    $('whatsappInput').value = '';
-                    $('contactsInput').value = '';
-                    $('maisonNotesInput').value = '';
-                    clr($('validationMessage'));
-                    clr($('maisonSubmitMessage'));
+                    // Render monthly data table
+                    renderMonthlyDataTable();
                     
+                    // Load other tables
                     loadTable('maison', $('maisonDataTableContainer'), { submittedBy: currentUser.username });
                     loadTable('maisonHistory', $('maisonHistoryTableContainer'), { submittedBy: currentUser.username });
+                    
+                    // Initialize email management
                     initEmail();
-                } else {
+                    
+                    // Clear any messages
+                    clr($('monthlyDataMessage'));
+                }
+                 else {
                     $('adminView').classList.remove('hidden'); 
                     $('maisonView').classList.add('hidden');
                     
@@ -702,97 +937,7 @@ document.addEventListener('DOMContentLoaded', () => {
             showPage($('loginPage'));
         },
 
-        submitDataButton: async () => {
-            if (!currentUser || currentUser.role !== 'maison') { 
-                msg($('maisonSubmitMessage'), 'Maison user only!', false); 
-                return; 
-            }
-            
-            clr($('validationMessage'));
-            clr($('maisonSubmitMessage'));
-            
-            const year = parseInt($('dataYearSelect').value);
-            const month = $('dataMonthSelect').value;
-            const emailCount = $('emailInput').value.trim();
-            const smsCount = $('smsInput').value.trim();
-            const whatsappCount = $('whatsappInput').value.trim();
-            const contactsCount = $('contactsInput').value.trim();
-            const maisonNotes = $('maisonNotesInput').value.trim();
-            
-            // 验证：至少填写一个指标
-            if (!emailCount && !smsCount && !whatsappCount && !contactsCount) {
-                msg($('maisonSubmitMessage'), 'Please fill in at least one metric!', false);
-                return;
-            }
-            
-            const emailNum = parseInt(emailCount) || 0;
-            const smsNum = parseInt(smsCount) || 0;
-            const whatsappNum = parseInt(whatsappCount) || 0;
-            const contactsNum = parseInt(contactsCount) || 0;
-            
-            if (emailNum < 0 || smsNum < 0 || whatsappNum < 0 || contactsNum < 0) {
-                msg($('maisonSubmitMessage'), 'Quantities cannot be negative!', false);
-                return;
-            }
-            
-            // 检查是否有现有数据
-            const checkRes = await api('checkExistingRecord', {
-                maisonName: currentUser.maisonName,
-                year: year,
-                month: month
-            });
-            
-            const isUpdate = checkRes.success && checkRes.exists;
-            
-            let confirmMsg = `You are about to ${isUpdate ? 'UPDATE' : 'SUBMIT'} the following data:\n\n`;
-            confirmMsg += `Year-Month: ${year}-${month}\n`;
-            confirmMsg += `Email: ${emailNum}\n`;
-            confirmMsg += `SMS: ${smsNum}\n`;
-            confirmMsg += `WhatsApp: ${whatsappNum}\n`;
-            confirmMsg += `Contacts: ${contactsNum}\n`;
-            
-            if (maisonNotes) {
-                confirmMsg += `\nYour Notes: ${maisonNotes}\n`;
-            }
-            
-            confirmMsg += '\nDo you want to proceed?';
-            
-            if (!confirm(confirmMsg)) {
-                msg($('maisonSubmitMessage'), 'Submission cancelled.', false);
-                return;
-            }
-            
-            // 提交数据
-            const res = await api('submitSfmcData', {
-                maisonName: currentUser.maisonName,
-                year: year,
-                month: month,
-                emailCount: emailNum,
-                smsCount: smsNum,
-                whatsappCount: whatsappNum,
-                contactsCount: contactsNum,
-                submittedBy: currentUser.username,
-                maisonNotes: maisonNotes
-            });
-            
-            if (res.success) {
-                msg($('maisonSubmitMessage'), `Data ${isUpdate ? 'updated' : 'submitted'} successfully!`, true);
-                
-                // 清空表单
-                $('emailInput').value = '';
-                $('smsInput').value = '';
-                $('whatsappInput').value = '';
-                $('contactsInput').value = '';
-                $('maisonNotesInput').value = '';
-                clr($('validationMessage'));
-                
-                // 重新加载表格
-                loadTable('maison', $('maisonDataTableContainer'), { submittedBy: currentUser.username });
-                loadTable('maisonHistory', $('maisonHistoryTableContainer'), { submittedBy: currentUser.username });
-            } else {
-                msg($('maisonSubmitMessage'), 'Failed to submit: ' + res.message, false);
-            }
-        },
+        
 
         submitEmailButton: async () => {
             if (!currentUser || currentUser.role !== 'maison') { 
@@ -950,7 +1095,68 @@ document.addEventListener('DOMContentLoaded', () => {
             console.warn(`Element with ID "${id}" not found. Skipping event listener.`);
         }
     });
-    
+    // === New Event Listeners for Monthly Data Table ===
+
+// Fiscal Year Tab buttons
+document.addEventListener('click', (e) => {
+    if (e.target.classList.contains('fy-tab-button')) {
+        const fiscalYear = parseInt(e.target.dataset.year);
+        switchFiscalYearTab(fiscalYear);
+    }
+});
+
+// Action buttons in monthly data table
+document.addEventListener('click', (e) => {
+    if (e.target.classList.contains('action-button-table')) {
+        const year = parseInt(e.target.dataset.year);
+        const month = e.target.dataset.month;
+        const hasData = e.target.dataset.hasData === 'true';
+        
+        // Get existing data if available
+        const key = formatMonth(year, month);
+        const existingData = monthlyDataCache[currentFiscalYear]?.[key] || null;
+        
+        openModal(year, month, existingData);
+    }
+});
+
+// Modal close button
+if ($('modalClose')) {
+    $('modalClose').addEventListener('click', closeModal);
+}
+
+// Modal cancel button
+if ($('modalCancelButton')) {
+    $('modalCancelButton').addEventListener('click', closeModal);
+}
+
+// Modal submit button
+if ($('modalSubmitButton')) {
+    $('modalSubmitButton').addEventListener('click', handleModalSubmit);
+}
+
+// Close modal when clicking outside
+if ($('submissionModal')) {
+    $('submissionModal').addEventListener('click', (e) => {
+        if (e.target.id === 'submissionModal') {
+            closeModal();
+        }
+    });
+}
+
+// Modal notes character count
+if ($('modalNotesInput')) {
+    $('modalNotesInput').addEventListener('input', () => {
+        const count = $('modalNotesInput').value.length;
+        $('modalNotesCharCount').textContent = `${count}/200`;
+        if (count >= 200) {
+            $('modalNotesCharCount').style.color = '#d32f2f';
+        } else {
+            $('modalNotesCharCount').style.color = '#666';
+        }
+    });
+}
+
     // 搜索输入框事件
     const userSearchInput = $('userSearchInput');
     if (userSearchInput) {
@@ -961,19 +1167,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Notes 字符计数
-    const maisonNotesInput = $('maisonNotesInput');
-    if (maisonNotesInput) {
-        maisonNotesInput.addEventListener('input', () => {
-            const count = maisonNotesInput.value.length;
-            $('notesCharCount').textContent = `${count}/200`;
-            if (count >= 200) {
-                $('notesCharCount').style.color = '#d32f2f';
-            } else {
-                $('notesCharCount').style.color = '#666';
-            }
-        });
-    }
+
 
     // 初始化
     showPage($('loginPage'));

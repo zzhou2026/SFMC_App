@@ -473,8 +473,9 @@ document.addEventListener('DOMContentLoaded', () => {
         
         let html = `<h4 style="padding: 15px; margin: 0; background-color: #e0f2f7; border-bottom: 1px solid #ddd;">${maisonShortName} - Monthly Forecast - FY${adminGlobalYear}</h4>`;
         html += '<table><thead><tr>';
-        html += '<th>Month</th><th>Email</th><th>SMS</th><th>WhatsApp</th><th>Contacts</th><th>Status</th><th>Action</th>';
-        html += '</tr></thead><tbody>';
+html += '<th>Month</th><th>Email</th><th>SMS</th><th>WhatsApp</th><th>Contacts</th><th>Status</th><th>Notes</th><th>Action</th>';
+html += '</tr></thead><tbody>';
+
         
         let annualForecast = { email: 0, sms: 0, whatsapp: 0, contacts: 0 };
         
@@ -506,16 +507,32 @@ if (data) {
                   <button class="reject-button-table" data-record-id="${data.RecordId}">Reject</button>`;
 }
 
-            
-            html += '<tr>';
-            html += `<td class="month-cell">${monthDisplay}</td>`;
-            html += `<td>${emailVal}</td>`;
-            html += `<td>${smsVal}</td>`;
-            html += `<td>${whatsappVal}</td>`;
-            html += `<td>${contactsVal}</td>`;
-            html += `<td><span class="${statusClass}"><span class="status-badge-cell">${status}</span></span></td>`;
-            html += `<td>${actionCell}</td>`;
-            html += '</tr>';
+// 构建 Notes 单元格
+let notesCell = '-';
+if (data) {
+    let notesContent = '';
+    if (data.MaisonNotes && data.MaisonNotes.trim()) {
+        notesContent += `<div class="notes-item"><strong>Maison:</strong> ${data.MaisonNotes}</div>`;
+    }
+    if (data.AdminNotes && data.AdminNotes.trim()) {
+        notesContent += `<div class="notes-item admin-note"><strong>Admin:</strong> ${data.AdminNotes}</div>`;
+    }
+    if (notesContent) {
+        notesCell = `<div class="notes-cell">${notesContent}</div>`;
+    }
+}
+
+html += '<tr>';
+html += `<td class="month-cell">${monthDisplay}</td>`;
+html += `<td>${emailVal}</td>`;
+html += `<td>${smsVal}</td>`;
+html += `<td>${whatsappVal}</td>`;
+html += `<td>${contactsVal}</td>`;
+html += `<td><span class="${statusClass}"><span class="status-badge-cell">${status}</span></span></td>`;
+html += `<td>${notesCell}</td>`;
+html += `<td>${actionCell}</td>`;
+html += '</tr>';
+
         });
         
         const variance = {
@@ -531,7 +548,7 @@ if (data) {
         html += `<td class="summary-value">${annualForecast.sms}</td>`;
         html += `<td class="summary-value">${annualForecast.whatsapp}</td>`;
         html += `<td class="summary-value">${annualForecast.contacts}</td>`;
-        html += '<td colspan="2"></td>';
+        html += '<td colspan="3"></td>';
         html += '</tr>';
         
         html += '<tr class="summary-row">';
@@ -540,7 +557,7 @@ if (data) {
         html += `<td class="summary-value">${budget.SMSBudget}</td>`;
         html += `<td class="summary-value">${budget.WhatsAppBudget}</td>`;
         html += `<td class="summary-value">${budget.ContactsBudget}</td>`;
-        html += '<td colspan="2"></td>';
+        html += '<td colspan="3"></td>';
         html += '</tr>';
         
         html += '<tr class="summary-row">';
@@ -549,7 +566,7 @@ if (data) {
         html += `<td class="summary-value ${getVarianceClass(variance.sms)}">${variance.sms >= 0 ? '+' : ''}${variance.sms}%</td>`;
         html += `<td class="summary-value ${getVarianceClass(variance.whatsapp)}">${variance.whatsapp >= 0 ? '+' : ''}${variance.whatsapp}%</td>`;
         html += `<td class="summary-value ${getVarianceClass(variance.contacts)}">${variance.contacts >= 0 ? '+' : ''}${variance.contacts}%</td>`;
-        html += '<td colspan="2"></td>';
+        html += '<td colspan="3"></td>';
         html += '</tr>';
         
         html += '</tbody></table>';

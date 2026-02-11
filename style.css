@@ -208,17 +208,6 @@ table tr:hover {
 }
 
 
-.status-pending { 
-    background-color: var(--gray-color); 
-}
-
-.status-approved { 
-    background-color: var(--success-color); 
-}
-
-.status-rejected { 
-    background-color: var(--danger-color); 
-}
 
 .variance-good { 
     color: var(--success-color); 

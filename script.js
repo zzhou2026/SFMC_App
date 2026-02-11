@@ -413,11 +413,14 @@ const handleModalSubmit = async () => {
                     if (cfg.renderStatusBadge === false) {
                         v = v ?? '';
                     } else {
-                        const sc = { Pending: 'status-pending', Approved: 'status-approved', Rejected: 'status-rejected' }[v] || 'status-pending';
-                        // 使用新的 status-badge-cell 结构
-                        v = `<span class="${sc}"><span class="status-badge-cell">${v}</span></span>`;
+                        // 直接将颜色类应用到 status-badge-cell 的父��素上，方便继承，但背景色由 status-badge-cell 自身决定
+                        const statusText = v ?? '';
+                        const statusClass = { Pending: 'status-pending', Approved: 'status-approved', Rejected: 'status-rejected' }[statusText] || 'status-pending';
+                        // 渲染成徽章样式
+                        v = `<span class="${statusClass}"><span class="status-badge-cell">${statusText}</span></span>`;
                     }
                 }
+                
                 
                 
                 if ((h.key === 'MaisonNotes' || h.key === 'AdminNotes') && v && v.length > 50) {

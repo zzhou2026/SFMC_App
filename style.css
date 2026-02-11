@@ -207,17 +207,6 @@ table tr:hover {
     background-color: #e0e0e0; 
 }
 
-/* === 状态标记 === */
-.status-badge {
-    display: inline-block;
-    padding: 3px 8px;
-    border-radius: 12px;
-    font-size: 0.8em;
-    font-weight: bold;
-    color: white;
-    text-align: center;
-    white-space: nowrap;
-}
 
 .status-pending { 
     background-color: var(--gray-color); 

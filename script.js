@@ -476,6 +476,7 @@ document.addEventListener('DOMContentLoaded', () => {
 html += '<th>Month</th><th>Email</th><th>SMS</th><th>WhatsApp</th><th>Contacts</th><th>Status</th><th>Notes</th><th>Action</th>';
 html += '</tr></thead><tbody>';
 
+
         
         let annualForecast = { email: 0, sms: 0, whatsapp: 0, contacts: 0 };
         
@@ -507,19 +508,10 @@ if (data) {
                   <button class="reject-button-table" data-record-id="${data.RecordId}">Reject</button>`;
 }
 
-// 构建 Notes 单元格
+// 构建 Notes 单元格（和 Maison 端一样的逻辑）
 let notesCell = '-';
-if (data) {
-    let notesContent = '';
-    if (data.MaisonNotes && data.MaisonNotes.trim()) {
-        notesContent += `<div class="notes-item"><strong>Maison:</strong> ${data.MaisonNotes}</div>`;
-    }
-    if (data.AdminNotes && data.AdminNotes.trim()) {
-        notesContent += `<div class="notes-item admin-note"><strong>Admin:</strong> ${data.AdminNotes}</div>`;
-    }
-    if (notesContent) {
-        notesCell = `<div class="notes-cell">${notesContent}</div>`;
-    }
+if (data && (data.MaisonNotes || data.AdminNotes)) {
+    notesCell = `<a href="javascript:void(0)" class="notes-link admin-notes-link" data-year="${y}" data-month="${m}" data-maison="${adminForecastMaison}">See</a>`;
 }
 
 html += '<tr>';
@@ -532,6 +524,7 @@ html += `<td><span class="${statusClass}"><span class="status-badge-cell">${stat
 html += `<td>${notesCell}</td>`;
 html += `<td>${actionCell}</td>`;
 html += '</tr>';
+
 
         });
         
@@ -768,6 +761,48 @@ html += '</tr>';
         
         container.innerHTML = html;
     };
+// Admin Notes View Modal
+const openAdminNotesModal = async (year, month, maisonName) => {
+    // Fetch the data for this specific month
+    const res = await api('getSfmcDataByMaison', { 
+        maisonName: maisonName, 
+        year: adminGlobalYear 
+    });
+    
+    if (!res.success || !res.data) return;
+    
+    const formattedMonth = String(month).padStart(2, '0');
+    const record = res.data.find(r => r.Year == year && String(r.Month).padStart(2, '0') === formattedMonth);
+    
+    if (!record) return;
+    
+    const modal = $('notesViewModal');
+    const title = $('notesViewTitle');
+    
+    title.textContent = `Notes for ${formatMonth(year, formattedMonth)}`;
+    
+    // Display Maison Notes
+    const maisonNotesDisplay = $('maisonNotesDisplay');
+    if (record.MaisonNotes && record.MaisonNotes.trim()) {
+        maisonNotesDisplay.textContent = record.MaisonNotes;
+    } else {
+        maisonNotesDisplay.textContent = '';
+    }
+    
+    // Display Admin Notes
+    const adminNotesSection = $('adminNotesViewSection');
+    const adminNotesDisplay = $('adminNotesViewDisplay');
+    
+    if (record.AdminNotes && record.AdminNotes.trim()) {
+        adminNotesSection.classList.remove('hidden');
+        adminNotesDisplay.textContent = record.AdminNotes;
+    } else {
+        adminNotesSection.classList.add('hidden');
+        adminNotesDisplay.textContent = '';
+    }
+    
+    modal.classList.remove('hidden');
+};
 
     const calcVariancePercent = (actual, forecast) => {
         if (!forecast || forecast === 0) return '0.0';
@@ -1508,13 +1543,22 @@ html += '</tr>';
     });
 
     // Notes link click handler
-    document.addEventListener('click', (e) => {
-        if (e.target.classList.contains('notes-link')) {
-            const year = parseInt(e.target.dataset.year);
-            const month = e.target.dataset.month;
+document.addEventListener('click', (e) => {
+    if (e.target.classList.contains('notes-link')) {
+        const year = parseInt(e.target.dataset.year);
+        const month = e.target.dataset.month;
+        
+        // Check if it's admin notes link
+        if (e.target.classList.contains('admin-notes-link')) {
+            const maison = e.target.dataset.maison;
+            openAdminNotesModal(year, month, maison);
+        } else {
+            // Maison user notes link
             openNotesViewModal(year, month);
         }
-    });
+    }
+});
+
 
     // Action buttons in monthly data table
     document.addEventListener('click', (e) => {

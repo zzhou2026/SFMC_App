@@ -766,7 +766,7 @@ const openAdminNotesModal = async (year, month, maisonName) => {
     // Fetch the data for this specific month
     const res = await api('getSfmcDataByMaison', { 
         maisonName: maisonName, 
-        year: adminGlobalYear 
+        year: year 
     });
     
     if (!res.success || !res.data) return;

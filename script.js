@@ -297,7 +297,6 @@ const handleModalSubmit = async () => {
         
         // Refresh table and history
         renderMonthlyDataTable();
-        loadTable('maison', $('maisonDataTableContainer'), { submittedBy: currentUser.username });
         loadTable('maisonHistory', $('maisonHistoryTableContainer'), { submittedBy: currentUser.username });
         
         // Clear message after 3 seconds
@@ -945,7 +944,6 @@ const handleModalSubmit = async () => {
                     renderMonthlyDataTable();
                     
                     // Load other tables
-                    loadTable('maison', $('maisonDataTableContainer'), { submittedBy: currentUser.username });
                     loadTable('maisonHistory', $('maisonHistoryTableContainer'), { submittedBy: currentUser.username });
                     
                     // Initialize email management

@@ -1164,3 +1164,62 @@ table tr:hover {
 .modal-button-secondary:hover {
     background-color: var(--gray-dark);
 }
+/* === Notes Column Link === */
+.notes-link {
+    color: var(--secondary-color);
+    text-decoration: underline;
+    cursor: pointer;
+    font-size: 0.85em;
+    transition: color 0.2s;
+}
+
+.notes-link:hover {
+    color: var(--secondary-dark);
+    text-decoration: underline;
+}
+
+/* === Notes View Modal === */
+.modal-content-small {
+    max-width: 450px;
+}
+
+.notes-section {
+    margin-bottom: 20px;
+}
+
+.notes-section:last-child {
+    margin-bottom: 0;
+}
+
+.notes-section label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: bold;
+    color: var(--primary-color);
+    font-size: 0.95em;
+}
+
+.notes-display {
+    padding: 12px;
+    background-color: #f9f9f9;
+    border: 1px solid #e0e0e0;
+    border-radius: 5px;
+    color: var(--text-color);
+    font-size: 0.9em;
+    line-height: 1.6;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    min-height: 50px;
+}
+
+.notes-display:empty::before {
+    content: "No notes available.";
+    color: #999;
+    font-style: italic;
+}
+
+.admin-notes-text {
+    background-color: #fff3cd;
+    border-color: #ffc107;
+    color: #856404;
+}

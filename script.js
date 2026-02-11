@@ -105,7 +105,7 @@ const renderMonthlyDataTable = async () => {
     const tbody = $('monthlyDataTableBody');
     if (!tbody) return;
     
-    tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 20px;">Loading...</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 20px;">Loading...</td></tr>';
     
     const months = getFiscalYearMonths(currentFiscalYear);
     
@@ -141,10 +141,13 @@ const renderMonthlyDataTable = async () => {
         const buttonText = existingData ? 'Update' : 'Submit';
         const buttonClass = existingData ? 'action-button-table update-button' : 'action-button-table';
         
-        // Status cell with info icon for rejected items
+        // Status cell
         let statusCell = `<span class="status-cell ${statusClass}">${status}</span>`;
-        if (status === 'Rejected' && existingData.AdminNotes) {
-            statusCell += ` <span class="status-info-icon" title="${existingData.AdminNotes}">ⓘ</span>`;
+        
+        // Notes cell
+        let notesCell = '-';
+        if (existingData && (existingData.MaisonNotes || existingData.AdminNotes)) {
+            notesCell = `<a href="javascript:void(0)" class="notes-link" data-year="${year}" data-month="${month}">See</a>`;
         }
         
         html += `
@@ -155,6 +158,7 @@ const renderMonthlyDataTable = async () => {
                 <td><input type="number" class="month-input" data-field="whatsapp" value="${whatsappVal}" min="0" readonly></td>
                 <td><input type="number" class="month-input" data-field="contacts" value="${contactsVal}" min="0" readonly></td>
                 <td>${statusCell}</td>
+                <td>${notesCell}</td>
                 <td>
                     <button class="${buttonClass}" 
                             data-year="${year}" 
@@ -172,6 +176,46 @@ const renderMonthlyDataTable = async () => {
     // Cache the data
     monthlyDataCache[currentFiscalYear] = dataMap;
 };
+// === Open Notes View Modal ===
+const openNotesViewModal = (year, month) => {
+    const key = formatMonth(year, month);
+    const data = monthlyDataCache[currentFiscalYear]?.[key];
+    
+    if (!data) return;
+    
+    const modal = $('notesViewModal');
+    const title = $('notesViewTitle');
+    
+    title.textContent = `Notes for ${formatMonth(year, month)}`;
+    
+    // Display Maison Notes
+    const maisonNotesDisplay = $('maisonNotesDisplay');
+    if (data.MaisonNotes && data.MaisonNotes.trim()) {
+        maisonNotesDisplay.textContent = data.MaisonNotes;
+    } else {
+        maisonNotesDisplay.textContent = '';
+    }
+    
+    // Display Admin Notes if available
+    const adminNotesSection = $('adminNotesViewSection');
+    const adminNotesDisplay = $('adminNotesViewDisplay');
+    
+    if (data.AdminNotes && data.AdminNotes.trim()) {
+        adminNotesSection.classList.remove('hidden');
+        adminNotesDisplay.textContent = data.AdminNotes;
+    } else {
+        adminNotesSection.classList.add('hidden');
+        adminNotesDisplay.textContent = '';
+    }
+    
+    modal.classList.remove('hidden');
+};
+
+const closeNotesViewModal = () => {
+    const modal = $('notesViewModal');
+    modal.classList.add('hidden');
+};
+
 // === Tab Switching ===
 const switchFiscalYearTab = (fiscalYear) => {
     currentFiscalYear = fiscalYear;
@@ -1104,6 +1148,14 @@ document.addEventListener('click', (e) => {
         switchFiscalYearTab(fiscalYear);
     }
 });
+// Notes link click handler
+document.addEventListener('click', (e) => {
+    if (e.target.classList.contains('notes-link')) {
+        const year = parseInt(e.target.dataset.year);
+        const month = e.target.dataset.month;
+        openNotesViewModal(year, month);
+    }
+});
 
 // Action buttons in monthly data table
 document.addEventListener('click', (e) => {
@@ -1153,6 +1205,23 @@ if ($('modalNotesInput')) {
             $('modalNotesCharCount').style.color = '#d32f2f';
         } else {
             $('modalNotesCharCount').style.color = '#666';
+        }
+    });
+}
+// Notes View Modal close handlers
+if ($('notesViewClose')) {
+    $('notesViewClose').addEventListener('click', closeNotesViewModal);
+}
+
+if ($('notesViewCloseButton')) {
+    $('notesViewCloseButton').addEventListener('click', closeNotesViewModal);
+}
+
+// Close notes view modal when clicking outside
+if ($('notesViewModal')) {
+    $('notesViewModal').addEventListener('click', (e) => {
+        if (e.target.id === 'notesViewModal') {
+            closeNotesViewModal();
         }
     });
 }

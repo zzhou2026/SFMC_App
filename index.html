@@ -70,9 +70,11 @@
                     <th>WhatsApp</th>
                     <th>Contacts</th>
                     <th>Status</th>
+                    <th>Notes</th>
                     <th>Action</th>
                 </tr>
             </thead>
+            
             <tbody id="monthlyDataTableBody">
                 <!-- Rows will be populated by JavaScript -->
             </tbody>
@@ -140,12 +142,30 @@
         </div>
     </div>
 </div>
+<!-- Notes View Modal -->
+<div id="notesViewModal" class="modal hidden">
+    <div class="modal-content modal-content-small">
+        <div class="modal-header">
+            <h3 id="notesViewTitle">Notes for Month</h3>
+            <span class="modal-close" id="notesViewClose">&times;</span>
+        </div>
+        <div class="modal-body">
+            <div id="maisonNotesSection" class="notes-section">
+                <label>Your Notes:</label>
+                <div id="maisonNotesDisplay" class="notes-display"></div>
+            </div>
+            
+            <div id="adminNotesViewSection" class="notes-section hidden">
+                <label>Admin Feedback:</label>
+                <div id="adminNotesViewDisplay" class="notes-display admin-notes-text"></div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button id="notesViewCloseButton" class="modal-button-secondary">Close</button>
+        </div>
+    </div>
+</div>
 
-
-                <h3>My Current Data</h3>
-                <div id="maisonDataTableContainer" class="table-container">
-                    <!-- Maison current data will be displayed here -->
-                </div>
 
                 <h3>My Historical Actions</h3>
                 <div id="maisonHistoryTableContainer" class="table-container">

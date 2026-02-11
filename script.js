@@ -501,10 +501,11 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             
             let actionCell = '-';
-            if (data && data.ApprovalStatus === 'Pending') {
-                actionCell = `<button class="approve-button-table" data-record-id="${data.RecordId}">Approve</button>
-                              <button class="reject-button-table" data-record-id="${data.RecordId}">Reject</button>`;
-            }
+if (data) {
+    actionCell = `<button class="approve-button-table" data-record-id="${data.RecordId}">Approve</button>
+                  <button class="reject-button-table" data-record-id="${data.RecordId}">Reject</button>`;
+}
+
             
             html += '<tr>';
             html += `<td class="month-cell">${monthDisplay}</td>`;

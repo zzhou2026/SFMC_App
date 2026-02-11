@@ -172,127 +172,191 @@
                 </div>
             </div>
 
-            <!-- Admin View -->
-            <div id="adminView" class="user-view hidden">
-                <button id="adminLogoutButton" class="logout-button">Logout</button>
-                
-                <!-- Admin Tabs -->
-                <div class="admin-tabs">
-                    <button class="admin-tab-button active" data-tab="overview">Overview</button>
-                    <button class="admin-tab-button" data-tab="ACQUA DI PARMA SRL">ADPS</button>
-                    <button class="admin-tab-button" data-tab="Maison Francis Kurkdjian">MFK</button>
-                    <button class="admin-tab-button" data-tab="GIE PCIS (Org MUF Education)">MUFE</button>
-                    <button class="admin-tab-button" data-tab="PARFUMS ET COSMETIQUES INFORMATION SERVICES">PCIS</button>
-                    <button class="admin-tab-button" data-tab="PERFUMES LOEWE SA">LOEWE</button>
-                </div>
-
-                <!-- Overview Tab Content -->
-                <div id="overviewTabContent" class="admin-tab-content active">
-                    <h3>All Maisons Summary</h3>
-                    
-                    <!-- Fiscal Year Selector for Overview -->
-                    <div class="year-selection-container">
-                        <label for="overviewYearSelect">Fiscal Year:</label>
-                        <select id="overviewYearSelect" class="form-control year-select">
-                            <option value="2025">FY2025</option>
-                            <option value="2026" selected>FY2026</option>
-                            <option value="2027">FY2027</option>
-                        </select>
-                    </div>
-
-                    <div id="overviewSummaryContainer" class="overview-summary-container">
-                        <!-- Overview summary table will be rendered here -->
-                    </div>
-
-                    <!-- Email Broadcast Section -->
-                    <div id="emailBroadcastSection" class="email-broadcast-section">
-                        <h3>Send Email to Users via Outlook</h3>
-                        <p>Select users from the list below and compose email in Outlook.</p>
-                        
-                        <div class="user-selection-header">
-                            <label>Select Recipients:</label>
-                            <div class="selection-controls">
-                                <button id="selectAllButton" class="selection-button">Select All</button>
-                                <button id="deselectAllButton" class="selection-button">Deselect All</button>
-                                <input type="text" id="userSearchInput" class="user-search-input" placeholder="Search users...">
-                            </div>
-                        </div>
-                        
-                        <div id="userListContainer" class="user-list-container">
-                            <p class="loading-text">Loading users...</p>
-                        </div>
-                        
-                        <label for="emailSubjectInput">Email Subject:</label>
-                        <input type="text" id="emailSubjectInput" class="form-control" placeholder="Enter email subject">
-                        
-                        <label for="emailContentInput">Email Content:</label>
-                        <textarea id="emailContentInput" class="form-control email-textarea" placeholder="Enter email content" rows="6"></textarea>
-                        
-                        <div class="email-action-buttons">
-                            <button id="openOutlookButton" class="email-broadcast-button">Open in Outlook</button>
-                            <button id="copyEmailsButton" class="email-broadcast-button-secondary">Copy Email List</button>
-                        </div>
-                        <p id="emailBroadcastMessage" class="message"></p>
-                        <p id="recipientCountDisplay" class="recipient-count"></p>
-                    </div>
-
-                    <h3>All Historical Actions Log</h3>
-                    <div id="adminHistoryTableContainer" class="table-container">
-                        <!-- Admin historical actions log will be displayed here -->
-                    </div>
-                    <button id="exportHistoryDataButton">Export History Data (CSV)</button>
-                </div>
-
-                <!-- Maison Tab Content Template (will be cloned for each maison) -->
-                <div id="maisonTabContent" class="admin-tab-content hidden">
-                    <!-- This will be dynamically populated for each maison -->
-                </div>
-
-                <!-- Approval Modal for Admin -->
-                <div id="approvalModal" class="modal hidden">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h3 id="approvalModalTitle">Approve/Reject Submission</h3>
-                            <span class="modal-close" id="approvalModalClose">&times;</span>
-                        </div>
-                        <div class="modal-body">
-                            <input type="hidden" id="approvalRecordId" value="">
+                        <!-- Admin View -->
+                        <div id="adminView" class="user-view hidden">
+                            <button id="adminLogoutButton" class="logout-button">Logout</button>
                             
-                            <div class="approval-details">
-                                <p><strong>Maison:</strong> <span id="approvalMaison"></span></p>
-                                <p><strong>Period:</strong> <span id="approvalPeriod"></span></p>
-                                <p><strong>Submitted By:</strong> <span id="approvalSubmittedBy"></span></p>
-                                <p><strong>Submission Time:</strong> <span id="approvalTimestamp"></span></p>
+                            <!-- Global Fiscal Year Selector -->
+                            <div class="global-year-selector">
+                                <label>Fiscal Year:</label>
+                                <div class="global-year-tabs">
+                                    <button class="global-year-tab" data-year="2025">FY2025</button>
+                                    <button class="global-year-tab active" data-year="2026">FY2026</button>
+                                    <button class="global-year-tab" data-year="2027">FY2027</button>
+                                </div>
                             </div>
-
-                            <div class="approval-data">
-                                <h4>Submitted Data:</h4>
-                                <ul>
-                                    <li>Email: <span id="approvalEmail"></span></li>
-                                    <li>SMS: <span id="approvalSms"></span></li>
-                                    <li>WhatsApp: <span id="approvalWhatsapp"></span></li>
-                                    <li>Contacts: <span id="approvalContacts"></span></li>
-                                </ul>
+            
+                            <!-- Budget Setting Section -->
+                            <div class="admin-section budget-section">
+                                <h3>Set Annual Budget</h3>
+                                <div class="budget-form">
+                                    <div class="budget-form-row">
+                                        <div class="form-group">
+                                            <label for="adminBudgetMaison">Maison:</label>
+                                            <select id="adminBudgetMaison" class="form-control">
+                                                <option value="ACQUA DI PARMA SRL">ADP</option>
+                                                <option value="Maison Francis Kurkdjian">MFK</option>
+                                                <option value="GIE PCIS (Org MUF Education)">MUFE</option>
+                                                <option value="PARFUMS ET COSMETIQUES INFORMATION SERVICES">PCIS</option>
+                                                <option value="PERFUMES LOEWE SA">LOEWE</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="budget-inputs-grid">
+                                        <div class="form-group">
+                                            <label for="adminEmailBudget">Email Budget:</label>
+                                            <input type="number" id="adminEmailBudget" class="form-control" min="0" value="0" placeholder="Enter budget">
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="adminSmsBudget">SMS Budget:</label>
+                                            <input type="number" id="adminSmsBudget" class="form-control" min="0" value="0" placeholder="Enter budget">
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="adminWhatsappBudget">WhatsApp Budget:</label>
+                                            <input type="number" id="adminWhatsappBudget" class="form-control" min="0" value="0" placeholder="Enter budget">
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="adminContactsBudget">Contacts Budget:</label>
+                                            <input type="number" id="adminContactsBudget" class="form-control" min="0" value="0" placeholder="Enter budget">
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="budget-form-actions">
+                                        <button id="adminSubmitBudget" class="submit-button">Submit Budget</button>
+                                    </div>
+                                    <p id="adminBudgetMessage" class="message"></p>
+                                </div>
                             </div>
-
-                            <div id="approvalMaisonNotesSection" class="notes-section hidden">
-                                <label>Maison Notes:</label>
-                                <div id="approvalMaisonNotes" class="notes-display"></div>
+            
+                            <!-- Forecast Section -->
+                            <div class="admin-section forecast-section">
+                                <h3>Monthly Forecast vs Budget</h3>
+                                
+                                <div class="maison-tabs">
+                                    <button class="maison-tab active" data-maison="ACQUA DI PARMA SRL">ADP</button>
+                                    <button class="maison-tab" data-maison="Maison Francis Kurkdjian">MFK</button>
+                                    <button class="maison-tab" data-maison="GIE PCIS (Org MUF Education)">MUFE</button>
+                                    <button class="maison-tab" data-maison="PARFUMS ET COSMETIQUES INFORMATION SERVICES">PCIS</button>
+                                    <button class="maison-tab" data-maison="PERFUMES LOEWE SA">LOEWE</button>
+                                </div>
+                                
+                                <div id="forecastTableContainer" class="data-table-container">
+                                    <p style="text-align: center; padding: 20px;">Loading...</p>
+                                </div>
                             </div>
-
-                            <div class="modal-form-group">
-                                <label for="approvalAdminNotes">Admin Notes (optional):</label>
-                                <textarea id="approvalAdminNotes" class="form-control" placeholder="Add feedback or notes..." maxlength="200" rows="3"></textarea>
+            
+                            <!-- Actual Section -->
+                            <div class="admin-section actual-section">
+                                <h3>Monthly Actual vs Budget</h3>
+                                
+                                <div class="maison-tabs">
+                                    <button class="maison-tab active" data-maison="ACQUA DI PARMA SRL">ADP</button>
+                                    <button class="maison-tab" data-maison="Maison Francis Kurkdjian">MFK</button>
+                                    <button class="maison-tab" data-maison="GIE PCIS (Org MUF Education)">MUFE</button>
+                                    <button class="maison-tab" data-maison="PARFUMS ET COSMETIQUES INFORMATION SERVICES">PCIS</button>
+                                    <button class="maison-tab" data-maison="PERFUMES LOEWE SA">LOEWE</button>
+                                </div>
+                                
+                                <div id="actualTableContainer" class="data-table-container">
+                                    <p style="text-align: center; padding: 20px;">Loading...</p>
+                                </div>
+                            </div>
+            
+                            <!-- Tools Section (Collapsible) -->
+                            <div class="admin-section tools-section">
+                                <div class="collapsible-header" id="emailBroadcastHeader">
+                                    <h3>▼ Email Broadcast</h3>
+                                </div>
+                                <div id="emailBroadcastContent" class="collapsible-content hidden">
+                                    <div id="emailBroadcastSection" class="email-broadcast-section">
+                                        <p>Select users from the list below and compose email in Outlook.</p>
+                                        
+                                        <div class="user-selection-header">
+                                            <label>Select Recipients:</label>
+                                            <div class="selection-controls">
+                                                <button id="selectAllButton" class="selection-button">Select All</button>
+                                                <button id="deselectAllButton" class="selection-button">Deselect All</button>
+                                                <input type="text" id="userSearchInput" class="user-search-input" placeholder="Search users...">
+                                            </div>
+                                        </div>
+                                        
+                                        <div id="userListContainer" class="user-list-container">
+                                            <p class="loading-text">Loading users...</p>
+                                        </div>
+                                        
+                                        <label for="emailSubjectInput">Email Subject:</label>
+                                        <input type="text" id="emailSubjectInput" class="form-control" placeholder="Enter email subject">
+                                        
+                                        <label for="emailContentInput">Email Content:</label>
+                                        <textarea id="emailContentInput" class="form-control email-textarea" placeholder="Enter email content" rows="6"></textarea>
+                                        
+                                        <div class="email-action-buttons">
+                                            <button id="openOutlookButton" class="email-broadcast-button">Open in Outlook</button>
+                                            <button id="copyEmailsButton" class="email-broadcast-button-secondary">Copy Email List</button>
+                                        </div>
+                                        <p id="emailBroadcastMessage" class="message"></p>
+                                        <p id="recipientCountDisplay" class="recipient-count"></p>
+                                    </div>
+                                </div>
+            
+                                <div class="collapsible-header" id="historyLogHeader">
+                                    <h3>▼ Historical Actions Log</h3>
+                                </div>
+                                <div id="historyLogContent" class="collapsible-content hidden">
+                                    <div id="adminHistoryTableContainer" class="table-container">
+                                        <!-- Admin historical actions log will be displayed here -->
+                                    </div>
+                                    <button id="exportHistoryDataButton">Export History Data (CSV)</button>
+                                </div>
+                            </div>
+            
+                            <!-- Approval Modal for Admin -->
+                            <div id="approvalModal" class="modal hidden">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h3 id="approvalModalTitle">Approve/Reject Submission</h3>
+                                        <span class="modal-close" id="approvalModalClose">&times;</span>
+                                    </div>
+                                    <div class="modal-body">
+                                        <input type="hidden" id="approvalRecordId" value="">
+                                        
+                                        <div class="approval-details">
+                                            <p><strong>Maison:</strong> <span id="approvalMaison"></span></p>
+                                            <p><strong>Period:</strong> <span id="approvalPeriod"></span></p>
+                                            <p><strong>Submitted By:</strong> <span id="approvalSubmittedBy"></span></p>
+                                            <p><strong>Submission Time:</strong> <span id="approvalTimestamp"></span></p>
+                                        </div>
+            
+                                        <div class="approval-data">
+                                            <h4>Submitted Data:</h4>
+                                            <ul>
+                                                <li>Email: <span id="approvalEmail"></span></li>
+                                                <li>SMS: <span id="approvalSms"></span></li>
+                                                <li>WhatsApp: <span id="approvalWhatsapp"></span></li>
+                                                <li>Contacts: <span id="approvalContacts"></span></li>
+                                            </ul>
+                                        </div>
+            
+                                        <div id="approvalMaisonNotesSection" class="notes-section hidden">
+                                            <label>Maison Notes:</label>
+                                            <div id="approvalMaisonNotes" class="notes-display"></div>
+                                        </div>
+            
+                                        <div class="modal-form-group">
+                                            <label for="approvalAdminNotes">Admin Notes (optional):</label>
+                                            <textarea id="approvalAdminNotes" class="form-control" placeholder="Add feedback or notes..." maxlength="200" rows="3"></textarea>
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button id="approvalCancelButton" class="modal-button-secondary">Cancel</button>
+                                        <button id="approvalRejectButton" class="modal-button-warning">Reject</button>
+                                        <button id="approvalApproveButton" class="modal-button-primary">Approve</button>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                        <div class="modal-footer">
-                            <button id="approvalCancelButton" class="modal-button-secondary">Cancel</button>
-                            <button id="approvalRejectButton" class="modal-button-warning">Reject</button>
-                            <button id="approvalApproveButton" class="modal-button-primary">Approve</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            
 
             <!-- SFMC Operator View -->
             <div id="operatorView" class="user-view hidden">

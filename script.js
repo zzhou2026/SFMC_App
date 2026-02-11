@@ -10,14 +10,17 @@ document.addEventListener('DOMContentLoaded', () => {
     let searchTerm = '';
     let currentYear = new Date().getFullYear();
     let currentFiscalYear = 2026;
-    let currentAdminTab = 'overview';
-    let currentAdminMaison = '';
-    let currentAdminYear = 2026;
     let monthlyDataCache = {};
+
+    // Admin 全局状态
+    let adminGlobalYear = 2026;
+    let adminBudgetMaison = 'ACQUA DI PARMA SRL';
+    let adminForecastMaison = 'ACQUA DI PARMA SRL';
+    let adminActualMaison = 'ACQUA DI PARMA SRL';
 
     // Maison 列表配置
     const MAISONS = [
-        { name: 'ACQUA DI PARMA SRL', shortName: 'ADPS' },
+        { name: 'ACQUA DI PARMA SRL', shortName: 'ADP' },
         { name: 'Maison Francis Kurkdjian', shortName: 'MFK' },
         { name: 'GIE PCIS (Org MUF Education)', shortName: 'MUFE' },
         { name: 'PARFUMS ET COSMETIQUES INFORMATION SERVICES', shortName: 'PCIS' },
@@ -69,6 +72,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const getMonthName = (month) => {
         const names = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
         return names[parseInt(month) - 1];
+    };
+
+    // Get short name for maison
+    const getMaisonShortName = (maisonName) => {
+        const maison = MAISONS.find(m => m.name === maisonName);
+        return maison ? maison.shortName : maisonName;
     };
 
     // ===== API 调用 =====
@@ -359,283 +368,95 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     // ===== Admin View Functions =====
 
-    // Switch Admin Tab
-    const switchAdminTab = (tabName) => {
-        currentAdminTab = tabName;
+    // Switch Global Year
+    const switchGlobalYear = (year) => {
+        adminGlobalYear = year;
         
         // Update tab buttons
-        document.querySelectorAll('.admin-tab-button').forEach(btn => {
-            if (btn.dataset.tab === tabName) {
+        document.querySelectorAll('.global-year-tab').forEach(btn => {
+            if (parseInt(btn.dataset.year) === year) {
                 btn.classList.add('active');
             } else {
                 btn.classList.remove('active');
             }
         });
         
-        // Update tab content
-        document.querySelectorAll('.admin-tab-content').forEach(content => {
-            content.classList.remove('active');
+        // Refresh all sections
+        loadAdminBudget();
+        loadAdminForecast();
+        loadAdminActual();
+    };
+
+    // Load Admin Budget
+    const loadAdminBudget = async () => {
+        const res = await api('getAnnualBudgetByMaison', { 
+            maisonName: adminBudgetMaison, 
+            year: adminGlobalYear 
         });
         
-        if (tabName === 'overview') {
-            $('overviewTabContent').classList.add('active');
-            renderOverviewTab();
+        if (res.success && res.data) {
+            $('adminEmailBudget').value = res.data.EmailBudget || 0;
+            $('adminSmsBudget').value = res.data.SMSBudget || 0;
+            $('adminWhatsappBudget').value = res.data.WhatsAppBudget || 0;
+            $('adminContactsBudget').value = res.data.ContactsBudget || 0;
         } else {
-            // Render maison-specific tab
-            currentAdminMaison = tabName;
-            renderMaisonTab(tabName);
+            $('adminEmailBudget').value = 0;
+            $('adminSmsBudget').value = 0;
+            $('adminWhatsappBudget').value = 0;
+            $('adminContactsBudget').value = 0;
         }
     };
 
-    // Render Overview Tab
-    const renderOverviewTab = async () => {
-        const year = parseInt($('overviewYearSelect').value) || currentYear;
-        const container = $('overviewSummaryContainer');
+    // Submit Admin Budget
+    const submitAdminBudget = async () => {
+        const emailBudget = parseInt($('adminEmailBudget').value) || 0;
+        const smsBudget = parseInt($('adminSmsBudget').value) || 0;
+        const whatsappBudget = parseInt($('adminWhatsappBudget').value) || 0;
+        const contactsBudget = parseInt($('adminContactsBudget').value) || 0;
         
-        if (!container) return;
-        
-        container.innerHTML = '<p style="text-align: center; padding: 20px;">Loading...</p>';
-        
-        // Fetch data
-        const forecastRes = await api('getForecastData', { year: year });
-        const budgetRes = await api('getAnnualBudgets', { year: year });
-        const actualRes = await api('getActualData', { year: year });
-        
-        if (!forecastRes.success) {
-            container.innerHTML = '<p>Failed to load forecast data.</p>';
+        if (emailBudget < 0 || smsBudget < 0 || whatsappBudget < 0 || contactsBudget < 0) {
+            msg($('adminBudgetMessage'), 'Budgets cannot be negative!', false);
             return;
         }
         
-        // Build budget map
-        const budgets = {};
-        if (budgetRes.success && budgetRes.data) {
-            budgetRes.data.forEach(b => {
-                budgets[b.MaisonName] = {
-                    email: parseInt(b.EmailBudget) || 0,
-                    sms: parseInt(b.SMSBudget) || 0,
-                    whatsapp: parseInt(b.WhatsAppBudget) || 0,
-                    contacts: parseInt(b.ContactsBudget) || 0
-                };
-            });
-        }
-        
-        // Build actual map
-        const actuals = {};
-        if (actualRes.success && actualRes.data) {
-            actualRes.data.forEach(a => {
-                if (!actuals[a.MaisonName]) {
-                    actuals[a.MaisonName] = {
-                        email: 0,
-                        sms: 0,
-                        whatsapp: 0,
-                        contacts: 0
-                    };
-                }
-                actuals[a.MaisonName].email += parseInt(a.EmailUsage) || 0;
-                actuals[a.MaisonName].sms += parseInt(a.SMSUsage) || 0;
-                actuals[a.MaisonName].whatsapp += parseInt(a.WhatsAppUsage) || 0;
-                // Contacts is cumulative, take the latest
-                const contactsTotal = parseInt(a.ContactsTotal) || 0;
-                if (contactsTotal > actuals[a.MaisonName].contacts) {
-                    actuals[a.MaisonName].contacts = contactsTotal;
-                }
-            });
-        }
-        
-        // Build table
-        let html = '<table class="overview-summary-table"><thead><tr>';
-        html += '<th>Maison</th>';
-        html += '<th>Email<br>Forecast / Budget</th>';
-        html += '<th>SMS<br>Forecast / Budget</th>';
-        html += '<th>WhatsApp<br>Forecast / Budget</th>';
-        html += '<th>Contacts<br>Forecast / Budget</th>';
-        html += '<th>Email<br>Actual</th>';
-        html += '<th>SMS<br>Actual</th>';
-        html += '<th>WhatsApp<br>Actual</th>';
-        html += '<th>Contacts<br>Actual</th>';
-        html += '</tr></thead><tbody>';
-        
-        let totalForecastEmail = 0, totalForecastSms = 0, totalForecastWhatsapp = 0, totalForecastContacts = 0;
-        let totalBudgetEmail = 0, totalBudgetSms = 0, totalBudgetWhatsapp = 0, totalBudgetContacts = 0;
-        let totalActualEmail = 0, totalActualSms = 0, totalActualWhatsapp = 0, totalActualContacts = 0;
-        
-        MAISONS.forEach(maison => {
-            const forecast = forecastRes.data.find(f => f.MaisonName === maison.name) || { TotalEmail: 0, TotalSMS: 0, TotalWhatsApp: 0, TotalContacts: 0 };
-            const budget = budgets[maison.name] || { email: 0, sms: 0, whatsapp: 0, contacts: 0 };
-            const actual = actuals[maison.name] || { email: 0, sms: 0, whatsapp: 0, contacts: 0 };
-            
-            totalForecastEmail += forecast.TotalEmail;
-            totalForecastSms += forecast.TotalSMS;
-            totalForecastWhatsapp += forecast.TotalWhatsApp;
-            totalForecastContacts += forecast.TotalContacts;
-            
-            totalBudgetEmail += budget.email;
-            totalBudgetSms += budget.sms;
-            totalBudgetWhatsapp += budget.whatsapp;
-            totalBudgetContacts += budget.contacts;
-            
-            totalActualEmail += actual.email;
-            totalActualSms += actual.sms;
-            totalActualWhatsapp += actual.whatsapp;
-            totalActualContacts += actual.contacts;
-            
-            const calcVariance = (f, b) => b > 0 ? ((f - b) / b * 100).toFixed(1) : '0.0';
-            
-            html += '<tr>';
-            html += `<td class="maison-name-cell">${maison.shortName}</td>`;
-            html += `<td>${forecast.TotalEmail} / ${budget.email}<br><span class="${getVarianceClass(calcVariance(forecast.TotalEmail, budget.email))}">(${calcVariance(forecast.TotalEmail, budget.email)}%)</span></td>`;
-            html += `<td>${forecast.TotalSMS} / ${budget.sms}<br><span class="${getVarianceClass(calcVariance(forecast.TotalSMS, budget.sms))}">(${calcVariance(forecast.TotalSMS, budget.sms)}%)</span></td>`;
-            html += `<td>${forecast.TotalWhatsApp} / ${budget.whatsapp}<br><span class="${getVarianceClass(calcVariance(forecast.TotalWhatsApp, budget.whatsapp))}">(${calcVariance(forecast.TotalWhatsApp, budget.whatsapp)}%)</span></td>`;
-            html += `<td>${forecast.TotalContacts} / ${budget.contacts}<br><span class="${getVarianceClass(calcVariance(forecast.TotalContacts, budget.contacts))}">(${calcVariance(forecast.TotalContacts, budget.contacts)}%)</span></td>`;
-            html += `<td>${actual.email}</td>`;
-            html += `<td>${actual.sms}</td>`;
-            html += `<td>${actual.whatsapp}</td>`;
-            html += `<td>${actual.contacts}</td>`;
-            html += '</tr>';
+        const res = await api('setAnnualBudget', {
+            maisonName: adminBudgetMaison,
+            year: adminGlobalYear,
+            emailBudget: emailBudget,
+            smsBudget: smsBudget,
+            whatsappBudget: whatsappBudget,
+            contactsBudget: contactsBudget,
+            updatedBy: currentUser.username
         });
         
-        // Total row
-        const calcVariance = (f, b) => b > 0 ? ((f - b) / b * 100).toFixed(1) : '0.0';
+        msg($('adminBudgetMessage'), res.success ? 'Budget set successfully!' : 'Failed: ' + res.message, res.success);
         
-        html += '<tr class="total-row">';
-        html += '<td class="maison-name-cell"><strong>Total</strong></td>';
-        html += `<td><strong>${totalForecastEmail} / ${totalBudgetEmail}</strong><br><span class="${getVarianceClass(calcVariance(totalForecastEmail, totalBudgetEmail))}">(${calcVariance(totalForecastEmail, totalBudgetEmail)}%)</span></td>`;
-        html += `<td><strong>${totalForecastSms} / ${totalBudgetSms}</strong><br><span class="${getVarianceClass(calcVariance(totalForecastSms, totalBudgetSms))}">(${calcVariance(totalForecastSms, totalBudgetSms)}%)</span></td>`;
-        html += `<td><strong>${totalForecastWhatsapp} / ${totalBudgetWhatsapp}</strong><br><span class="${getVarianceClass(calcVariance(totalForecastWhatsapp, totalBudgetWhatsapp))}">(${calcVariance(totalForecastWhatsapp, totalBudgetWhatsapp)}%)</span></td>`;
-        html += `<td><strong>${totalForecastContacts} / ${totalBudgetContacts}</strong><br><span class="${getVarianceClass(calcVariance(totalForecastContacts, totalBudgetContacts))}">(${calcVariance(totalForecastContacts, totalBudgetContacts)}%)</span></td>`;
-        html += `<td><strong>${totalActualEmail}</strong></td>`;
-        html += `<td><strong>${totalActualSms}</strong></td>`;
-        html += `<td><strong>${totalActualWhatsapp}</strong></td>`;
-        html += `<td><strong>${totalActualContacts}</strong></td>`;
-        html += '</tr>';
-        
-        html += '</tbody></table>';
-        
-        container.innerHTML = html;
-    };
-
-    const getVarianceClass = (variance) => {
-        const v = parseFloat(variance);
-        if (Math.abs(v) <= 5) return 'variance-neutral';
-        return v > 0 ? 'variance-positive' : 'variance-negative';
-    };
-
-    // Render Maison-specific Tab
-    const renderMaisonTab = async (maisonName) => {
-        // Find or create maison tab content
-        let maisonContent = document.querySelector(`.admin-tab-content[data-maison="${maisonName}"]`);
-        
-        if (!maisonContent) {
-            maisonContent = document.createElement('div');
-            maisonContent.className = 'admin-tab-content';
-            maisonContent.dataset.maison = maisonName;
-            $('adminView').appendChild(maisonContent);
+        if (res.success) {
+            setTimeout(() => clr($('adminBudgetMessage')), 3000);
+            loadAdminForecast();
+            loadAdminActual();
         }
-        
-        // Show this content
-        document.querySelectorAll('.admin-tab-content').forEach(c => c.classList.remove('active'));
-        maisonContent.classList.add('active');
-        
-        // Get short name
-        const maisonShortName = MAISONS.find(m => m.name === maisonName)?.shortName || maisonName;
-        
-        // Render content
-        maisonContent.innerHTML = `
-            <div class="maison-detail-section">
-                <h3>${maisonShortName} - Management Dashboard</h3>
-                
-                <!-- Fiscal Year Selector -->
-                <div class="year-selection-container">
-                    <label for="maisonYearSelect_${maisonName}">Fiscal Year:</label>
-                    <select id="maisonYearSelect_${maisonName}" class="form-control year-select maison-year-select" data-maison="${maisonName}">
-                        <option value="2025">FY2025</option>
-                        <option value="2026" selected>FY2026</option>
-                        <option value="2027">FY2027</option>
-                    </select>
-                </div>
-                
-                <!-- Budget Section -->
-                <div class="maison-budget-section">
-                    <h4>Set Annual Budget for ${maisonShortName}</h4>
-                    <div class="budget-inputs-row">
-                        <div class="budget-input-group">
-                            <label>Email Budget:</label>
-                            <input type="number" id="budgetEmail_${maisonName}" class="form-control" min="0" value="0" placeholder="Enter budget">
-                        </div>
-                        <div class="budget-input-group">
-                            <label>SMS Budget:</label>
-                            <input type="number" id="budgetSms_${maisonName}" class="form-control" min="0" value="0" placeholder="Enter budget">
-                        </div>
-                        <div class="budget-input-group">
-                            <label>WhatsApp Budget:</label>
-                            <input type="number" id="budgetWhatsapp_${maisonName}" class="form-control" min="0" value="0" placeholder="Enter budget">
-                        </div>
-                        <div class="budget-input-group">
-                            <label>Contacts Budget:</label>
-                            <input type="number" id="budgetContacts_${maisonName}" class="form-control" min="0" value="0" placeholder="Enter budget">
-                        </div>
-                    </div>
-                    <button class="submit-budget-btn" data-maison="${maisonName}">Submit Budget</button>
-                    <p id="budgetMessage_${maisonName}" class="message"></p>
-                </div>
-                
-                <!-- Forecast and Actual Tables -->
-                <div class="forecast-actual-container">
-                    <div class="forecast-table-wrapper">
-                        <h4>Monthly Forecast (Submitted by Maison)</h4>
-                        <div id="forecastTable_${maisonName}"></div>
-                    </div>
-                    
-                    <div class="actual-table-wrapper">
-                        <h4>Monthly Actual Usage (Recorded by SFMC Operator)</h4>
-                        <div id="actualTable_${maisonName}"></div>
-                    </div>
-                </div>
-            </div>
-        `;
-        
-        // Load data for this maison
-        loadMaisonData(maisonName, currentAdminYear);
     };
 
-    // Load Maison Data
-    const loadMaisonData = async (maisonName, year) => {
-        // Load budget
-        const budgetRes = await api('getAnnualBudgetByMaison', { maisonName: maisonName, year: year });
-        
-        if (budgetRes.success && budgetRes.data) {
-            const budget = budgetRes.data;
-            const emailInput = $(`budgetEmail_${maisonName}`);
-            const smsInput = $(`budgetSms_${maisonName}`);
-            const whatsappInput = $(`budgetWhatsapp_${maisonName}`);
-            const contactsInput = $(`budgetContacts_${maisonName}`);
-            
-            if (emailInput) emailInput.value = budget.EmailBudget || 0;
-            if (smsInput) smsInput.value = budget.SMSBudget || 0;
-            if (whatsappInput) whatsappInput.value = budget.WhatsAppBudget || 0;
-            if (contactsInput) contactsInput.value = budget.ContactsBudget || 0;
-        }
-        
-        // Load forecast data
-        renderForecastTable(maisonName, year);
-        
-        // Load actual data
-        renderActualTable(maisonName, year);
-    };
-
-    // Render Forecast Table for Maison
-    const renderForecastTable = async (maisonName, year) => {
-        const container = $(`forecastTable_${maisonName}`);
+    // Load Admin Forecast
+    const loadAdminForecast = async () => {
+        const container = $('forecastTableContainer');
         if (!container) return;
         
         container.innerHTML = '<p style="text-align: center; padding: 20px;">Loading...</p>';
         
-        const res = await api('getSfmcDataByMaison', { maisonName: maisonName, year: year });
-        const budgetRes = await api('getAnnualBudgetByMaison', { maisonName: maisonName, year: year });
+        const res = await api('getSfmcDataByMaison', { 
+            maisonName: adminForecastMaison, 
+            year: adminGlobalYear 
+        });
         
-        const months = getFiscalYearMonths(year);
+        const budgetRes = await api('getAnnualBudgetByMaison', { 
+            maisonName: adminForecastMaison, 
+            year: adminGlobalYear 
+        });
         
-        // Build data map
+        const months = getFiscalYearMonths(adminGlobalYear);
+        
         const dataMap = {};
         if (res.success && res.data) {
             res.data.forEach(record => {
@@ -648,12 +469,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const budget = budgetRes.success && budgetRes.data ? budgetRes.data : 
             { EmailBudget: 0, SMSBudget: 0, WhatsAppBudget: 0, ContactsBudget: 0 };
         
-        // Build table
-        let html = '<table class="forecast-actual-table"><thead><tr>';
+        const maisonShortName = getMaisonShortName(adminForecastMaison);
+        
+        let html = `<h4 style="padding: 15px; margin: 0; background-color: #e0f2f7; border-bottom: 1px solid #ddd;">${maisonShortName} - Monthly Forecast - FY${adminGlobalYear}</h4>`;
+        html += '<table><thead><tr>';
         html += '<th>Month</th><th>Email</th><th>SMS</th><th>WhatsApp</th><th>Contacts</th><th>Status</th><th>Action</th>';
         html += '</tr></thead><tbody>';
         
-        let ytdEmail = 0, ytdSms = 0, ytdWhatsapp = 0, ytdContacts = 0;
+        let annualForecast = { email: 0, sms: 0, whatsapp: 0, contacts: 0 };
         
         months.forEach(({ year: y, month: m }) => {
             const key = formatMonth(y, m);
@@ -671,16 +494,16 @@ document.addEventListener('DOMContentLoaded', () => {
             const contactsVal = data ? data.ContactsCount : '-';
             
             if (data && data.ApprovalStatus === 'Approved') {
-                ytdEmail += parseInt(data.EmailCount) || 0;
-                ytdSms += parseInt(data.SMSCount) || 0;
-                ytdWhatsapp += parseInt(data.WhatsAppCount) || 0;
-                ytdContacts += parseInt(data.ContactsCount) || 0;
+                annualForecast.email += parseInt(data.EmailCount) || 0;
+                annualForecast.sms += parseInt(data.SMSCount) || 0;
+                annualForecast.whatsapp += parseInt(data.WhatsAppCount) || 0;
+                annualForecast.contacts += parseInt(data.ContactsCount) || 0;
             }
             
             let actionCell = '-';
             if (data && data.ApprovalStatus === 'Pending') {
-                actionCell = `<button class="approve-button-table" data-record-id="${data.RecordId}" data-maison="${maisonName}">Approve</button>
-                              <button class="reject-button-table" data-record-id="${data.RecordId}" data-maison="${maisonName}">Reject</button>`;
+                actionCell = `<button class="approve-button-table" data-record-id="${data.RecordId}">Approve</button>
+                              <button class="reject-button-table" data-record-id="${data.RecordId}">Reject</button>`;
             }
             
             html += '<tr>';
@@ -694,27 +517,19 @@ document.addEventListener('DOMContentLoaded', () => {
             html += '</tr>';
         });
         
-        // Summary rows
-        const remaining = {
-            email: parseInt(budget.EmailBudget) - ytdEmail,
-            sms: parseInt(budget.SMSBudget) - ytdSms,
-            whatsapp: parseInt(budget.WhatsAppBudget) - ytdWhatsapp,
-            contacts: parseInt(budget.ContactsBudget) - ytdContacts
-        };
-        
-        const progress = {
-            email: budget.EmailBudget > 0 ? (ytdEmail / budget.EmailBudget * 100).toFixed(1) : '0.0',
-            sms: budget.SMSBudget > 0 ? (ytdSms / budget.SMSBudget * 100).toFixed(1) : '0.0',
-            whatsapp: budget.WhatsAppBudget > 0 ? (ytdWhatsapp / budget.WhatsAppBudget * 100).toFixed(1) : '0.0',
-            contacts: budget.ContactsBudget > 0 ? (ytdContacts / budget.ContactsBudget * 100).toFixed(1) : '0.0'
+        const variance = {
+            email: budget.EmailBudget > 0 ? ((annualForecast.email - budget.EmailBudget) / budget.EmailBudget * 100).toFixed(1) : '0.0',
+            sms: budget.SMSBudget > 0 ? ((annualForecast.sms - budget.SMSBudget) / budget.SMSBudget * 100).toFixed(1) : '0.0',
+            whatsapp: budget.WhatsAppBudget > 0 ? ((annualForecast.whatsapp - budget.WhatsAppBudget) / budget.WhatsAppBudget * 100).toFixed(1) : '0.0',
+            contacts: budget.ContactsBudget > 0 ? ((annualForecast.contacts - budget.ContactsBudget) / budget.ContactsBudget * 100).toFixed(1) : '0.0'
         };
         
         html += '<tr class="summary-row">';
-        html += '<td class="summary-label">YTD Approved</td>';
-        html += `<td class="summary-value">${ytdEmail}</td>`;
-        html += `<td class="summary-value">${ytdSms}</td>`;
-        html += `<td class="summary-value">${ytdWhatsapp}</td>`;
-        html += `<td class="summary-value">${ytdContacts}</td>`;
+        html += '<td class="summary-label">Annual Forecast</td>';
+        html += `<td class="summary-value">${annualForecast.email}</td>`;
+        html += `<td class="summary-value">${annualForecast.sms}</td>`;
+        html += `<td class="summary-value">${annualForecast.whatsapp}</td>`;
+        html += `<td class="summary-value">${annualForecast.contacts}</td>`;
         html += '<td colspan="2"></td>';
         html += '</tr>';
         
@@ -728,20 +543,11 @@ document.addEventListener('DOMContentLoaded', () => {
         html += '</tr>';
         
         html += '<tr class="summary-row">';
-        html += '<td class="summary-label">Remaining</td>';
-        html += `<td class="summary-value">${remaining.email}</td>`;
-        html += `<td class="summary-value">${remaining.sms}</td>`;
-        html += `<td class="summary-value">${remaining.whatsapp}</td>`;
-        html += `<td class="summary-value">${remaining.contacts}</td>`;
-        html += '<td colspan="2"></td>';
-        html += '</tr>';
-        
-        html += '<tr class="summary-row">';
-        html += '<td class="summary-label">Progress</td>';
-        html += `<td class="summary-value">${progress.email}%</td>`;
-        html += `<td class="summary-value">${progress.sms}%</td>`;
-        html += `<td class="summary-value">${progress.whatsapp}%</td>`;
-        html += `<td class="summary-value">${progress.contacts}%</td>`;
+        html += '<td class="summary-label">Variance</td>';
+        html += `<td class="summary-value ${getVarianceClass(variance.email)}">${variance.email >= 0 ? '+' : ''}${variance.email}%</td>`;
+        html += `<td class="summary-value ${getVarianceClass(variance.sms)}">${variance.sms >= 0 ? '+' : ''}${variance.sms}%</td>`;
+        html += `<td class="summary-value ${getVarianceClass(variance.whatsapp)}">${variance.whatsapp >= 0 ? '+' : ''}${variance.whatsapp}%</td>`;
+        html += `<td class="summary-value ${getVarianceClass(variance.contacts)}">${variance.contacts >= 0 ? '+' : ''}${variance.contacts}%</td>`;
         html += '<td colspan="2"></td>';
         html += '</tr>';
         
@@ -750,20 +556,36 @@ document.addEventListener('DOMContentLoaded', () => {
         container.innerHTML = html;
     };
 
-    // Render Actual Table for Maison
-    const renderActualTable = async (maisonName, year) => {
-        const container = $(`actualTable_${maisonName}`);
+    const getVarianceClass = (variance) => {
+        const v = parseFloat(variance);
+        if (Math.abs(v) <= 5) return 'variance-neutral';
+        return v > 0 ? 'variance-positive' : 'variance-negative';
+    };
+
+    // Load Admin Actual
+    const loadAdminActual = async () => {
+        const container = $('actualTableContainer');
         if (!container) return;
         
         container.innerHTML = '<p style="text-align: center; padding: 20px;">Loading...</p>';
         
-        const actualRes = await api('getActualDataByMaison', { maisonName: maisonName, year: year });
-        const forecastRes = await api('getSfmcDataByMaison', { maisonName: maisonName, year: year });
-        const budgetRes = await api('getAnnualBudgetByMaison', { maisonName: maisonName, year: year });
+        const actualRes = await api('getActualDataByMaison', { 
+            maisonName: adminActualMaison, 
+            year: adminGlobalYear 
+        });
         
-        const months = getFiscalYearMonths(year);
+        const forecastRes = await api('getSfmcDataByMaison', { 
+            maisonName: adminActualMaison, 
+            year: adminGlobalYear 
+        });
         
-        // Build actual data map
+        const budgetRes = await api('getAnnualBudgetByMaison', { 
+            maisonName: adminActualMaison, 
+            year: adminGlobalYear 
+        });
+        
+        const months = getFiscalYearMonths(adminGlobalYear);
+        
         const actualMap = {};
         if (actualRes.success && actualRes.data) {
             actualRes.data.forEach(record => {
@@ -773,7 +595,6 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
         
-        // Build forecast data map (only approved)
         const forecastMap = {};
         if (forecastRes.success && forecastRes.data) {
             forecastRes.data.forEach(record => {
@@ -788,14 +609,16 @@ document.addEventListener('DOMContentLoaded', () => {
         const budget = budgetRes.success && budgetRes.data ? budgetRes.data : 
             { EmailBudget: 0, SMSBudget: 0, WhatsAppBudget: 0, ContactsBudget: 0 };
         
-        // Build table
-        let html = '<table class="forecast-actual-table"><thead><tr>';
+        const maisonShortName = getMaisonShortName(adminActualMaison);
+        
+        let html = `<h4 style="padding: 15px; margin: 0; background-color: #e0f2f7; border-bottom: 1px solid #ddd;">${maisonShortName} - Monthly Actual Usage - FY${adminGlobalYear}</h4>`;
+        html += '<table><thead><tr>';
         html += '<th>Month</th><th>Email</th><th>SMS</th><th>WhatsApp</th><th>Contacts</th>';
         html += '<th>Variance vs Forecast</th><th>Recorded By</th><th>Time</th>';
         html += '</tr></thead><tbody>';
         
-        let ytdActualEmail = 0, ytdActualSms = 0, ytdActualWhatsapp = 0, ytdActualContacts = 0;
-        let ytdForecastEmail = 0, ytdForecastSms = 0, ytdForecastWhatsapp = 0, ytdForecastContacts = 0;
+        let annualActual = { email: 0, sms: 0, whatsapp: 0, contacts: 0 };
+        let annualForecast = { email: 0, sms: 0, whatsapp: 0, contacts: 0 };
         
         months.forEach(({ year: y, month: m }) => {
             const key = formatMonth(y, m);
@@ -809,33 +632,28 @@ document.addEventListener('DOMContentLoaded', () => {
             const whatsappActual = actual ? (parseInt(actual.WhatsAppUsage) || 0) : '-';
             const contactsActual = actual ? (parseInt(actual.ContactsTotal) || 0) : '-';
             
-            // Calculate cumulative forecast for contacts
             if (forecast) {
-                ytdForecastEmail += parseInt(forecast.EmailCount) || 0;
-                ytdForecastSms += parseInt(forecast.SMSCount) || 0;
-                ytdForecastWhatsapp += parseInt(forecast.WhatsAppCount) || 0;
-                ytdForecastContacts += parseInt(forecast.ContactsCount) || 0;
+                annualForecast.email += parseInt(forecast.EmailCount) || 0;
+                annualForecast.sms += parseInt(forecast.SMSCount) || 0;
+                annualForecast.whatsapp += parseInt(forecast.WhatsAppCount) || 0;
+                annualForecast.contacts += parseInt(forecast.ContactsCount) || 0;
             }
             
-            // Accumulate actual
             if (actual) {
-                ytdActualEmail += parseInt(actual.EmailUsage) || 0;
-                ytdActualSms += parseInt(actual.SMSUsage) || 0;
-                ytdActualWhatsapp += parseInt(actual.WhatsAppUsage) || 0;
-                // Contacts is cumulative, so take the latest value
-                ytdActualContacts = parseInt(actual.ContactsTotal) || 0;
+                annualActual.email += parseInt(actual.EmailUsage) || 0;
+                annualActual.sms += parseInt(actual.SMSUsage) || 0;
+                annualActual.whatsapp += parseInt(actual.WhatsAppUsage) || 0;
+                annualActual.contacts = parseInt(actual.ContactsTotal) || 0;
             }
             
-            // Calculate variance
             let varianceText = '-';
             if (actual && forecast) {
                 const varEmail = calcVariancePercent(parseInt(actual.EmailUsage) || 0, parseInt(forecast.EmailCount) || 0);
                 const varSms = calcVariancePercent(parseInt(actual.SMSUsage) || 0, parseInt(forecast.SMSCount) || 0);
                 const varWhatsapp = calcVariancePercent(parseInt(actual.WhatsAppUsage) || 0, parseInt(forecast.WhatsAppCount) || 0);
-                // For contacts, compare cumulative values
-                const varContacts = calcVariancePercent(parseInt(actual.ContactsTotal) || 0, ytdForecastContacts);
+                const varContacts = calcVariancePercent(parseInt(actual.ContactsTotal) || 0, annualForecast.contacts);
                 
-                varianceText = `E: ${varEmail}% / S: ${varSms}% / W: ${varWhatsapp}% / C: ${varContacts}%`;
+                varianceText = `${varEmail}% / ${varSms}% / ${varWhatsapp}% / ${varContacts}%`;
             }
             
             const recordedBy = actual ? actual.RecordedBy : '-';
@@ -853,43 +671,42 @@ document.addEventListener('DOMContentLoaded', () => {
             html += '</tr>';
         });
         
-        // Summary rows
         const varianceVsForecast = {
-            email: calcVariancePercent(ytdActualEmail, ytdForecastEmail),
-            sms: calcVariancePercent(ytdActualSms, ytdForecastSms),
-            whatsapp: calcVariancePercent(ytdActualWhatsapp, ytdForecastWhatsapp),
-            contacts: calcVariancePercent(ytdActualContacts, ytdForecastContacts)
+            email: calcVariancePercent(annualActual.email, annualForecast.email),
+            sms: calcVariancePercent(annualActual.sms, annualForecast.sms),
+            whatsapp: calcVariancePercent(annualActual.whatsapp, annualForecast.whatsapp),
+            contacts: calcVariancePercent(annualActual.contacts, annualForecast.contacts)
         };
         
         const remaining = {
-            email: parseInt(budget.EmailBudget) - ytdActualEmail,
-            sms: parseInt(budget.SMSBudget) - ytdActualSms,
-            whatsapp: parseInt(budget.WhatsAppBudget) - ytdActualWhatsapp,
-            contacts: parseInt(budget.ContactsBudget) - ytdActualContacts
+            email: parseInt(budget.EmailBudget) - annualActual.email,
+            sms: parseInt(budget.SMSBudget) - annualActual.sms,
+            whatsapp: parseInt(budget.WhatsAppBudget) - annualActual.whatsapp,
+            contacts: parseInt(budget.ContactsBudget) - annualActual.contacts
         };
         
         const utilization = {
-            email: budget.EmailBudget > 0 ? (ytdActualEmail / budget.EmailBudget * 100).toFixed(1) : '0.0',
-            sms: budget.SMSBudget > 0 ? (ytdActualSms / budget.SMSBudget * 100).toFixed(1) : '0.0',
-            whatsapp: budget.WhatsAppBudget > 0 ? (ytdActualWhatsapp / budget.WhatsAppBudget * 100).toFixed(1) : '0.0',
-            contacts: budget.ContactsBudget > 0 ? (ytdActualContacts / budget.ContactsBudget * 100).toFixed(1) : '0.0'
+            email: budget.EmailBudget > 0 ? (annualActual.email / budget.EmailBudget * 100).toFixed(1) : '0.0',
+            sms: budget.SMSBudget > 0 ? (annualActual.sms / budget.SMSBudget * 100).toFixed(1) : '0.0',
+            whatsapp: budget.WhatsAppBudget > 0 ? (annualActual.whatsapp / budget.WhatsAppBudget * 100).toFixed(1) : '0.0',
+            contacts: budget.ContactsBudget > 0 ? (annualActual.contacts / budget.ContactsBudget * 100).toFixed(1) : '0.0'
         };
         
         html += '<tr class="summary-row">';
-        html += '<td class="summary-label">YTD Actual</td>';
-        html += `<td class="summary-value">${ytdActualEmail}</td>`;
-        html += `<td class="summary-value">${ytdActualSms}</td>`;
-        html += `<td class="summary-value">${ytdActualWhatsapp}</td>`;
-        html += `<td class="summary-value">${ytdActualContacts}</td>`;
+        html += '<td class="summary-label">Annual Actual</td>';
+        html += `<td class="summary-value">${annualActual.email}</td>`;
+        html += `<td class="summary-value">${annualActual.sms}</td>`;
+        html += `<td class="summary-value">${annualActual.whatsapp}</td>`;
+        html += `<td class="summary-value">${annualActual.contacts}</td>`;
         html += '<td colspan="3"></td>';
         html += '</tr>';
         
         html += '<tr class="summary-row">';
-        html += '<td class="summary-label">YTD Forecast</td>';
-        html += `<td class="summary-value">${ytdForecastEmail}</td>`;
-        html += `<td class="summary-value">${ytdForecastSms}</td>`;
-        html += `<td class="summary-value">${ytdForecastWhatsapp}</td>`;
-        html += `<td class="summary-value">${ytdForecastContacts}</td>`;
+        html += '<td class="summary-label">Annual Forecast</td>';
+        html += `<td class="summary-value">${annualForecast.email}</td>`;
+        html += `<td class="summary-value">${annualForecast.sms}</td>`;
+        html += `<td class="summary-value">${annualForecast.whatsapp}</td>`;
+        html += `<td class="summary-value">${annualForecast.contacts}</td>`;
         html += '<td colspan="3"></td>';
         html += '</tr>';
         
@@ -939,7 +756,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const variance = ((actual - forecast) / forecast * 100).toFixed(1);
         return variance >= 0 ? `+${variance}` : variance;
     };
-
     // ===== SFMC Operator View Functions =====
 
     const initOperatorView = async () => {
@@ -1289,7 +1105,6 @@ document.addEventListener('DOMContentLoaded', () => {
             $('userListContainer').innerHTML = `<p class="error-text">Failed to load users: ${res.message || 'Unknown'}</p>`;
         }
     };
-
     // ===== Approval Modal for Admin =====
     let currentApprovalRecordId = null;
     let currentApprovalData = null;
@@ -1314,7 +1129,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const modal = $('approvalModal');
         
         $('approvalRecordId').value = recordId;
-        $('approvalMaison').textContent = MAISONS.find(m => m.name === record.MaisonName)?.shortName || record.MaisonName;
+        $('approvalMaison').textContent = getMaisonShortName(record.MaisonName);
         $('approvalPeriod').textContent = `FY${record.Year} - ${getMonthName(String(record.Month).padStart(2, '0'))} (${record.Year}-${String(record.Month).padStart(2, '0')})`;
         $('approvalSubmittedBy').textContent = record.SubmittedBy || 'N/A';
         $('approvalTimestamp').textContent = fmt(record.Timestamp);
@@ -1367,10 +1182,8 @@ document.addEventListener('DOMContentLoaded', () => {
             alert(`Submission ${status.toLowerCase()} successfully!`);
             closeApprovalModal();
             
-            // Refresh the current maison tab
-            if (currentAdminTab !== 'overview') {
-                loadMaisonData(currentAdminTab, currentAdminYear);
-            }
+            // Refresh forecast table
+            loadAdminForecast();
             
             // Refresh history
             loadTable('adminHistory', $('adminHistoryTableContainer'));
@@ -1426,7 +1239,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             const applicantEmail = emailRes.email.trim();
             const statusText = status === 'Approved' ? 'Approved' : 'Rejected';
-            const maisonShortName = MAISONS.find(m => m.name === maisonName)?.shortName || maisonName;
+            const maisonShortName = getMaisonShortName(maisonName);
             const subject = `SFMC Data Submission ${statusText} - ${maisonShortName} (${year}-${String(month).padStart(2, '0')})`;
             const body = buildNotificationBody(submittedBy, status, maisonName, year, month, dataDetails, timestamp, maisonNotes, adminNotes);
 
@@ -1453,8 +1266,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 updCnt();
             }
 
-            // Switch to overview tab to show email broadcast
-            switchAdminTab('overview');
+            // Scroll to email broadcast section
             $('emailBroadcastSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
             msg($('emailBroadcastMessage'), 'Notification email prepared. Click "Open in Outlook" to send.', true);
         } catch (error) {
@@ -1535,8 +1347,16 @@ document.addEventListener('DOMContentLoaded', () => {
                     $('maisonView').classList.add('hidden');
                     $('operatorView').classList.add('hidden');
                     
-                    currentAdminYear = currentYear;
-                    switchAdminTab('overview');
+                    // 初始化 Admin 全局状态
+                    adminGlobalYear = currentYear;
+                    adminBudgetMaison = 'ACQUA DI PARMA SRL';
+                    adminForecastMaison = 'ACQUA DI PARMA SRL';
+                    adminActualMaison = 'ACQUA DI PARMA SRL';
+                    
+                    // 加载初始数据
+                    loadAdminBudget();
+                    loadAdminForecast();
+                    loadAdminActual();
                     initBcast();
                     loadTable('adminHistory', $('adminHistoryTableContainer'));
                 } else if (currentUser.role === 'sfmc-operator') {
@@ -1649,11 +1469,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         },
 
-        exportHistoryDataButton: exportHistoryData,
-
-        overviewYearSelect: () => {
-            renderOverviewTab();
-        }
+        exportHistoryDataButton: exportHistoryData
     };
 
     // 统一绑定事件
@@ -1661,13 +1477,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const element = $(id);
         if (element) {
             element.addEventListener('click', handlers[id]);
-        } else if (id === 'overviewYearSelect') {
-            // Year select is a change event
-            const el = $(id);
-            if (el) el.addEventListener('change', handlers[id]);
         }
     });
-
     // === Maison View Event Listeners ===
 
     // Fiscal Year Tab buttons
@@ -1768,61 +1579,77 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // === Admin View Event Listeners ===
 
-    // Admin tab switching
+    // Global Year Tabs
     document.addEventListener('click', (e) => {
-        if (e.target.classList.contains('admin-tab-button')) {
-            const tabName = e.target.dataset.tab;
-            switchAdminTab(tabName);
+        if (e.target.classList.contains('global-year-tab')) {
+            const year = parseInt(e.target.dataset.year);
+            switchGlobalYear(year);
         }
     });
 
-    // Maison year select (dynamically created)
-    document.addEventListener('change', (e) => {
-        if (e.target.classList.contains('maison-year-select')) {
-            const maison = e.target.dataset.maison;
-            const year = parseInt(e.target.value);
-            currentAdminYear = year;
-            loadMaisonData(maison, year);
-        }
-    });
+    // Budget Maison Selector
+    if ($('adminBudgetMaison')) {
+        $('adminBudgetMaison').addEventListener('change', (e) => {
+            adminBudgetMaison = e.target.value;
+            loadAdminBudget();
+        });
+    }
 
-    // Submit budget button (dynamically created)
-    document.addEventListener('click', async (e) => {
-        if (e.target.classList.contains('submit-budget-btn')) {
-            const maison = e.target.dataset.maison;
-            const year = currentAdminYear;
-            
-            const emailBudget = parseInt($(`budgetEmail_${maison}`).value) || 0;
-            const smsBudget = parseInt($(`budgetSms_${maison}`).value) || 0;
-            const whatsappBudget = parseInt($(`budgetWhatsapp_${maison}`).value) || 0;
-            const contactsBudget = parseInt($(`budgetContacts_${maison}`).value) || 0;
-            
-            if (emailBudget < 0 || smsBudget < 0 || whatsappBudget < 0 || contactsBudget < 0) {
-                const msgEl = $(`budgetMessage_${maison}`);
-                msg(msgEl, 'Budgets cannot be negative!', false);
-                return;
-            }
-            
-            const res = await api('setAnnualBudget', {
-                maisonName: maison,
-                year: year,
-                emailBudget: emailBudget,
-                smsBudget: smsBudget,
-                whatsappBudget: whatsappBudget,
-                contactsBudget: contactsBudget,
-                updatedBy: currentUser.username
+    // Submit Budget Button
+    if ($('adminSubmitBudget')) {
+        $('adminSubmitBudget').addEventListener('click', submitAdminBudget);
+    }
+
+    // Forecast Maison Tabs
+    document.addEventListener('click', (e) => {
+        if (e.target.classList.contains('maison-tab') && 
+            e.target.closest('.forecast-section')) {
+            // Update active state
+            e.target.closest('.maison-tabs').querySelectorAll('.maison-tab').forEach(tab => {
+                tab.classList.remove('active');
             });
+            e.target.classList.add('active');
             
-            const msgEl = $(`budgetMessage_${maison}`);
-            msg(msgEl, res.success ? 'Budget set successfully!' : 'Failed: ' + res.message, res.success);
-            
-            if (res.success) {
-                setTimeout(() => clr(msgEl), 3000);
-                loadMaisonData(maison, year);
-                renderOverviewTab();
-            }
+            // Load new data
+            adminForecastMaison = e.target.dataset.maison;
+            loadAdminForecast();
         }
     });
+
+    // Actual Maison Tabs
+    document.addEventListener('click', (e) => {
+        if (e.target.classList.contains('maison-tab') && 
+            e.target.closest('.actual-section')) {
+            // Update active state
+            e.target.closest('.maison-tabs').querySelectorAll('.maison-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            e.target.classList.add('active');
+            
+            // Load new data
+            adminActualMaison = e.target.dataset.maison;
+            loadAdminActual();
+        }
+    });
+
+    // Collapsible Headers
+    if ($('emailBroadcastHeader')) {
+        $('emailBroadcastHeader').addEventListener('click', () => {
+            const content = $('emailBroadcastContent');
+            content.classList.toggle('hidden');
+            const header = $('emailBroadcastHeader').querySelector('h3');
+            header.textContent = content.classList.contains('hidden') ? '▶ Email Broadcast' : '▼ Email Broadcast';
+        });
+    }
+
+    if ($('historyLogHeader')) {
+        $('historyLogHeader').addEventListener('click', () => {
+            const content = $('historyLogContent');
+            content.classList.toggle('hidden');
+            const header = $('historyLogHeader').querySelector('h3');
+            header.textContent = content.classList.contains('hidden') ? '▶ Historical Actions Log' : '▼ Historical Actions Log';
+        });
+    }
 
     // Approve/Reject buttons in forecast table
     document.addEventListener('click', async (e) => {
@@ -1920,4 +1747,3 @@ document.addEventListener('DOMContentLoaded', () => {
     // 初始化
     showPage($('loginPage'));
 });
-

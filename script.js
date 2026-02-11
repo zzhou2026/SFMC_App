@@ -145,7 +145,7 @@ const renderMonthlyDataTable = async () => {
         const buttonClass = existingData ? 'action-button-table update-button' : 'action-button-table';
         
         // Status cell
-        let statusCell = `<span class="status-cell ${statusClass}">${status}</span>`;
+        let statusCell = `<span class="${statusClass}"><span class="status-badge-cell">${status}</span></span>`;
         
         // Notes cell
         let notesCell = '-';
@@ -414,9 +414,11 @@ const handleModalSubmit = async () => {
                         v = v ?? '';
                     } else {
                         const sc = { Pending: 'status-pending', Approved: 'status-approved', Rejected: 'status-rejected' }[v] || 'status-pending';
-                        v = `<span class="status-badge ${sc}">${v}</span>`;
+                        // 使用新的 status-badge-cell 结构
+                        v = `<span class="${sc}"><span class="status-badge-cell">${v}</span></span>`;
                     }
                 }
+                
                 
                 if ((h.key === 'MaisonNotes' || h.key === 'AdminNotes') && v && v.length > 50) {
                     v = `<span title="${v}">${v.substring(0, 50)}...</span>`;

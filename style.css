@@ -907,14 +907,31 @@ table tr:hover {
     padding-left: 15px;
 }
 
-.status-cell {
+/* --- Status Badges --- */
+.status-badge-cell {
+    display: inline-block;
+    padding: 4px 10px; /* 调整内边距使徽章更美观 */
+    border-radius: 15px; /* 更圆润的边角 */
+    font-size: 0.8em; /* 字体大小 */
     font-weight: bold;
-    font-size: 0.85em;
+    color: white; /* 所有徽章文字都是白色 */
+    text-align: center;
+    white-space: nowrap;
+    min-width: 70px; /* 确保最小宽度，保持视觉一致性 */
 }
 
-.status-approved { color: var(--success-color); }
-.status-pending { color: var(--warning-color); }
-.status-rejected { color: var(--danger-color); }
+.status-approved .status-badge-cell { 
+    background-color: var(--success-color); /* 绿色背景 */
+}
+
+.status-pending .status-badge-cell { 
+    background-color: var(--gray-color); /* 灰色背景 */
+}
+
+.status-rejected .status-badge-cell { 
+    background-color: var(--danger-color); /* 红色背景 */
+}
+
 
 .status-info-icon {
     cursor: pointer;

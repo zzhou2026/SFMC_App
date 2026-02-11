@@ -174,7 +174,39 @@ const renderMonthlyDataTable = async () => {
         `;
     });
     
+    // Calculate totals for Approved data only
+    let totalEmail = 0;
+    let totalSms = 0;
+    let totalWhatsapp = 0;
+    let totalContacts = 0;
+    
+    Object.values(dataMap).forEach(data => {
+        if (data.ApprovalStatus === 'Approved') {
+            totalEmail += parseInt(data.EmailCount) || 0;
+            totalSms += parseInt(data.SMSCount) || 0;
+            totalWhatsapp += parseInt(data.WhatsAppCount) || 0;
+            totalContacts += parseInt(data.ContactsCount) || 0;
+        }
+    });
+    
+    const grandTotal = totalEmail + totalSms + totalWhatsapp + totalContacts;
+    
+    // Add total row
+    html += `
+        <tr class="total-row">
+            <td class="total-cell"><strong>Total (Approved)</strong></td>
+            <td class="total-value"><strong>${totalEmail}</strong></td>
+            <td class="total-value"><strong>${totalSms}</strong></td>
+            <td class="total-value"><strong>${totalWhatsapp}</strong></td>
+            <td class="total-value"><strong>${totalContacts}</strong></td>
+            <td class="total-cell">-</td>
+            <td class="total-cell">-</td>
+            <td class="total-grand"><strong>Grand Total: ${grandTotal}</strong></td>
+        </tr>
+    `;
+    
     tbody.innerHTML = html;
+
     
     // Cache the data
     monthlyDataCache[currentFiscalYear] = dataMap;

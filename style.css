@@ -872,6 +872,36 @@ table tr:hover {
     color: #666;
     cursor: not-allowed;
 }
+/* === Total Row Styles === */
+.monthly-data-table .total-row {
+    background-color: #e0f2f7;
+    font-weight: bold;
+    border-top: 2px solid #00796b;
+}
+
+.monthly-data-table .total-row:hover {
+    background-color: #e0f2f7;
+}
+
+.monthly-data-table .total-cell {
+    text-align: center;
+    font-weight: bold;
+    color: #004d40;
+}
+
+.monthly-data-table .total-value {
+    text-align: center;
+    font-weight: bold;
+    color: #00796b;
+    font-size: 0.95em;
+}
+
+.monthly-data-table .total-grand {
+    text-align: center;
+    font-weight: bold;
+    color: #d32f2f;
+    font-size: 1em;
+}
 
 .month-cell {
     font-weight: bold;

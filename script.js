@@ -772,7 +772,8 @@ const openAdminNotesModal = async (year, month, maisonName) => {
     if (!res.success || !res.data) return;
     
     const formattedMonth = String(month).padStart(2, '0');
-    const record = res.data.find(r => r.Year == year && String(r.Month).padStart(2, '0') === formattedMonth);
+    const record = res.data.find(r => r.Year == year && parseInt(r.Month) === parseInt(month));
+
     
     if (!record) return;
     

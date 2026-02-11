@@ -112,14 +112,17 @@ const renderMonthlyDataTable = async () => {
     // Fetch existing data for this fiscal year
     const res = await api('getMaisonSfmcData', { submittedBy: currentUser.username });
     
-    // Build data map for quick lookup
-    const dataMap = {};
-    if (res.success && res.data) {
-        res.data.forEach(record => {
-            const key = `${record.Year}-${record.Month}`;
-            dataMap[key] = record;
-        });
-    }
+        // Build data map for quick lookup
+        const dataMap = {};
+        if (res.success && res.data) {
+            res.data.forEach(record => {
+                // 这里是关键的改动
+                const formattedMonth = String(record.Month).padStart(2, '0'); // 确保月份是两位数
+                const key = `${record.Year}-${formattedMonth}`;
+                dataMap[key] = record;
+            });
+        }
+    
     
     // Render table rows
     let html = '';

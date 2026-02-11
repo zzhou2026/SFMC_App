@@ -899,9 +899,10 @@ table tr:hover {
 .monthly-data-table .total-grand {
     text-align: center;
     font-weight: bold;
-    color: #d32f2f;
+    color: #004d40;
     font-size: 1em;
 }
+
 
 .month-cell {
     font-weight: bold;

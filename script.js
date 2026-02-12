@@ -292,10 +292,13 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // 确保 month 是两位数格式
         const formattedMonth = String(month).padStart(2, '0');
-    
         const key = `${year}-${formattedMonth}`;
         
+        alert('Looking for key: ' + key + '\nCache keys: ' + Object.keys(adminForecastDataCache).join(', '));
+        
         const data = adminForecastDataCache[key];
+        
+        alert('Data found: ' + (data ? 'YES' : 'NO'));
         
         if (!data) {
             alert(`No data found.\nLooking for: ${key}\nCache keys: ${Object.keys(adminForecastDataCache).join(', ')}`);

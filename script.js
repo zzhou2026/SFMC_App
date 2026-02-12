@@ -288,49 +288,55 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const openAdminForecastNotesModal = (maison, year, month) => {
-        alert('Function called! Maison: ' + maison + ', Year: ' + year + ', Month: ' + month);
-        
         // 确保 month 是两位数格式
         const formattedMonth = String(month).padStart(2, '0');
         const key = `${year}-${formattedMonth}`;
         
-        alert('Looking for key: ' + key + '\nCache keys: ' + Object.keys(adminForecastDataCache).join(', '));
-        
         const data = adminForecastDataCache[key];
         
-        alert('Data found: ' + (data ? 'YES' : 'NO'));
-        
         if (!data) {
-            alert(`No data found.\nLooking for: ${key}\nCache keys: ${Object.keys(adminForecastDataCache).join(', ')}`);
+            alert(`No data found for this period.\n\nLooking for: ${key}\nAvailable keys: ${Object.keys(adminForecastDataCache).join(', ')}`);
             return;
         }
         
         const modal = $('notesViewModal');
+        if (!modal) {
+            alert('Modal element not found!');
+            return;
+        }
+        
         const title = $('notesViewTitle');
         const maisonShortName = getMaisonShortName(maison);
         
-        title.textContent = `Notes for ${maisonShortName} - ${key}`;
+        if (title) {
+            title.textContent = `Notes for ${maisonShortName} - ${key}`;
+        }
         
         const maisonNotesDisplay = $('maisonNotesDisplay');
-        if (data.MaisonNotes && String(data.MaisonNotes).trim()) {
-            maisonNotesDisplay.textContent = data.MaisonNotes;
-        } else {
-            maisonNotesDisplay.textContent = '';
+        if (maisonNotesDisplay) {
+            if (data.MaisonNotes && String(data.MaisonNotes).trim()) {
+                maisonNotesDisplay.textContent = data.MaisonNotes;
+            } else {
+                maisonNotesDisplay.textContent = '';
+            }
         }
         
         const adminNotesSection = $('adminNotesViewSection');
         const adminNotesDisplay = $('adminNotesViewDisplay');
         
-        if (data.AdminNotes && String(data.AdminNotes).trim()) {
-            adminNotesSection.classList.remove('hidden');
-            adminNotesDisplay.textContent = data.AdminNotes;
-        } else {
-            adminNotesSection.classList.add('hidden');
-            adminNotesDisplay.textContent = '';
+        if (adminNotesSection && adminNotesDisplay) {
+            if (data.AdminNotes && String(data.AdminNotes).trim()) {
+                adminNotesSection.classList.remove('hidden');
+                adminNotesDisplay.textContent = data.AdminNotes;
+            } else {
+                adminNotesSection.classList.add('hidden');
+                adminNotesDisplay.textContent = '';
+            }
         }
         
         modal.classList.remove('hidden');
     };
+    
     
     
     const switchFiscalYearTab = (fiscalYear) => {

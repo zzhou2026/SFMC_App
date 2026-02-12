@@ -288,17 +288,14 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const openAdminForecastNotesModal = (maison, year, month) => {
-        const key = formatMonth(year, month);
+        // 确保 month 是两位数格式
+        const formattedMonth = String(month).padStart(2, '0');
+        const key = `${year}-${formattedMonth}`;
+        
         const data = adminForecastDataCache[key];
         
         if (!data) {
-            alert('No data found for this period.');
-            return;
-        }
-    
-        
-        if (!data) {
-            alert('No data found for this period.');
+            alert(`No data found.\nLooking for: ${key}\nCache keys: ${Object.keys(adminForecastDataCache).join(', ')}`);
             return;
         }
         
@@ -306,10 +303,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const title = $('notesViewTitle');
         const maisonShortName = getMaisonShortName(maison);
         
-        title.textContent = `Notes for ${maisonShortName} - ${formatMonth(year, month)}`;
+        title.textContent = `Notes for ${maisonShortName} - ${key}`;
         
         const maisonNotesDisplay = $('maisonNotesDisplay');
-        if (data.MaisonNotes && data.MaisonNotes.trim()) {
+        if (data.MaisonNotes && String(data.MaisonNotes).trim()) {
             maisonNotesDisplay.textContent = data.MaisonNotes;
         } else {
             maisonNotesDisplay.textContent = '';
@@ -318,7 +315,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const adminNotesSection = $('adminNotesViewSection');
         const adminNotesDisplay = $('adminNotesViewDisplay');
         
-        if (data.AdminNotes && data.AdminNotes.trim()) {
+        if (data.AdminNotes && String(data.AdminNotes).trim()) {
             adminNotesSection.classList.remove('hidden');
             adminNotesDisplay.textContent = data.AdminNotes;
         } else {
@@ -328,6 +325,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         modal.classList.remove('hidden');
     };
+    
     
     const switchFiscalYearTab = (fiscalYear) => {
         currentFiscalYear = fiscalYear;
@@ -507,7 +505,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 dataMap[key] = record;
             });
         }
-        
+        // Cache the data for notes viewing
+adminForecastDataCache = dataMap;
+
         const budget = budgetRes.success && budgetRes.data ? budgetRes.data : 
             { EmailBudget: 0, SMSBudget: 0, WhatsAppBudget: 0, ContactsBudget: 0 };
         
@@ -855,9 +855,6 @@ html += '</tr>';
             });
         }
         
-// Cache the data for notes viewing
-adminForecastDataCache = dataMap;
-
 
         let html = '';
         months.forEach(({ year, month }) => {

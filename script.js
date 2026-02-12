@@ -532,7 +532,7 @@ html += '</tr></thead><tbody>';
 let notesCell = '-';
 if (row.MaisonNotes || row.AdminNotes) {
     const noteDataId = `note-${row.MaisonName}-${row.Year}-${String(row.Month).padStart(2, '0')}`;
-    notesCell = `<a href="#" class="notes-link admin-notes-link" data-note-id="${noteDataId}">See</a>`;
+    notesCell = `<a href="javascript:void(0);" class="notes-link admin-notes-link" data-note-id="${noteDataId}">See</a>`;
     
     // 将完整数据存储到缓存
     if (!window.adminNotesCache) window.adminNotesCache = {};
@@ -545,6 +545,7 @@ if (row.MaisonNotes || row.AdminNotes) {
     };
 }
 html += `<td>${notesCell}</td>`;
+
 
 
             
@@ -2124,8 +2125,6 @@ document.addEventListener('click', (e) => {
 // Admin Notes link click handler (for Overview)
 document.addEventListener('click', (e) => {
     if (e.target.classList.contains('admin-notes-link')) {
-        e.preventDefault(); // 阻止默认跳转行为
-        
         const noteId = e.target.dataset.noteId;
         
         if (window.adminNotesCache && window.adminNotesCache[noteId]) {
@@ -2140,6 +2139,7 @@ document.addEventListener('click', (e) => {
         }
     }
 });
+
 
 
 // Fiscal Year Tab buttons for Actual (Maison view)

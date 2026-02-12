@@ -653,6 +653,20 @@ const closeNotesViewModal = () => {
     const modal = $('notesViewModal');
     modal.classList.add('hidden');
 };
+// === Open Admin Overview Notes Modal ===
+const openAdminOverviewNotesModal = (notes) => {
+    const modal = $('adminOverviewNotesModal');
+    const notesDisplay = $('adminOverviewNotesDisplay');
+    
+    notesDisplay.textContent = notes || 'No notes available.';
+    modal.classList.remove('hidden');
+};
+
+// === Close Admin Overview Notes Modal ===
+const closeAdminOverviewNotesModal = () => {
+    const modal = $('adminOverviewNotesModal');
+    modal.classList.add('hidden');
+};
 
 // === Tab Switching ===
 const switchFiscalYearTab = (fiscalYear) => {
@@ -858,9 +872,15 @@ const handleModalSubmit = async () => {
                 
                 
                 
-                if ((h.key === 'MaisonNotes' || h.key === 'AdminNotes') && v && v.length > 50) {
+                if (h.key === 'MaisonNotes' && type === 'admin' && v && v.trim()) {
+                    const recordId = row.RecordId || '';
+                    v = `<a href="javascript:void(0)" class="notes-link admin-overview-notes-link" data-record-id="${recordId}" data-notes="${v.replace(/"/g, '&quot;')}">See</a>`;
+                } else if ((h.key === 'MaisonNotes' || h.key === 'AdminNotes') && v && v.length > 50) {
                     v = `<span title="${v}">${v.substring(0, 50)}...</span>`;
+                } else if (h.key === 'MaisonNotes' && type === 'admin' && (!v || !v.trim())) {
+                    v = '-';
                 }
+                
                 
                 return `<td>${v ?? ''}</td>`;
             }).join('');
@@ -1811,11 +1831,17 @@ document.addEventListener('click', (e) => {
 // Notes link click handler
 document.addEventListener('click', (e) => {
     if (e.target.classList.contains('notes-link')) {
-        const year = parseInt(e.target.dataset.year);
-        const month = e.target.dataset.month;
-        openNotesViewModal(year, month);
+        if (e.target.classList.contains('admin-overview-notes-link')) {
+            const notes = e.target.dataset.notes;
+            openAdminOverviewNotesModal(notes);
+        } else {
+            const year = parseInt(e.target.dataset.year);
+            const month = e.target.dataset.month;
+            openNotesViewModal(year, month);
+        }
     }
 });
+
 // Fiscal Year Tab buttons for Actual (Maison view)
 document.addEventListener('click', (e) => {
     if (e.target.classList.contains('fy-tab-button-actual')) {
@@ -1902,6 +1928,22 @@ if ($('notesViewModal')) {
     // Operator Modal close button
 if ($('operatorModalClose')) {
     $('operatorModalClose').addEventListener('click', closeOperatorModal);
+}
+// Admin Overview Notes Modal close handlers
+if ($('adminOverviewNotesClose')) {
+    $('adminOverviewNotesClose').addEventListener('click', closeAdminOverviewNotesModal);
+}
+
+if ($('adminOverviewNotesCloseButton')) {
+    $('adminOverviewNotesCloseButton').addEventListener('click', closeAdminOverviewNotesModal);
+}
+
+if ($('adminOverviewNotesModal')) {
+    $('adminOverviewNotesModal').addEventListener('click', (e) => {
+        if (e.target.id === 'adminOverviewNotesModal') {
+            closeAdminOverviewNotesModal();
+        }
+    });
 }
 
 // Operator Modal cancel button

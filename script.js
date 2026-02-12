@@ -945,7 +945,9 @@ html += '</tr>';
             $('operatorNotesInput').value = '';
             $('operatorNotesCharCount').textContent = '0/200';
         }
-        
+        alert('About to show modal. Modal element exists: ' + (modal ? 'YES' : 'NO'));
+modal.classList.remove('hidden');
+
         modal.classList.remove('hidden');
     };
 

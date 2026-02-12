@@ -145,7 +145,6 @@ const renderOperatorDataTable = async () => {
             const smsVal = existingData ? existingData.SMSUsage : '';
             const whatsappVal = existingData ? existingData.WhatsAppUsage : '';
             const contactsVal = existingData ? existingData.ContactsTotal : '';
-            const notesVal = existingData ? (existingData.Notes || '-') : '-';
             
             const buttonText = existingData ? 'Update' : 'Submit';
             const buttonClass = existingData ? 'action-button-table update-button' : 'action-button-table';
@@ -158,7 +157,6 @@ const renderOperatorDataTable = async () => {
                     <td>${smsVal}</td>
                     <td>${whatsappVal}</td>
                     <td>${contactsVal}</td>
-                    <td>${notesVal}</td>
                     <td>
                         <button class="${buttonClass} operator-action-button" 
                                 data-maison="${maison}"
@@ -205,10 +203,6 @@ const openOperatorModal = async (maison, year, month) => {
     $('operatorModalSmsInput').value = existingData ? existingData.SMSUsage : '';
     $('operatorModalWhatsappInput').value = existingData ? existingData.WhatsAppUsage : '';
     $('operatorModalContactsInput').value = existingData ? existingData.ContactsTotal : '';
-    $('operatorModalNotesInput').value = existingData ? (existingData.Notes || '') : '';
-    
-    const notesLength = $('operatorModalNotesInput').value.length;
-    $('operatorModalNotesCharCount').textContent = `${notesLength}/200`;
     
     $('operatorModalSubmitButton').textContent = existingData ? 'Update' : 'Submit';
     
@@ -224,8 +218,6 @@ const closeOperatorModal = () => {
     $('operatorModalSmsInput').value = '';
     $('operatorModalWhatsappInput').value = '';
     $('operatorModalContactsInput').value = '';
-    $('operatorModalNotesInput').value = '';
-    $('operatorModalNotesCharCount').textContent = '0/200';
 };
 
 // === Handle Operator Modal Submit ===
@@ -237,7 +229,6 @@ const handleOperatorModalSubmit = async () => {
     const smsUsage = $('operatorModalSmsInput').value.trim();
     const whatsappUsage = $('operatorModalWhatsappInput').value.trim();
     const contactsTotal = $('operatorModalContactsInput').value.trim();
-    const notes = $('operatorModalNotesInput').value.trim();
     
     if (!emailUsage || !smsUsage || !whatsappUsage || !contactsTotal) {
         alert('Please fill in all four metrics!');
@@ -261,7 +252,6 @@ const handleOperatorModalSubmit = async () => {
     confirmMsg += `SMS: ${smsNum}\n`;
     confirmMsg += `WhatsApp: ${whatsappNum}\n`;
     confirmMsg += `Contacts: ${contactsNum}\n`;
-    if (notes) confirmMsg += `\nNotes: ${notes}\n`;
     confirmMsg += '\nProceed?';
     
     if (!confirm(confirmMsg)) return;
@@ -274,8 +264,7 @@ const handleOperatorModalSubmit = async () => {
         smsUsage: smsNum,
         whatsappUsage: whatsappNum,
         contactsTotal: contactsNum,
-        recordedBy: currentUser.username,
-        notes: notes
+        recordedBy: currentUser.username
     });
     
     if (res.success) {
@@ -519,7 +508,7 @@ const renderMonthlyDataTable = async () => {
     const tbody = $('monthlyDataTableBody');
     if (!tbody) return;
     
-    tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 20px;">Loading...</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 20px;">Loading...</td></tr>';
     
     const months = getFiscalYearMonths(currentFiscalYear);
     
@@ -1934,18 +1923,6 @@ if ($('operatorSubmissionModal')) {
     });
 }
 
-// Operator Modal notes character count
-if ($('operatorModalNotesInput')) {
-    $('operatorModalNotesInput').addEventListener('input', () => {
-        const count = $('operatorModalNotesInput').value.length;
-        $('operatorModalNotesCharCount').textContent = `${count}/200`;
-        if (count >= 200) {
-            $('operatorModalNotesCharCount').style.color = '#d32f2f';
-        } else {
-            $('operatorModalNotesCharCount').style.color = '#666';
-        }
-    });
-}
 
 // Logout button for operator
 if ($('logoutButtonOperator')) {

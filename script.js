@@ -502,20 +502,20 @@ const loadMaisonForecastData = async (maison, containerSelector) => {
     };
     
     let html = '<table><thead><tr>';
-    html += '<th>Maison Name</th><th>Year</th><th>Month</th>';
-    html += '<th>Email</th><th>SMS</th><th>WhatsApp</th><th>Contacts</th>';
-    html += '<th>Submitted By</th><th>Submission Time</th>';
-    html += '<th>Approval Status</th><th>Maison Notes</th><th>Approval Action</th>';
-    html += '</tr></thead><tbody>';
+html += '<th>Maison Name</th><th>Year-Month</th>';  // 合并为一列
+html += '<th>Email</th><th>SMS</th><th>WhatsApp</th><th>Contacts</th>';
+html += '<th>Submitted By</th><th>Submission Time</th>';
+html += '<th>Approval Status</th><th>Maison Notes</th><th>Approval Action</th>';
+html += '</tr></thead><tbody>';
+
     
     if (filteredData.length === 0) {
-        html += '<tr><td colspan="12" style="text-align: center; padding: 20px; color: #666;">No data for this selection.</td></tr>';
+        html += '<tr><td colspan="11" style="text-align: center; padding: 20px; color: #666;">No data for this selection.</td></tr>';
     } else {
         filteredData.forEach(row => {
             html += '<tr>';
             html += `<td>${row.MaisonName}</td>`;
-            html += `<td>${row.Year}</td>`;
-            html += `<td>${row.Month}</td>`;
+            html += `<td>${row.Year}-${String(row.Month).padStart(2, '0')}</td>`;  // 合并显示
             html += `<td>${row.EmailCount || 0}</td>`;
             html += `<td>${row.SMSCount || 0}</td>`;
             html += `<td>${row.WhatsAppCount || 0}</td>`;
@@ -566,7 +566,7 @@ const loadMaisonForecastData = async (maison, containerSelector) => {
     }
     
     html += '<tr class="overview-total-row">';
-    html += `<td colspan="3" style="text-align: center; font-weight: bold;">TOTAL (Approved Only)</td>`;
+html += `<td colspan="2" style="text-align: center; font-weight: bold;">TOTAL (Approved Only)</td>`;
     
     html += '<td class="total-cell-multiline">';
     html += `<span class="total-main-value">${summary.totals.Email.toLocaleString()}</span>`;
@@ -646,19 +646,19 @@ const loadMaisonActualData = async (maison, containerSelector) => {
     };
     
     let html = '<table><thead><tr>';
-    html += '<th>Maison</th><th>Year</th><th>Month</th>';
-    html += '<th>Email</th><th>SMS</th><th>WhatsApp</th><th>Contacts</th>';
-    html += '<th>Recorded By</th><th>Timestamp</th>';
-    html += '</tr></thead><tbody>';
+html += '<th>Maison</th><th>Year-Month</th>';  // 合并为一列
+html += '<th>Email</th><th>SMS</th><th>WhatsApp</th><th>Contacts</th>';
+html += '<th>Recorded By</th><th>Timestamp</th>';
+html += '</tr></thead><tbody>';
+
     
     if (filteredData.length === 0) {
-        html += '<tr><td colspan="9" style="text-align: center; padding: 20px; color: #666;">No data for this selection.</td></tr>';
+        html += '<tr><td colspan="8" style="text-align: center; padding: 20px; color: #666;">No data for this selection.</td></tr>';
     } else {
         filteredData.forEach(row => {
             html += '<tr>';
             html += `<td>${row.MaisonName}</td>`;
-            html += `<td>${row.Year}</td>`;
-            html += `<td>${row.Month}</td>`;
+            html += `<td>${row.Year}-${String(row.Month).padStart(2, '0')}</td>`;  // 合并显示
             html += `<td>${row.EmailUsage || 0}</td>`;
             html += `<td>${row.SMSUsage || 0}</td>`;
             html += `<td>${row.WhatsAppUsage || 0}</td>`;
@@ -670,7 +670,8 @@ const loadMaisonActualData = async (maison, containerSelector) => {
     }
     
     html += '<tr class="overview-total-row">';
-    html += `<td colspan="3" style="text-align: center; font-weight: bold;">TOTAL</td>`;
+html += `<td colspan="2" style="text-align: center; font-weight: bold;">TOTAL</td>`;
+
     
     html += '<td class="total-cell-multiline">';
     html += `<span class="total-main-value">${summary.totals.Email.toLocaleString()}</span>`;

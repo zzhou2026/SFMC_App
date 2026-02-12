@@ -1244,3 +1244,109 @@ table tr:hover {
     border-color: #ffc107;
     color: #856404;
 }
+/* === Info Text === */
+.info-text {
+    color: #666;
+    font-size: 0.9em;
+    font-style: italic;
+    margin: 10px 0 20px 0;
+    text-align: center;
+}
+
+/* === Operator View Specific Styles === */
+#operatorView .monthly-data-table th:first-child {
+    min-width: 120px;
+}
+
+#logoutButtonOperator {
+    background-color: #d32f2f;
+    margin-bottom: 20px;
+}
+
+#logoutButtonOperator:hover {
+    background-color: #b71c1c;
+}
+
+/* === Actual Data Table for Maison (Read-only) === */
+#actualDataTable input[type="number"] {
+    background-color: #f5f5f5;
+    border-color: #e0e0e0;
+    color: #666;
+    cursor: not-allowed;
+}
+
+/* === Alert Button in Tables === */
+.alert-button-table {
+    background-color: #ff9800;
+    color: white;
+    padding: 5px 12px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.85em;
+    font-weight: bold;
+    margin: 2px;
+    transition: background-color 0.2s;
+}
+
+.alert-button-table:hover {
+    background-color: #f57c00;
+}
+
+.alert-button-table:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+}
+
+/* === Total Row in Overview Tables === */
+.overview-total-row {
+    background-color: #e0f2f7;
+    font-weight: bold;
+    border-top: 3px solid #00796b;
+}
+
+.overview-total-row:hover {
+    background-color: #e0f2f7;
+}
+
+.overview-total-cell {
+    font-weight: bold;
+    color: #004d40;
+    font-size: 1em;
+}
+
+.budget-comparison-cell {
+    font-size: 0.85em;
+    line-height: 1.4;
+}
+
+.budget-line {
+    display: block;
+    margin: 2px 0;
+}
+
+.budget-label {
+    color: #666;
+    font-weight: normal;
+}
+
+.budget-value {
+    font-weight: bold;
+    color: #00796b;
+}
+
+.variance-value {
+    font-weight: bold;
+}
+
+.variance-positive {
+    color: #d32f2f;
+}
+
+.variance-negative {
+    color: #388e3c;
+}
+
+.variance-neutral {
+    color: #666;
+}

@@ -10,6 +10,11 @@ document.addEventListener('DOMContentLoaded', () => {
     let searchTerm = '';
     let currentYear = new Date().getFullYear();
     let currentFiscalYear = 2026; // Default to FY2026
+    let currentFiscalYearActual = 2026; // For Maison actual view
+let currentFiscalYearOperator = 2026; // For Operator view
+let actualDataCache = {}; // Cache for actual data
+let allMaisons = []; // Store all maison names for operator
+
     let monthlyDataCache = {}; // Cache for monthly data
 
     // ===== 工具函数 =====
@@ -100,6 +105,415 @@ const closeModal = () => {
     $('modalNotesCharCount').textContent = '0/200';
     $('modalAdminNotesSection').classList.add('hidden');
 };
+// === Load All Maisons for Operator ===
+const loadAllMaisons = async () => {
+    const res = await api('getAllUsers');
+    if (res.success && res.data) {
+        allMaisons = [...new Set(res.data
+            .filter(u => u.maisonName && u.maisonName !== 'BT' && u.maisonName !== 'SFMC')
+            .map(u => u.maisonName))];
+    }
+};
+
+// === Render Operator Data Table ===
+const renderOperatorDataTable = async () => {
+    const tbody = $('operatorDataTableBody');
+    if (!tbody) return;
+    
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 20px;">Loading...</td></tr>';
+    
+    const months = getFiscalYearMonths(currentFiscalYearOperator);
+    const res = await api('getAllActualData');
+    
+    const dataMap = {};
+    if (res.success && res.data) {
+        res.data.forEach(record => {
+            const formattedMonth = String(record.Month).padStart(2, '0');
+            const key = `${record.MaisonName}-${record.Year}-${formattedMonth}`;
+            dataMap[key] = record;
+        });
+    }
+    
+    let html = '';
+    allMaisons.forEach(maison => {
+        months.forEach(({ year, month }) => {
+            const key = `${maison}-${year}-${month}`;
+            const existingData = dataMap[key];
+            
+            const monthDisplay = `${year}-${month}`;
+            const emailVal = existingData ? existingData.EmailUsage : '';
+            const smsVal = existingData ? existingData.SMSUsage : '';
+            const whatsappVal = existingData ? existingData.WhatsAppUsage : '';
+            const contactsVal = existingData ? existingData.ContactsTotal : '';
+            const notesVal = existingData ? (existingData.Notes || '-') : '-';
+            
+            const buttonText = existingData ? 'Update' : 'Submit';
+            const buttonClass = existingData ? 'action-button-table update-button' : 'action-button-table';
+            
+            html += `
+                <tr data-maison="${maison}" data-year="${year}" data-month="${month}">
+                    <td>${maison}</td>
+                    <td class="month-cell">${monthDisplay}</td>
+                    <td>${emailVal}</td>
+                    <td>${smsVal}</td>
+                    <td>${whatsappVal}</td>
+                    <td>${contactsVal}</td>
+                    <td>${notesVal}</td>
+                    <td>
+                        <button class="${buttonClass} operator-action-button" 
+                                data-maison="${maison}"
+                                data-year="${year}" 
+                                data-month="${month}"
+                                data-has-data="${existingData ? 'true' : 'false'}">
+                            ${buttonText}
+                        </button>
+                    </td>
+                </tr>
+            `;
+        });
+    });
+    
+    tbody.innerHTML = html;
+};
+
+// === Open Operator Modal ===
+const openOperatorModal = async (maison, year, month) => {
+    const modal = $('operatorSubmissionModal');
+    const modalTitle = $('operatorModalTitle');
+    
+    $('operatorModalMaison').value = maison;
+    $('operatorModalYear').value = year;
+    $('operatorModalMonth').value = month;
+    $('operatorModalMaisonDisplay').textContent = maison;
+    
+    // Fetch existing data
+    const res = await api('getAllActualData');
+    let existingData = null;
+    
+    if (res.success && res.data) {
+        const formattedMonth = String(month).padStart(2, '0');
+        existingData = res.data.find(d => 
+            d.MaisonName === maison && 
+            d.Year == year && 
+            String(d.Month).padStart(2, '0') === formattedMonth
+        );
+    }
+    
+    modalTitle.textContent = `${existingData ? 'Update' : 'Submit'} Actual Data for ${maison} - ${formatMonth(year, month)}`;
+    
+    $('operatorModalEmailInput').value = existingData ? existingData.EmailUsage : '';
+    $('operatorModalSmsInput').value = existingData ? existingData.SMSUsage : '';
+    $('operatorModalWhatsappInput').value = existingData ? existingData.WhatsAppUsage : '';
+    $('operatorModalContactsInput').value = existingData ? existingData.ContactsTotal : '';
+    $('operatorModalNotesInput').value = existingData ? (existingData.Notes || '') : '';
+    
+    const notesLength = $('operatorModalNotesInput').value.length;
+    $('operatorModalNotesCharCount').textContent = `${notesLength}/200`;
+    
+    $('operatorModalSubmitButton').textContent = existingData ? 'Update' : 'Submit';
+    
+    modal.classList.remove('hidden');
+};
+
+// === Close Operator Modal ===
+const closeOperatorModal = () => {
+    const modal = $('operatorSubmissionModal');
+    modal.classList.add('hidden');
+    
+    $('operatorModalEmailInput').value = '';
+    $('operatorModalSmsInput').value = '';
+    $('operatorModalWhatsappInput').value = '';
+    $('operatorModalContactsInput').value = '';
+    $('operatorModalNotesInput').value = '';
+    $('operatorModalNotesCharCount').textContent = '0/200';
+};
+
+// === Handle Operator Modal Submit ===
+const handleOperatorModalSubmit = async () => {
+    const maison = $('operatorModalMaison').value;
+    const year = parseInt($('operatorModalYear').value);
+    const month = $('operatorModalMonth').value;
+    const emailUsage = $('operatorModalEmailInput').value.trim();
+    const smsUsage = $('operatorModalSmsInput').value.trim();
+    const whatsappUsage = $('operatorModalWhatsappInput').value.trim();
+    const contactsTotal = $('operatorModalContactsInput').value.trim();
+    const notes = $('operatorModalNotesInput').value.trim();
+    
+    if (!emailUsage || !smsUsage || !whatsappUsage || !contactsTotal) {
+        alert('Please fill in all four metrics!');
+        return;
+    }
+    
+    const emailNum = parseInt(emailUsage);
+    const smsNum = parseInt(smsUsage);
+    const whatsappNum = parseInt(whatsappUsage);
+    const contactsNum = parseInt(contactsTotal);
+    
+    if (emailNum < 0 || smsNum < 0 || whatsappNum < 0 || contactsNum < 0) {
+        alert('Quantities cannot be negative!');
+        return;
+    }
+    
+    let confirmMsg = `Submit actual usage data:\n\n`;
+    confirmMsg += `Maison: ${maison}\n`;
+    confirmMsg += `Year-Month: ${year}-${month}\n`;
+    confirmMsg += `Email: ${emailNum}\n`;
+    confirmMsg += `SMS: ${smsNum}\n`;
+    confirmMsg += `WhatsApp: ${whatsappNum}\n`;
+    confirmMsg += `Contacts: ${contactsNum}\n`;
+    if (notes) confirmMsg += `\nNotes: ${notes}\n`;
+    confirmMsg += '\nProceed?';
+    
+    if (!confirm(confirmMsg)) return;
+    
+    const res = await api('submitActualData', {
+        maisonName: maison,
+        year: year,
+        month: month,
+        emailUsage: emailNum,
+        smsUsage: smsNum,
+        whatsappUsage: whatsappNum,
+        contactsTotal: contactsNum,
+        recordedBy: currentUser.username,
+        notes: notes
+    });
+    
+    if (res.success) {
+        msg($('operatorDataMessage'), 'Actual data submitted successfully!', true);
+        closeOperatorModal();
+        renderOperatorDataTable();
+        setTimeout(() => clr($('operatorDataMessage')), 3000);
+    } else {
+        alert('Failed to submit: ' + res.message);
+    }
+};
+
+// === Switch Fiscal Year Tab for Operator ===
+const switchFiscalYearTabOperator = (fiscalYear) => {
+    currentFiscalYearOperator = fiscalYear;
+    
+    document.querySelectorAll('.fy-tab-button-operator').forEach(btn => {
+        if (parseInt(btn.dataset.year) === fiscalYear) {
+            btn.classList.add('active');
+        } else {
+            btn.classList.remove('active');
+        }
+    });
+    
+    renderOperatorDataTable();
+};
+
+// === Render Maison Actual Data Table (Read-only) ===
+const renderMaisonActualDataTable = async () => {
+    const tbody = $('actualDataTableBody');
+    if (!tbody) return;
+    
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 20px;">Loading...</td></tr>';
+    
+    const months = getFiscalYearMonths(currentFiscalYearActual);
+    const res = await api('getMaisonActualData', { maisonName: currentUser.maisonName });
+    
+    const dataMap = {};
+    if (res.success && res.data) {
+        res.data.forEach(record => {
+            const formattedMonth = String(record.Month).padStart(2, '0');
+            const key = `${record.Year}-${formattedMonth}`;
+            dataMap[key] = record;
+        });
+    }
+    
+    let html = '';
+    let totalEmail = 0, totalSms = 0, totalWhatsapp = 0, totalContacts = 0;
+    
+    months.forEach(({ year, month }) => {
+        const key = formatMonth(year, month);
+        const existingData = dataMap[key];
+        
+        const monthDisplay = `${year}-${month}`;
+        const emailVal = existingData ? existingData.EmailUsage : '-';
+        const smsVal = existingData ? existingData.SMSUsage : '-';
+        const whatsappVal = existingData ? existingData.WhatsAppUsage : '-';
+        const contactsVal = existingData ? existingData.ContactsTotal : '-';
+        const recordedBy = existingData ? existingData.RecordedBy : '-';
+        const timestamp = existingData ? fmt(existingData.Timestamp) : '-';
+        
+        if (existingData) {
+            totalEmail += parseInt(existingData.EmailUsage) || 0;
+            totalSms += parseInt(existingData.SMSUsage) || 0;
+            totalWhatsapp += parseInt(existingData.WhatsAppUsage) || 0;
+            totalContacts += parseInt(existingData.ContactsTotal) || 0;
+        }
+        
+        html += `
+            <tr>
+                <td class="month-cell">${monthDisplay}</td>
+                <td>${emailVal}</td>
+                <td>${smsVal}</td>
+                <td>${whatsappVal}</td>
+                <td>${contactsVal}</td>
+                <td>${recordedBy}</td>
+                <td style="font-size: 0.8em;">${timestamp}</td>
+            </tr>
+        `;
+    });
+    
+    const grandTotal = totalEmail + totalSms + totalWhatsapp + totalContacts;
+    
+    html += `
+        <tr class="total-row">
+            <td class="total-cell"><strong>Total (Actual)</strong></td>
+            <td class="total-value"><strong>${totalEmail}</strong></td>
+            <td class="total-value"><strong>${totalSms}</strong></td>
+            <td class="total-value"><strong>${totalWhatsapp}</strong></td>
+            <td class="total-value"><strong>${totalContacts}</strong></td>
+            <td class="total-cell">-</td>
+            <td class="total-grand"><strong>Grand Total: ${grandTotal}</strong></td>
+        </tr>
+    `;
+    
+    tbody.innerHTML = html;
+    actualDataCache[currentFiscalYearActual] = dataMap;
+};
+
+// === Switch Fiscal Year Tab for Maison Actual ===
+const switchFiscalYearTabActual = (fiscalYear) => {
+    currentFiscalYearActual = fiscalYear;
+    
+    document.querySelectorAll('.fy-tab-button-actual').forEach(btn => {
+        if (parseInt(btn.dataset.year) === fiscalYear) {
+            btn.classList.add('active');
+        } else {
+            btn.classList.remove('active');
+        }
+    });
+    
+    renderMaisonActualDataTable();
+};
+
+// === Load Admin Actual Overview with Total Row ===
+const loadAdminActualOverview = async () => {
+    const container = $('actualOverviewTableContainer');
+    if (!container) return;
+    
+    container.innerHTML = '<p style="text-align: center; padding: 20px;">Loading...</p>';
+    
+    const res = await api('getAllActualData');
+    
+    if (!res.success || !res.data || res.data.length === 0) {
+        container.innerHTML = '<p>No actual data available.</p>';
+        return;
+    }
+    
+    // Get current year for budget comparison
+    const currentYear = new Date().getFullYear();
+    
+    // Get budget data
+    const budgetRes = await api('getYearlyBudget', { year: currentYear });
+    const budget = budgetRes.success ? budgetRes.budget : { Email: 0, SMS: 0, WhatsApp: 0, Contacts: 0 };
+    
+    // Calculate totals
+    let totalEmail = 0, totalSms = 0, totalWhatsapp = 0, totalContacts = 0;
+    
+    let html = '<table><thead><tr>';
+    html += '<th>Maison</th><th>Year</th><th>Month</th>';
+    html += '<th>Email</th><th>SMS</th><th>WhatsApp</th><th>Contacts</th>';
+    html += '<th>Recorded By</th><th>Timestamp</th><th>Notes</th>';
+    html += '</tr></thead><tbody>';
+    
+    res.data.forEach(row => {
+        totalEmail += parseInt(row.EmailUsage) || 0;
+        totalSms += parseInt(row.SMSUsage) || 0;
+        totalWhatsapp += parseInt(row.WhatsAppUsage) || 0;
+        totalContacts += parseInt(row.ContactsTotal) || 0;
+        
+        html += '<tr>';
+        html += `<td>${row.MaisonName}</td>`;
+        html += `<td>${row.Year}</td>`;
+        html += `<td>${row.Month}</td>`;
+        html += `<td>${row.EmailUsage}</td>`;
+        html += `<td>${row.SMSUsage}</td>`;
+        html += `<td>${row.WhatsAppUsage}</td>`;
+        html += `<td>${row.ContactsTotal}</td>`;
+        html += `<td>${row.RecordedBy}</td>`;
+        html += `<td>${fmt(row.Timestamp)}</td>`;
+        html += `<td>${row.Notes || '-'}</td>`;
+        html += '</tr>';
+    });
+    
+    // Calculate variance
+    const varianceThreshold = parseFloat(configPrices.VarianceThreshold) || 15;
+    
+    const calcVariance = (total, budgetVal) => {
+        if (budgetVal > 0) {
+            return ((total - budgetVal) / budgetVal) * 100;
+        }
+        return total > 0 ? 100 : 0;
+    };
+    
+    const emailVariance = calcVariance(totalEmail, budget.Email);
+    const smsVariance = calcVariance(totalSms, budget.SMS);
+    const whatsappVariance = calcVariance(totalWhatsapp, budget.WhatsApp);
+    const contactsVariance = calcVariance(totalContacts, budget.Contacts);
+    
+    const needsAlert = Math.abs(emailVariance) > varianceThreshold || 
+                       Math.abs(smsVariance) > varianceThreshold || 
+                       Math.abs(whatsappVariance) > varianceThreshold || 
+                       Math.abs(contactsVariance) > varianceThreshold;
+    
+    // Total row with budget comparison
+    html += '<tr class="overview-total-row">';
+    html += '<td colspan="3" class="overview-total-cell">Total (Actual) - FY' + currentYear + '</td>';
+    
+    // Email column
+    html += '<td class="budget-comparison-cell">';
+    html += `<span class="budget-line"><span class="budget-label">Total:</span> <span class="budget-value">${totalEmail}</span></span><br>`;
+    html += `<span class="budget-line"><span class="budget-label">Budget:</span> ${budget.Email}</span><br>`;
+    const emailVarianceClass = emailVariance >= 0 ? 'variance-positive' : 'variance-negative';
+    html += `<span class="budget-line"><span class="budget-label">Variance:</span> <span class="variance-value ${emailVarianceClass}">${emailVariance >= 0 ? '+' : ''}${emailVariance.toFixed(1)}%</span></span>`;
+    html += '</td>';
+    
+    // SMS column
+    html += '<td class="budget-comparison-cell">';
+    html += `<span class="budget-line"><span class="budget-label">Total:</span> <span class="budget-value">${totalSms}</span></span><br>`;
+    html += `<span class="budget-line"><span class="budget-label">Budget:</span> ${budget.SMS}</span><br>`;
+    const smsVarianceClass = smsVariance >= 0 ? 'variance-positive' : 'variance-negative';
+    html += `<span class="budget-line"><span class="budget-label">Variance:</span> <span class="variance-value ${smsVarianceClass}">${smsVariance >= 0 ? '+' : ''}${smsVariance.toFixed(1)}%</span></span>`;
+    html += '</td>';
+    
+    // WhatsApp column
+    html += '<td class="budget-comparison-cell">';
+    html += `<span class="budget-line"><span class="budget-label">Total:</span> <span class="budget-value">${totalWhatsapp}</span></span><br>`;
+    html += `<span class="budget-line"><span class="budget-label">Budget:</span> ${budget.WhatsApp}</span><br>`;
+    const whatsappVarianceClass = whatsappVariance >= 0 ? 'variance-positive' : 'variance-negative';
+    html += `<span class="budget-line"><span class="budget-label">Variance:</span> <span class="variance-value ${whatsappVarianceClass}">${whatsappVariance >= 0 ? '+' : ''}${whatsappVariance.toFixed(1)}%</span></span>`;
+    html += '</td>';
+    
+    // Contacts column
+    html += '<td class="budget-comparison-cell">';
+    html += `<span class="budget-line"><span class="budget-label">Total:</span> <span class="budget-value">${totalContacts}</span></span><br>`;
+    html += `<span class="budget-line"><span class="budget-label">Budget:</span> ${budget.Contacts}</span><br>`;
+    const contactsVarianceClass = contactsVariance >= 0 ? 'variance-positive' : 'variance-negative';
+    html += `<span class="budget-line"><span class="budget-label">Variance:</span> <span class="variance-value ${contactsVarianceClass}">${contactsVariance >= 0 ? '+' : ''}${contactsVariance.toFixed(1)}%</span></span>`;
+    html += '</td>';
+    
+    html += '<td colspan="2" class="overview-total-cell">-</td>';
+    
+    // Alert button column
+    html += '<td>';
+    if (needsAlert) {
+        html += `<button class="alert-button-table" data-type="actual" data-year="${currentYear}">🔔 Alert</button>`;
+    } else {
+        html += '-';
+    }
+    html += '</td>';
+    
+    html += '</tr>';
+    html += '</tbody></table>';
+    
+    container.innerHTML = html;
+};
+
+
 // === Render Monthly Data Table ===
 const renderMonthlyDataTable = async () => {
     const tbody = $('monthlyDataTableBody');
@@ -498,8 +912,109 @@ const handleModalSubmit = async () => {
             html += '</tr>';
         });
 
-        container.innerHTML = html + '</tbody></table>';
+        html += '</tbody></table>';
+    
+        // Add total row for admin forecast overview
+        if (type === 'admin' && res.data && res.data.length > 0) {
+            const tableElement = container.querySelector('table');
+            if (tableElement) {
+                container.innerHTML = html;
+                await addForecastTotalRow(container);
+            } else {
+                container.innerHTML = html;
+            }
+        } else {
+            container.innerHTML = html;
+        }
+    
     };
+// === Add Forecast Total Row ===
+const addForecastTotalRow = async (container) => {
+    const table = container.querySelector('table');
+    if (!table) return;
+    
+    const tbody = table.querySelector('tbody');
+    if (!tbody) return;
+    
+    const currentYear = new Date().getFullYear();
+    
+    // Get totals
+    const totalsRes = await api('calculateYearlyTotals', { dataType: 'forecast', year: currentYear });
+    const totals = totalsRes.success ? totalsRes.totals : { Email: 0, SMS: 0, WhatsApp: 0, Contacts: 0 };
+    
+    // Get budget
+    const budgetRes = await api('getYearlyBudget', { year: currentYear });
+    const budget = budgetRes.success ? budgetRes.budget : { Email: 0, SMS: 0, WhatsApp: 0, Contacts: 0 };
+    
+    const varianceThreshold = parseFloat(configPrices.VarianceThreshold) || 15;
+    
+    const calcVariance = (total, budgetVal) => {
+        if (budgetVal > 0) {
+            return ((total - budgetVal) / budgetVal) * 100;
+        }
+        return total > 0 ? 100 : 0;
+    };
+    
+    const emailVariance = calcVariance(totals.Email, budget.Email);
+    const smsVariance = calcVariance(totals.SMS, budget.SMS);
+    const whatsappVariance = calcVariance(totals.WhatsApp, budget.WhatsApp);
+    const contactsVariance = calcVariance(totals.Contacts, budget.Contacts);
+    
+    const needsAlert = Math.abs(emailVariance) > varianceThreshold || 
+                       Math.abs(smsVariance) > varianceThreshold || 
+                       Math.abs(whatsappVariance) > varianceThreshold || 
+                       Math.abs(contactsVariance) > varianceThreshold;
+    
+    let totalRowHtml = '<tr class="overview-total-row">';
+    totalRowHtml += '<td colspan="3" class="overview-total-cell">Total (Approved Forecast) - FY' + currentYear + '</td>';
+    
+    // Email
+    totalRowHtml += '<td class="budget-comparison-cell">';
+    totalRowHtml += `<span class="budget-line"><span class="budget-label">Total:</span> <span class="budget-value">${totals.Email}</span></span><br>`;
+    totalRowHtml += `<span class="budget-line"><span class="budget-label">Budget:</span> ${budget.Email}</span><br>`;
+    const emailVarianceClass = emailVariance >= 0 ? 'variance-positive' : 'variance-negative';
+    totalRowHtml += `<span class="budget-line"><span class="budget-label">Variance:</span> <span class="variance-value ${emailVarianceClass}">${emailVariance >= 0 ? '+' : ''}${emailVariance.toFixed(1)}%</span></span>`;
+    totalRowHtml += '</td>';
+    
+    // SMS
+    totalRowHtml += '<td class="budget-comparison-cell">';
+    totalRowHtml += `<span class="budget-line"><span class="budget-label">Total:</span> <span class="budget-value">${totals.SMS}</span></span><br>`;
+    totalRowHtml += `<span class="budget-line"><span class="budget-label">Budget:</span> ${budget.SMS}</span><br>`;
+    const smsVarianceClass = smsVariance >= 0 ? 'variance-positive' : 'variance-negative';
+    totalRowHtml += `<span class="budget-line"><span class="budget-label">Variance:</span> <span class="variance-value ${smsVarianceClass}">${smsVariance >= 0 ? '+' : ''}${smsVariance.toFixed(1)}%</span></span>`;
+    totalRowHtml += '</td>';
+    
+    // WhatsApp
+    totalRowHtml += '<td class="budget-comparison-cell">';
+    totalRowHtml += `<span class="budget-line"><span class="budget-label">Total:</span> <span class="budget-value">${totals.WhatsApp}</span></span><br>`;
+    totalRowHtml += `<span class="budget-line"><span class="budget-label">Budget:</span> ${budget.WhatsApp}</span><br>`;
+    const whatsappVarianceClass = whatsappVariance >= 0 ? 'variance-positive' : 'variance-negative';
+    totalRowHtml += `<span class="budget-line"><span class="budget-label">Variance:</span> <span class="variance-value ${whatsappVarianceClass}">${whatsappVariance >= 0 ? '+' : ''}${whatsappVariance.toFixed(1)}%</span></span>`;
+    totalRowHtml += '</td>';
+    
+    // Contacts
+    totalRowHtml += '<td class="budget-comparison-cell">';
+    totalRowHtml += `<span class="budget-line"><span class="budget-label">Total:</span> <span class="budget-value">${totals.Contacts}</span></span><br>`;
+    totalRowHtml += `<span class="budget-line"><span class="budget-label">Budget:</span> ${budget.Contacts}</span><br>`;
+    const contactsVarianceClass = contactsVariance >= 0 ? 'variance-positive' : 'variance-negative';
+    totalRowHtml += `<span class="budget-line"><span class="budget-label">Variance:</span> <span class="variance-value ${contactsVarianceClass}">${contactsVariance >= 0 ? '+' : ''}${contactsVariance.toFixed(1)}%</span></span>`;
+    totalRowHtml += '</td>';
+    
+    totalRowHtml += '<td colspan="3" class="overview-total-cell">-</td>';
+    
+    // Alert button
+    totalRowHtml += '<td>';
+    if (needsAlert) {
+        totalRowHtml += `<button class="alert-button-table" data-type="forecast" data-year="${currentYear}">🔔 Alert</button>`;
+    } else {
+        totalRowHtml += '-';
+    }
+    totalRowHtml += '</td>';
+    
+    totalRowHtml += '</tr>';
+    
+    tbody.insertAdjacentHTML('beforeend', totalRowHtml);
+};
 
     // ===== Forecast 表格渲染 =====
     const loadForecastTable = async (container, year) => {
@@ -655,6 +1170,76 @@ const handleModalSubmit = async () => {
                 }
             }
         }
+        // Handle operator action buttons
+        if (e.target.classList.contains('operator-action-button')) {
+            const maison = e.target.dataset.maison;
+            const year = parseInt(e.target.dataset.year);
+            const month = e.target.dataset.month;
+            openOperatorModal(maison, year, month);
+            return;
+        }
+        
+        // Handle alert buttons
+        if (e.target.classList.contains('alert-button-table')) {
+            const dataType = e.target.dataset.type; // 'forecast' or 'actual'
+            const year = parseInt(e.target.dataset.year);
+            
+            // Generate alert email
+            const totalsRes = await api('calculateYearlyTotals', { 
+                dataType: dataType, 
+                year: year 
+            });
+            const totals = totalsRes.success ? totalsRes.totals : { Email: 0, SMS: 0, WhatsApp: 0, Contacts: 0 };
+            
+            const budgetRes = await api('getYearlyBudget', { year: year });
+            const budget = budgetRes.success ? budgetRes.budget : { Email: 0, SMS: 0, WhatsApp: 0, Contacts: 0 };
+            
+            const calcVariance = (total, budgetVal) => {
+                if (budgetVal > 0) return ((total - budgetVal) / budgetVal) * 100;
+                return total > 0 ? 100 : 0;
+            };
+            
+            const variance = {
+                Email: calcVariance(totals.Email, budget.Email),
+                SMS: calcVariance(totals.SMS, budget.SMS),
+                WhatsApp: calcVariance(totals.WhatsApp, budget.WhatsApp),
+                Contacts: calcVariance(totals.Contacts, budget.Contacts)
+            };
+            
+            const emailRes = await api('generateAlertEmail', {
+                dataType: dataType === 'forecast' ? 'Forecast' : 'Actual',
+                year: year,
+                totals: totals,
+                budget: budget,
+                variance: variance,
+                maisonName: null
+            });
+            
+            if (emailRes.success) {
+                $('emailSubjectInput').value = emailRes.subject;
+                $('emailContentInput').value = emailRes.body;
+                
+                // Auto-select BT admin
+                if (allUsers && allUsers.length) {
+                    searchTerm = '';
+                    if ($('userSearchInput')) $('userSearchInput').value = '';
+                    renderU();
+                    
+                    $('userListContainer').querySelectorAll('.user-checkbox').forEach(cb => {
+                        const username = cb.dataset.username || '';
+                        if (username === 'BT-admin' || username.includes('admin')) {
+                            cb.checked = true;
+                        }
+                    });
+                    updCnt();
+                }
+                
+                $('emailBroadcastSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+                msg($('emailBroadcastMessage'), 'Alert email prepared. Click "Open in Outlook" to send.', true);
+            }
+            return;
+        }
+    
     });
 
     // ===== Email 管理 =====
@@ -988,22 +1573,38 @@ const handleModalSubmit = async () => {
                     
                     // Initialize email management
                     initEmail();
-                    
+                    // Initialize actual data view
+renderMaisonActualDataTable();
+
                     // Clear any messages
                     clr($('monthlyDataMessage'));
-                }
-                 else {
+                } else if (currentUser.role === 'admin') {
                     $('adminView').classList.remove('hidden'); 
                     $('maisonView').classList.add('hidden');
+                    $('operatorView').classList.add('hidden');
                     
                     popYearSelectors();
                     popMaisonSelectors();
                     
                     loadTable('admin', $('overviewDataTableContainer'));
+                    loadAdminActualOverview();
                     loadTable('adminHistory', $('adminHistoryTableContainer'));
-                    loadForecastTable($('forecastTableContainer'), currentYear);
                     initBcast();
+                } else if (currentUser.role === 'sfmc-operator') {
+                    $('operatorView').classList.remove('hidden');
+                    $('adminView').classList.add('hidden');
+                    $('maisonView').classList.add('hidden');
+                    
+                    const now = new Date();
+                    const currentMonth = now.getMonth() + 1;
+                    currentFiscalYearOperator = currentMonth === 1 ? now.getFullYear() - 1 : now.getFullYear();
+                    
+                    loadAllMaisons();
+                    renderOperatorDataTable();
+                    
+                    clr($('operatorDataMessage'));
                 }
+                
                 
             }, 500);
         },
@@ -1100,15 +1701,46 @@ const handleModalSubmit = async () => {
             }
         },
 
-        forecastYearSelect: async () => {
-            const year = parseInt($('forecastYearSelect').value) || currentYear;
-            loadForecastTable($('forecastTableContainer'), year);
-        },
+
 
         exportOverviewDataButton: exportOverviewData,
         exportHistoryDataButton: exportHistoryData,
-        exportForecastButton: exportForecastData,
-
+        exportActualDataButton: async () => {
+            if (!currentUser || currentUser.role !== 'admin') { alert('Admin only!'); return; }
+            const res = await api('getAllActualData');
+            if (!res.success || !res.data || !res.data.length) { 
+                msg($('loginMessage'), 'Export failed: No actual data available.', false); 
+                return; 
+            }
+            
+            let csv = 'Maison,Year,Month,Email Usage,SMS Usage,WhatsApp Usage,Contacts Total,Recorded By,Timestamp,Notes\n';
+            
+            res.data.forEach(r => { 
+                csv += [
+                    r.MaisonName,
+                    r.Year,
+                    r.Month,
+                    r.EmailUsage,
+                    r.SMSUsage,
+                    r.WhatsAppUsage,
+                    r.ContactsTotal,
+                    r.RecordedBy,
+                    fmt(r.Timestamp),
+                    `"${(r.Notes || '').replace(/"/g, '""')}"`
+                ].join(',') + '\n';
+            });
+            
+            const b = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const l = document.createElement('a');
+            l.href = URL.createObjectURL(b);
+            l.download = `SFMC_Actual_Export_${new Date().toLocaleDateString('en-US').replace(/\//g, '-')}.csv`;
+            document.body.appendChild(l);
+            l.click();
+            document.body.removeChild(l);
+            
+            msg($('loginMessage'), 'Actual data exported successfully!', true);
+        },
+        
         selectAllButton: () => { 
             $('userListContainer').querySelectorAll('.user-checkbox:not(:disabled)').forEach(c => c.checked = true); 
             updCnt(); 
@@ -1194,6 +1826,21 @@ document.addEventListener('click', (e) => {
         openNotesViewModal(year, month);
     }
 });
+// Fiscal Year Tab buttons for Actual (Maison view)
+document.addEventListener('click', (e) => {
+    if (e.target.classList.contains('fy-tab-button-actual')) {
+        const fiscalYear = parseInt(e.target.dataset.year);
+        switchFiscalYearTabActual(fiscalYear);
+    }
+});
+
+// Fiscal Year Tab buttons for Operator
+document.addEventListener('click', (e) => {
+    if (e.target.classList.contains('fy-tab-button-operator')) {
+        const fiscalYear = parseInt(e.target.dataset.year);
+        switchFiscalYearTabOperator(fiscalYear);
+    }
+});
 
 // Action buttons in monthly data table
 document.addEventListener('click', (e) => {
@@ -1262,6 +1909,48 @@ if ($('notesViewModal')) {
             closeNotesViewModal();
         }
     });
+    // Operator Modal close button
+if ($('operatorModalClose')) {
+    $('operatorModalClose').addEventListener('click', closeOperatorModal);
+}
+
+// Operator Modal cancel button
+if ($('operatorModalCancelButton')) {
+    $('operatorModalCancelButton').addEventListener('click', closeOperatorModal);
+}
+
+// Operator Modal submit button
+if ($('operatorModalSubmitButton')) {
+    $('operatorModalSubmitButton').addEventListener('click', handleOperatorModalSubmit);
+}
+
+// Close operator modal when clicking outside
+if ($('operatorSubmissionModal')) {
+    $('operatorSubmissionModal').addEventListener('click', (e) => {
+        if (e.target.id === 'operatorSubmissionModal') {
+            closeOperatorModal();
+        }
+    });
+}
+
+// Operator Modal notes character count
+if ($('operatorModalNotesInput')) {
+    $('operatorModalNotesInput').addEventListener('input', () => {
+        const count = $('operatorModalNotesInput').value.length;
+        $('operatorModalNotesCharCount').textContent = `${count}/200`;
+        if (count >= 200) {
+            $('operatorModalNotesCharCount').style.color = '#d32f2f';
+        } else {
+            $('operatorModalNotesCharCount').style.color = '#666';
+        }
+    });
+}
+
+// Logout button for operator
+if ($('logoutButtonOperator')) {
+    $('logoutButtonOperator').addEventListener('click', handlers.logoutButton);
+}
+
 }
 
     // 搜索输入框事件

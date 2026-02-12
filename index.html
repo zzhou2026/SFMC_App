@@ -167,12 +167,119 @@
     </div>
 </div>
 
+<!-- View Actual Usage Section -->
+<h3>View Actual Usage Data</h3>
+<p class="info-text">Below is the actual usage data recorded by SFMC Operator (Read-only)</p>
+
+<div class="fiscal-year-tabs">
+    <button class="fy-tab-button-actual" data-year="2025">FY2025</button>
+    <button class="fy-tab-button-actual active" data-year="2026">FY2026</button>
+    <button class="fy-tab-button-actual" data-year="2027">FY2027</button>
+</div>
+
+<div class="monthly-data-table-container">
+    <table class="monthly-data-table" id="actualDataTable">
+        <thead>
+            <tr>
+                <th>Month</th>
+                <th>Email</th>
+                <th>SMS</th>
+                <th>WhatsApp</th>
+                <th>Contacts</th>
+                <th>Recorded By</th>
+                <th>Timestamp</th>
+            </tr>
+        </thead>
+        <tbody id="actualDataTableBody"></tbody>
+    </table>
+</div>
 
                 <h3>My Historical Actions</h3>
                 <div id="maisonHistoryTableContainer" class="table-container">
                     <!-- Maison historical actions log will be displayed here -->
                 </div>
             </div>
+<!-- SFMC-Operator View -->
+<div id="operatorView" class="user-view hidden">
+    <button id="logoutButtonOperator">Logout</button>
+    
+    <h3>Submit Monthly Actual Usage Data</h3>
+    
+    <div class="fiscal-year-tabs">
+        <button class="fy-tab-button-operator" data-year="2025">FY2025</button>
+        <button class="fy-tab-button-operator active" data-year="2026">FY2026</button>
+        <button class="fy-tab-button-operator" data-year="2027">FY2027</button>
+    </div>
+    
+    <div class="monthly-data-table-container">
+        <table class="monthly-data-table" id="operatorDataTable">
+            <thead>
+                <tr>
+                    <th>Maison</th>
+                    <th>Month</th>
+                    <th>Email</th>
+                    <th>SMS</th>
+                    <th>WhatsApp</th>
+                    <th>Contacts</th>
+                    <th>Notes</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody id="operatorDataTableBody"></tbody>
+        </table>
+    </div>
+    <p id="operatorDataMessage" class="message"></p>
+</div>
+
+<!-- Operator Modal -->
+<div id="operatorSubmissionModal" class="modal hidden">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 id="operatorModalTitle">Submit Actual Data</h3>
+            <span class="modal-close" id="operatorModalClose">&times;</span>
+        </div>
+        <div class="modal-body">
+            <input type="hidden" id="operatorModalMaison" value="">
+            <input type="hidden" id="operatorModalYear" value="">
+            <input type="hidden" id="operatorModalMonth" value="">
+            
+            <div class="modal-form-group">
+                <label>Maison:</label>
+                <p id="operatorModalMaisonDisplay" style="font-weight: bold; color: #00796b;"></p>
+            </div>
+            
+            <div class="modal-form-group">
+                <label for="operatorModalEmailInput">Email Usage:</label>
+                <input type="number" id="operatorModalEmailInput" class="form-control" min="0">
+            </div>
+            
+            <div class="modal-form-group">
+                <label for="operatorModalSmsInput">SMS Usage:</label>
+                <input type="number" id="operatorModalSmsInput" class="form-control" min="0">
+            </div>
+            
+            <div class="modal-form-group">
+                <label for="operatorModalWhatsappInput">WhatsApp Usage:</label>
+                <input type="number" id="operatorModalWhatsappInput" class="form-control" min="0">
+            </div>
+            
+            <div class="modal-form-group">
+                <label for="operatorModalContactsInput">Contacts Total:</label>
+                <input type="number" id="operatorModalContactsInput" class="form-control" min="0">
+            </div>
+            
+            <div class="modal-form-group">
+                <label for="operatorModalNotesInput">Notes (max 200 chars):</label>
+                <textarea id="operatorModalNotesInput" class="form-control" maxlength="200" rows="3"></textarea>
+                <p id="operatorModalNotesCharCount" class="char-count">0/200</p>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button id="operatorModalCancelButton" class="modal-button-secondary">Cancel</button>
+            <button id="operatorModalSubmitButton" class="modal-button-primary">Submit</button>
+        </div>
+    </div>
+</div>
 
             <!-- Admin View -->
             <div id="adminView" class="user-view hidden">
@@ -224,19 +331,12 @@
                     <!-- All maisons data will be displayed here -->
                 </div>
                 <button id="exportOverviewDataButton">Export Overview Data (CSV)</button>
+<!-- Actual Data Overview -->
+<h3>Actual Usage Data Overview</h3>
+<div id="actualOverviewTableContainer" class="table-container"></div>
+<button id="exportActualDataButton">Export Actual Data (CSV)</button>
 
-                <!-- Annual Forecast vs Budget -->
-                <h3>Annual Forecast vs Budget</h3>
-                <div class="year-selection-container">
-                    <label for="forecastYearSelect">Select Year:</label>
-                    <select id="forecastYearSelect" class="form-control year-select">
-                        <!-- Options will be populated by JavaScript -->
-                    </select>
-                </div>
-                <div id="forecastTableContainer" class="table-container forecast-table-container">
-                    <!-- Forecast table will be displayed here -->
-                </div>
-                <button id="exportForecastButton">Export Forecast Data (CSV)</button>
+
 
                 <!-- Email Broadcast Section -->
                 <div id="emailBroadcastSection" class="email-broadcast-section">

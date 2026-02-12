@@ -49,122 +49,124 @@
                 <button id="logoutButton">Logout</button>
                 
                 <!-- Submit Monthly Data Section -->
-                <h3>Submit Monthly Data</h3>
+<h3>Submit Monthly Data</h3>
 
-                <div class="monthly-data-section">
-                    <div class="data-tips-bottom">
-                        <p class="tips-title">💡 Tips:</p>
-                        <ul class="tips-list">
-                            <li>Click <strong>[Submit]</strong> or <strong>[Update]</strong> button to open submission dialog</li>
-                            <li>Use [Update] to modify submitted data (will reset to Pending status)</li>
-                            <li>All submissions require admin approval</li>
-                        </ul>
-                    </div>
-                </div>
+<div class="monthly-data-section">
+    <!-- Tips Section -->
+    <div class="data-tips-bottom">
+        <p class="tips-title">💡 Tips:</p>
+        <ul class="tips-list">
+            <li>Click <strong>[Submit]</strong> or <strong>[Update]</strong> button to open submission dialog</li>
+            <li>Use [Update] to modify submitted data (will reset to Pending status)</li>
+            <li>All submissions require admin approval</li>
+        </ul>
+    </div>
+</div>
+    <!-- Fiscal Year Tabs -->
+    <div class="fiscal-year-tabs">
+        <button class="fy-tab-button" data-year="2025">FY2025</button>
+        <button class="fy-tab-button active" data-year="2026">FY2026</button>
+        <button class="fy-tab-button" data-year="2027">FY2027</button>
+    </div>
+    
+    <!-- Monthly Data Table -->
+    <div class="monthly-data-table-container">
+        <table class="monthly-data-table" id="monthlyDataTable">
+            <thead>
+                <tr>
+                    <th>Month</th>
+                    <th>Email</th>
+                    <th>SMS</th>
+                    <th>WhatsApp</th>
+                    <th>Contacts</th>
+                    <th>Status</th>
+                    <th>Notes</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            
+            <tbody id="monthlyDataTableBody">
+                <!-- Rows will be populated by JavaScript -->
+            </tbody>
+        </table>
+    </div>
+    
+    <p id="monthlyDataMessage" class="message"></p>
+    
+    
 
-                <!-- Fiscal Year Tabs -->
-                <div class="fiscal-year-tabs">
-                    <button class="fy-tab-button" data-year="2025">FY2025</button>
-                    <button class="fy-tab-button active" data-year="2026">FY2026</button>
-                    <button class="fy-tab-button" data-year="2027">FY2027</button>
-                </div>
-                
-                <!-- Monthly Data Table -->
-                <div class="monthly-data-table-container">
-                    <table class="monthly-data-table" id="monthlyDataTable">
-                        <thead>
-                            <tr>
-                                <th>Month</th>
-                                <th>Email</th>
-                                <th>SMS</th>
-                                <th>WhatsApp</th>
-                                <th>Contacts</th>
-                                <th>Status</th>
-                                <th>Notes</th>
-                                <th>Action</th>
-                            </tr>
-                        </thead>
-                        
-                        <tbody id="monthlyDataTableBody">
-                            <!-- Rows will be populated by JavaScript -->
-                        </tbody>
-                    </table>
-                </div>
-                
-                <p id="monthlyDataMessage" class="message"></p>
+<!-- Modal Dialog for Data Submission -->
+<div id="submissionModal" class="modal hidden">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 id="modalTitle">Submit Data for Month</h3>
+            <span class="modal-close" id="modalClose">&times;</span>
+        </div>
+        <div class="modal-body">
+            <input type="hidden" id="modalYear" value="">
+            <input type="hidden" id="modalMonth" value="">
+            
+            <div class="modal-form-group">
+                <label for="modalEmailInput">Email:</label>
+                <input type="number" id="modalEmailInput" class="form-control" placeholder="Enter quantity" min="0" value="">
+            </div>
+            
+            <div class="modal-form-group">
+                <label for="modalSmsInput">SMS:</label>
+                <input type="number" id="modalSmsInput" class="form-control" placeholder="Enter quantity" min="0" value="">
+            </div>
+            
+            <div class="modal-form-group">
+                <label for="modalWhatsappInput">WhatsApp:</label>
+                <input type="number" id="modalWhatsappInput" class="form-control" placeholder="Enter quantity" min="0" value="">
+            </div>
+            
+            <div class="modal-form-group">
+                <label for="modalContactsInput">Contacts:</label>
+                <input type="number" id="modalContactsInput" class="form-control" placeholder="Enter quantity" min="0" value="">
+            </div>
+            
+            <div class="modal-form-group">
+                <label for="modalNotesInput">Notes (optional, max 200 characters):</label>
+                <textarea id="modalNotesInput" class="form-control" placeholder="Add any notes..." maxlength="200" rows="3"></textarea>
+                <p id="modalNotesCharCount" class="char-count">0/200</p>
+            </div>
+            
+            <div id="modalAdminNotesSection" class="modal-admin-notes hidden">
+                <label>Admin Feedback:</label>
+                <div id="modalAdminNotesDisplay" class="admin-notes-display"></div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button id="modalCancelButton" class="modal-button-secondary">Cancel</button>
+            <button id="modalSubmitButton" class="modal-button-primary">Submit</button>
+        </div>
+    </div>
+</div>
+<!-- Notes View Modal -->
+<div id="notesViewModal" class="modal hidden">
+    <div class="modal-content modal-content-small">
+        <div class="modal-header">
+            <h3 id="notesViewTitle">Notes for Month</h3>
+            <span class="modal-close" id="notesViewClose">&times;</span>
+        </div>
+        <div class="modal-body">
+            <div id="maisonNotesSection" class="notes-section">
+                <label>Your Notes:</label>
+                <div id="maisonNotesDisplay" class="notes-display"></div>
+            </div>
+            
+            <div id="adminNotesViewSection" class="notes-section hidden">
+                <label>Admin Feedback:</label>
+                <div id="adminNotesViewDisplay" class="notes-display admin-notes-text"></div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button id="notesViewCloseButton" class="modal-button-secondary">Close</button>
+        </div>
+    </div>
+</div>
 
-                <!-- Modal Dialog for Data Submission -->
-                <div id="submissionModal" class="modal hidden">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h3 id="modalTitle">Submit Data for Month</h3>
-                            <span class="modal-close" id="modalClose">&times;</span>
-                        </div>
-                        <div class="modal-body">
-                            <input type="hidden" id="modalYear" value="">
-                            <input type="hidden" id="modalMonth" value="">
-                            
-                            <div class="modal-form-group">
-                                <label for="modalEmailInput">Email:</label>
-                                <input type="number" id="modalEmailInput" class="form-control" placeholder="Enter quantity" min="0" value="">
-                            </div>
-                            
-                            <div class="modal-form-group">
-                                <label for="modalSmsInput">SMS:</label>
-                                <input type="number" id="modalSmsInput" class="form-control" placeholder="Enter quantity" min="0" value="">
-                            </div>
-                            
-                            <div class="modal-form-group">
-                                <label for="modalWhatsappInput">WhatsApp:</label>
-                                <input type="number" id="modalWhatsappInput" class="form-control" placeholder="Enter quantity" min="0" value="">
-                            </div>
-                            
-                            <div class="modal-form-group">
-                                <label for="modalContactsInput">Contacts:</label>
-                                <input type="number" id="modalContactsInput" class="form-control" placeholder="Enter quantity" min="0" value="">
-                            </div>
-                            
-                            <div class="modal-form-group">
-                                <label for="modalNotesInput">Notes (optional, max 200 characters):</label>
-                                <textarea id="modalNotesInput" class="form-control" placeholder="Add any notes..." maxlength="200" rows="3"></textarea>
-                                <p id="modalNotesCharCount" class="char-count">0/200</p>
-                            </div>
-                            
-                            <div id="modalAdminNotesSection" class="modal-admin-notes hidden">
-                                <label>Admin Feedback:</label>
-                                <div id="modalAdminNotesDisplay" class="admin-notes-display"></div>
-                            </div>
-                        </div>
-                        <div class="modal-footer">
-                            <button id="modalCancelButton" class="modal-button-secondary">Cancel</button>
-                            <button id="modalSubmitButton" class="modal-button-primary">Submit</button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Notes View Modal -->
-                <div id="notesViewModal" class="modal hidden">
-                    <div class="modal-content modal-content-small">
-                        <div class="modal-header">
-                            <h3 id="notesViewTitle">Notes for Month</h3>
-                            <span class="modal-close" id="notesViewClose">&times;</span>
-                        </div>
-                        <div class="modal-body">
-                            <div id="maisonNotesSection" class="notes-section">
-                                <label>Your Notes:</label>
-                                <div id="maisonNotesDisplay" class="notes-display"></div>
-                            </div>
-                            
-                            <div id="adminNotesViewSection" class="notes-section hidden">
-                                <label>Admin Feedback:</label>
-                                <div id="adminNotesViewDisplay" class="notes-display admin-notes-text"></div>
-                            </div>
-                        </div>
-                        <div class="modal-footer">
-                            <button id="notesViewCloseButton" class="modal-button-secondary">Close</button>
-                        </div>
-                    </div>
-                </div>
 
                 <h3>My Historical Actions</h3>
                 <div id="maisonHistoryTableContainer" class="table-container">
@@ -172,296 +174,107 @@
                 </div>
             </div>
 
-                        <!-- Admin View -->
-                        <div id="adminView" class="user-view hidden">
-                            <button id="adminLogoutButton" class="logout-button">Logout</button>
-                            
-                            <!-- Global Fiscal Year Selector -->
-                            <div class="global-year-selector">
-                                <label>Fiscal Year:</label>
-                                <div class="global-year-tabs">
-                                    <button class="global-year-tab" data-year="2025">FY2025</button>
-                                    <button class="global-year-tab active" data-year="2026">FY2026</button>
-                                    <button class="global-year-tab" data-year="2027">FY2027</button>
-                                </div>
-                            </div>
-            
-                            <!-- Budget Setting Section -->
-                            <div class="admin-section budget-section">
-                                <h3>Set Annual Budget</h3>
-                                <div class="budget-form">
-                                    <div class="budget-form-row">
-                                        <div class="form-group">
-                                            <label for="adminBudgetMaison">Maison:</label>
-                                            <select id="adminBudgetMaison" class="form-control">
-                                                <option value="ACQUA DI PARMA SRL">ADP</option>
-                                                <option value="Maison Francis Kurkdjian">MFK</option>
-                                                <option value="GIE PCIS (Org MUF Education)">MUFE</option>
-                                                <option value="PARFUMS ET COSMETIQUES INFORMATION SERVICES">PCIS</option>
-                                                <option value="PERFUMES LOEWE SA">LOEWE</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="budget-inputs-grid">
-                                        <div class="form-group">
-                                            <label for="adminEmailBudget">Email Budget:</label>
-                                            <input type="number" id="adminEmailBudget" class="form-control" min="0" value="0" placeholder="Enter budget">
-                                        </div>
-                                        <div class="form-group">
-                                            <label for="adminSmsBudget">SMS Budget:</label>
-                                            <input type="number" id="adminSmsBudget" class="form-control" min="0" value="0" placeholder="Enter budget">
-                                        </div>
-                                        <div class="form-group">
-                                            <label for="adminWhatsappBudget">WhatsApp Budget:</label>
-                                            <input type="number" id="adminWhatsappBudget" class="form-control" min="0" value="0" placeholder="Enter budget">
-                                        </div>
-                                        <div class="form-group">
-                                            <label for="adminContactsBudget">Contacts Budget:</label>
-                                            <input type="number" id="adminContactsBudget" class="form-control" min="0" value="0" placeholder="Enter budget">
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="budget-form-actions">
-                                        <button id="adminSubmitBudget" class="submit-button">Submit Budget</button>
-                                    </div>
-                                    <p id="adminBudgetMessage" class="message"></p>
-                                </div>
-                            </div>
-            
-                            <!-- Forecast Section -->
-                            <div class="admin-section forecast-section">
-                                <h3>Monthly Forecast vs Budget</h3>
-                                
-                                <div class="maison-tabs">
-                                    <button class="maison-tab active" data-maison="ACQUA DI PARMA SRL">ADP</button>
-                                    <button class="maison-tab" data-maison="Maison Francis Kurkdjian">MFK</button>
-                                    <button class="maison-tab" data-maison="GIE PCIS (Org MUF Education)">MUFE</button>
-                                    <button class="maison-tab" data-maison="PARFUMS ET COSMETIQUES INFORMATION SERVICES">PCIS</button>
-                                    <button class="maison-tab" data-maison="PERFUMES LOEWE SA">LOEWE</button>
-                                </div>
-                                
-                                <div id="forecastTableContainer" class="data-table-container">
-                                    <p style="text-align: center; padding: 20px;">Loading...</p>
-                                </div>
-                            </div>
-            
-                            <!-- Actual Section -->
-                            <div class="admin-section actual-section">
-                                <h3>Monthly Actual vs Budget</h3>
-                                
-                                <div class="maison-tabs">
-                                    <button class="maison-tab active" data-maison="ACQUA DI PARMA SRL">ADP</button>
-                                    <button class="maison-tab" data-maison="Maison Francis Kurkdjian">MFK</button>
-                                    <button class="maison-tab" data-maison="GIE PCIS (Org MUF Education)">MUFE</button>
-                                    <button class="maison-tab" data-maison="PARFUMS ET COSMETIQUES INFORMATION SERVICES">PCIS</button>
-                                    <button class="maison-tab" data-maison="PERFUMES LOEWE SA">LOEWE</button>
-                                </div>
-                                
-                                <div id="actualTableContainer" class="data-table-container">
-                                    <p style="text-align: center; padding: 20px;">Loading...</p>
-                                </div>
-                            </div>
-            
-                            <!-- Tools Section (Collapsible) -->
-                            <div class="admin-section tools-section">
-                                <div class="collapsible-header" id="emailBroadcastHeader">
-                                    <h3>▼ Email Broadcast</h3>
-                                </div>
-                                <div id="emailBroadcastContent" class="collapsible-content hidden">
-                                    <div id="emailBroadcastSection" class="email-broadcast-section">
-                                        <p>Select users from the list below and compose email in Outlook.</p>
-                                        
-                                        <div class="user-selection-header">
-                                            <label>Select Recipients:</label>
-                                            <div class="selection-controls">
-                                                <button id="selectAllButton" class="selection-button">Select All</button>
-                                                <button id="deselectAllButton" class="selection-button">Deselect All</button>
-                                                <input type="text" id="userSearchInput" class="user-search-input" placeholder="Search users...">
-                                            </div>
-                                        </div>
-                                        
-                                        <div id="userListContainer" class="user-list-container">
-                                            <p class="loading-text">Loading users...</p>
-                                        </div>
-                                        
-                                        <label for="emailSubjectInput">Email Subject:</label>
-                                        <input type="text" id="emailSubjectInput" class="form-control" placeholder="Enter email subject">
-                                        
-                                        <label for="emailContentInput">Email Content:</label>
-                                        <textarea id="emailContentInput" class="form-control email-textarea" placeholder="Enter email content" rows="6"></textarea>
-                                        
-                                        <div class="email-action-buttons">
-                                            <button id="openOutlookButton" class="email-broadcast-button">Open in Outlook</button>
-                                            <button id="copyEmailsButton" class="email-broadcast-button-secondary">Copy Email List</button>
-                                        </div>
-                                        <p id="emailBroadcastMessage" class="message"></p>
-                                        <p id="recipientCountDisplay" class="recipient-count"></p>
-                                    </div>
-                                </div>
-            
-                                <div class="collapsible-header" id="historyLogHeader">
-                                    <h3>▼ Historical Actions Log</h3>
-                                </div>
-                                <div id="historyLogContent" class="collapsible-content hidden">
-                                    <div id="adminHistoryTableContainer" class="table-container">
-                                        <!-- Admin historical actions log will be displayed here -->
-                                    </div>
-                                    <button id="exportHistoryDataButton">Export History Data (CSV)</button>
-                                </div>
-                            </div>
-            
-                            <!-- Approval Modal for Admin -->
-                            <div id="approvalModal" class="modal hidden">
-                                <div class="modal-content">
-                                    <div class="modal-header">
-                                        <h3 id="approvalModalTitle">Approve/Reject Submission</h3>
-                                        <span class="modal-close" id="approvalModalClose">&times;</span>
-                                    </div>
-                                    <div class="modal-body">
-                                        <input type="hidden" id="approvalRecordId" value="">
-                                        
-                                        <div class="approval-details">
-                                            <p><strong>Maison:</strong> <span id="approvalMaison"></span></p>
-                                            <p><strong>Period:</strong> <span id="approvalPeriod"></span></p>
-                                            <p><strong>Submitted By:</strong> <span id="approvalSubmittedBy"></span></p>
-                                            <p><strong>Submission Time:</strong> <span id="approvalTimestamp"></span></p>
-                                        </div>
-            
-                                        <div class="approval-data">
-                                            <h4>Submitted Data:</h4>
-                                            <ul>
-                                                <li>Email: <span id="approvalEmail"></span></li>
-                                                <li>SMS: <span id="approvalSms"></span></li>
-                                                <li>WhatsApp: <span id="approvalWhatsapp"></span></li>
-                                                <li>Contacts: <span id="approvalContacts"></span></li>
-                                            </ul>
-                                        </div>
-            
-                                        <div id="approvalMaisonNotesSection" class="notes-section hidden">
-                                            <label>Maison Notes:</label>
-                                            <div id="approvalMaisonNotes" class="notes-display"></div>
-                                        </div>
-            
-                                        <div class="modal-form-group">
-                                            <label for="approvalAdminNotes">Admin Notes (optional):</label>
-                                            <textarea id="approvalAdminNotes" class="form-control" placeholder="Add feedback or notes..." maxlength="200" rows="3"></textarea>
-                                        </div>
-                                    </div>
-                                    <div class="modal-footer">
-                                        <button id="approvalCancelButton" class="modal-button-secondary">Cancel</button>
-                                        <button id="approvalRejectButton" class="modal-button-warning">Reject</button>
-                                        <button id="approvalApproveButton" class="modal-button-primary">Approve</button>
-                                    </div>
-                                </div>
-                            </div>
+            <!-- Admin View -->
+            <div id="adminView" class="user-view hidden">
+                
+                <!-- Budget Management Section -->
+                <div class="budget-management-section">
+                    <h3>Set Annual Budget</h3>
+                    <div class="budget-form-row">
+                        <div class="budget-form-item">
+                            <label for="budgetYearSelect">Year:</label>
+                            <select id="budgetYearSelect" class="form-control">
+                                <!-- Options will be populated by JavaScript -->
+                            </select>
                         </div>
-            
-
-            <!-- SFMC Operator View -->
-            <div id="operatorView" class="user-view hidden">
-                <button id="operatorLogoutButton" class="logout-button">Logout</button>
-
-                <h3>Record Monthly Actual Usage</h3>
-
-                <!-- Maison and Fiscal Year Selection -->
-                <div class="operator-controls">
-                    <div class="operator-control-item">
-                        <label for="operatorMaisonSelect">Select Maison:</label>
-                        <select id="operatorMaisonSelect" class="form-control">
-                            <option value="">-- Select Maison --</option>
-                        </select>
-                    </div>
-                    <div class="operator-control-item">
-                        <label for="operatorYearSelect">Fiscal Year:</label>
-                        <select id="operatorYearSelect" class="form-control">
-                            <option value="2025">FY2025</option>
-                            <option value="2026" selected>FY2026</option>
-                            <option value="2027">FY2027</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="data-tips-bottom">
-                    <p class="tips-title">💡 Tips:</p>
-                    <ul class="tips-list">
-                        <li><strong>Email/SMS/WhatsApp:</strong> Enter monthly usage (consumed during the month)</li>
-                        <li><strong>Contacts:</strong> Enter cumulative total (total as of month end)</li>
-                        <li>Click <strong>[Submit]</strong> to record new data or <strong>[Update]</strong> to modify existing records</li>
-                    </ul>
-                </div>
-
-                <!-- Monthly Actual Data Table -->
-                <div class="monthly-data-table-container">
-                    <table class="monthly-data-table" id="operatorDataTable">
-                        <thead>
-                            <tr>
-                                <th>Month</th>
-                                <th>Email Usage</th>
-                                <th>SMS Usage</th>
-                                <th>WhatsApp Usage</th>
-                                <th>Contacts Total</th>
-                                <th>Recorded By</th>
-                                <th>Time</th>
-                                <th>Action</th>
-                            </tr>
-                        </thead>
-                        <tbody id="operatorDataTableBody">
-                            <tr>
-                                <td colspan="8" style="text-align: center; padding: 20px; color: #999;">
-                                    Please select a Maison to view and record data
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-
-                <p id="operatorMessage" class="message"></p>
-
-                <!-- Operator Data Modal -->
-                <div id="operatorModal" class="modal hidden">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h3 id="operatorModalTitle">Record Actual Usage</h3>
-                            <span class="modal-close" id="operatorModalClose">&times;</span>
-                        </div>
-                        <div class="modal-body">
-                            <input type="hidden" id="operatorModalMaison" value="">
-                            <input type="hidden" id="operatorModalYear" value="">
-                            <input type="hidden" id="operatorModalMonth" value="">
-                            
-                            <div class="modal-form-group">
-                                <label for="operatorEmailInput">Email Usage (monthly):</label>
-                                <input type="number" id="operatorEmailInput" class="form-control" placeholder="Enter monthly usage" min="0" value="">
-                            </div>
-                            
-                            <div class="modal-form-group">
-                                <label for="operatorSmsInput">SMS Usage (monthly):</label>
-                                <input type="number" id="operatorSmsInput" class="form-control" placeholder="Enter monthly usage" min="0" value="">
-                            </div>
-                            
-                            <div class="modal-form-group">
-                                <label for="operatorWhatsappInput">WhatsApp Usage (monthly):</label>
-                                <input type="number" id="operatorWhatsappInput" class="form-control" placeholder="Enter monthly usage" min="0" value="">
-                            </div>
-                            
-                            <div class="modal-form-group">
-                                <label for="operatorContactsInput">Contacts Total (cumulative):</label>
-                                <input type="number" id="operatorContactsInput" class="form-control" placeholder="Enter cumulative total" min="0" value="">
-                            </div>
-                            
-                            <div class="modal-form-group">
-                                <label for="operatorNotesInput">Notes (optional, max 200 characters):</label>
-                                <textarea id="operatorNotesInput" class="form-control" placeholder="Add any notes..." maxlength="200" rows="3"></textarea>
-                                <p id="operatorNotesCharCount" class="char-count">0/200</p>
-                            </div>
-                        </div>
-                        <div class="modal-footer">
-                            <button id="operatorModalCancelButton" class="modal-button-secondary">Cancel</button>
-                            <button id="operatorModalSubmitButton" class="modal-button-primary">Submit</button>
+                        <div class="budget-form-item">
+                            <label for="budgetMaisonSelect">Maison:</label>
+                            <select id="budgetMaisonSelect" class="form-control">
+                                <!-- Options will be populated by JavaScript -->
+                            </select>
                         </div>
                     </div>
+                    
+                    <div class="budget-inputs-container">
+                        <div class="budget-input-item">
+                            <label for="emailBudgetInput">Email Budget:</label>
+                            <input type="number" id="emailBudgetInput" class="form-control" placeholder="Enter email budget" min="0" value="0">
+                        </div>
+                        <div class="budget-input-item">
+                            <label for="smsBudgetInput">SMS Budget:</label>
+                            <input type="number" id="smsBudgetInput" class="form-control" placeholder="Enter SMS budget" min="0" value="0">
+                        </div>
+                        <div class="budget-input-item">
+                            <label for="whatsappBudgetInput">WhatsApp Budget:</label>
+                            <input type="number" id="whatsappBudgetInput" class="form-control" placeholder="Enter WhatsApp budget" min="0" value="0">
+                        </div>
+                        <div class="budget-input-item">
+                            <label for="contactsBudgetInput">Contacts Budget:</label>
+                            <input type="number" id="contactsBudgetInput" class="form-control" placeholder="Enter Contacts budget" min="0" value="0">
+                        </div>
+                    </div>
+
+                    <button id="submitBudgetButton">Submit Budget</button>
+                    <p id="budgetSubmitMessage" class="message"></p>
                 </div>
+
+                <!-- Overview of All Maisons Data -->
+                <h3>Overview of All Maisons Monthly Data</h3>
+                <div id="overviewDataTableContainer" class="table-container">
+                    <!-- All maisons data will be displayed here -->
+                </div>
+                <button id="exportOverviewDataButton">Export Overview Data (CSV)</button>
+
+                <!-- Annual Forecast vs Budget -->
+                <h3>Annual Forecast vs Budget</h3>
+                <div class="year-selection-container">
+                    <label for="forecastYearSelect">Select Year:</label>
+                    <select id="forecastYearSelect" class="form-control year-select">
+                        <!-- Options will be populated by JavaScript -->
+                    </select>
+                </div>
+                <div id="forecastTableContainer" class="table-container forecast-table-container">
+                    <!-- Forecast table will be displayed here -->
+                </div>
+                <button id="exportForecastButton">Export Forecast Data (CSV)</button>
+
+                <!-- Email Broadcast Section -->
+                <div id="emailBroadcastSection" class="email-broadcast-section">
+                    <h3>Send Email to Users via Outlook</h3>
+                    <p>Select users from the list below and compose email in Outlook.</p>
+                    
+                    <div class="user-selection-header">
+                        <label>Select Recipients:</label>
+                        <div class="selection-controls">
+                            <button id="selectAllButton" class="selection-button">Select All</button>
+                            <button id="deselectAllButton" class="selection-button">Deselect All</button>
+                            <input type="text" id="userSearchInput" class="user-search-input" placeholder="Search users...">
+                        </div>
+                    </div>
+                    
+                    <div id="userListContainer" class="user-list-container">
+                        <p class="loading-text">Loading users...</p>
+                    </div>
+                    
+                    <label for="emailSubjectInput">Email Subject:</label>
+                    <input type="text" id="emailSubjectInput" class="form-control" placeholder="Enter email subject">
+                    
+                    <label for="emailContentInput">Email Content:</label>
+                    <textarea id="emailContentInput" class="form-control email-textarea" placeholder="Enter email content" rows="6"></textarea>
+                    
+                    <div class="email-action-buttons">
+                        <button id="openOutlookButton" class="email-broadcast-button">Open in Outlook</button>
+                        <button id="copyEmailsButton" class="email-broadcast-button-secondary">Copy Email List</button>
+                    </div>
+                    <p id="emailBroadcastMessage" class="message"></p>
+                    <p id="recipientCountDisplay" class="recipient-count"></p>
+                </div>
+
+                <h3>All Historical Actions Log</h3>
+                <div id="adminHistoryTableContainer" class="table-container">
+                    <!-- Admin historical actions log will be displayed here -->
+                </div>
+                <button id="exportHistoryDataButton">Export History Data (CSV)</button>
             </div>
         </div>
     </div>

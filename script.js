@@ -528,26 +528,9 @@ html += '</tr></thead><tbody>';
             const statusClass = { Pending: 'status-pending', Approved: 'status-approved', Rejected: 'status-rejected' }[statusText] || 'status-pending';
             html += `<td><span class="${statusClass}"><span class="status-badge-cell">${statusText}</span></span></td>`;
             
-            // Notes 列改为 "See" 链接（使用缓存）
-let notesCell = '-';
-if (row.MaisonNotes || row.AdminNotes) {
-    const noteDataId = `note-${row.MaisonName}-${row.Year}-${String(row.Month).padStart(2, '0')}`;
-    notesCell = `<a href="javascript:void(0);" class="notes-link admin-notes-link" data-note-id="${noteDataId}">See</a>`;
-    
-    // 将完整数据存储到缓存
-    if (!window.adminNotesCache) window.adminNotesCache = {};
-    window.adminNotesCache[noteDataId] = {
-        maisonName: row.MaisonName,
-        year: row.Year,
-        month: String(row.Month).padStart(2, '0'),
-        maisonNotes: row.MaisonNotes || '',
-        adminNotes: row.AdminNotes || ''
-    };
-}
-html += `<td>${notesCell}</td>`;
-
-
-
+            const notes = row.MaisonNotes || '';
+            const displayNotes = notes.length > 50 ? `<span title="${notes}">${notes.substring(0, 50)}...</span>` : notes;
+            html += `<td>${displayNotes}</td>`;
             
             const recordId = row.RecordId || '';
             const submittedBy = row.SubmittedBy || '';
@@ -909,35 +892,6 @@ const openNotesViewModal = (year, month) => {
 const closeNotesViewModal = () => {
     const modal = $('notesViewModal');
     modal.classList.add('hidden');
-};
-// === Open Admin Notes View Modal ===
-const openAdminNotesViewModal = (maisonName, year, month, maisonNotes, adminNotes) => {
-    const modal = $('notesViewModal');
-    const title = $('notesViewTitle');
-    
-    title.textContent = `Notes for ${maisonName} - ${year}-${month}`;
-    
-    // Display Maison Notes
-    const maisonNotesDisplay = $('maisonNotesDisplay');
-    if (maisonNotes && maisonNotes.trim()) {
-        maisonNotesDisplay.textContent = maisonNotes;
-    } else {
-        maisonNotesDisplay.textContent = '';
-    }
-    
-    // Display Admin Notes
-    const adminNotesSection = $('adminNotesViewSection');
-    const adminNotesDisplay = $('adminNotesViewDisplay');
-    
-    if (adminNotes && adminNotes.trim()) {
-        adminNotesSection.classList.remove('hidden');
-        adminNotesDisplay.textContent = adminNotes;
-    } else {
-        adminNotesSection.classList.add('hidden');
-        adminNotesDisplay.textContent = '';
-    }
-    
-    modal.classList.remove('hidden');
 };
 
 // === Tab Switching ===
@@ -2122,26 +2076,6 @@ document.addEventListener('click', (e) => {
         openNotesViewModal(year, month);
     }
 });
-// Admin Notes link click handler (for Overview)
-document.addEventListener('click', (e) => {
-    if (e.target.classList.contains('admin-notes-link')) {
-        const noteId = e.target.dataset.noteId;
-        
-        if (window.adminNotesCache && window.adminNotesCache[noteId]) {
-            const data = window.adminNotesCache[noteId];
-            openAdminNotesViewModal(
-                data.maisonName, 
-                data.year, 
-                data.month, 
-                data.maisonNotes, 
-                data.adminNotes
-            );
-        }
-    }
-});
-
-
-
 // Fiscal Year Tab buttons for Actual (Maison view)
 document.addEventListener('click', (e) => {
     if (e.target.classList.contains('fy-tab-button-actual')) {

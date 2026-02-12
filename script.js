@@ -502,15 +502,17 @@ const loadMaisonForecastData = async (maison, containerSelector) => {
     };
     
     let html = '<table><thead><tr>';
-html += '<th>Maison Name</th><th>Year-Month</th>';  // 合并为一列
+html += '<th>Maison Name</th><th>Year-Month</th>';
 html += '<th>Email</th><th>SMS</th><th>WhatsApp</th><th>Contacts</th>';
-html += '<th>Submitted By</th><th>Submission Time</th>';
+html += '<th>Submission Time</th>';  // 删除了 Submitted By
 html += '<th>Approval Status</th><th>Maison Notes</th><th>Approval Action</th>';
 html += '</tr></thead><tbody>';
 
+
     
     if (filteredData.length === 0) {
-        html += '<tr><td colspan="11" style="text-align: center; padding: 20px; color: #666;">No data for this selection.</td></tr>';
+        html += '<tr><td colspan="10" style="text-align: center; padding: 20px; color: #666;">No data for this selection.</td></tr>';
+
     } else {
         filteredData.forEach(row => {
             html += '<tr>';
@@ -520,7 +522,6 @@ html += '</tr></thead><tbody>';
             html += `<td>${row.SMSCount || 0}</td>`;
             html += `<td>${row.WhatsAppCount || 0}</td>`;
             html += `<td>${row.ContactsCount || 0}</td>`;
-            html += `<td>${row.SubmittedBy || ''}</td>`;
             html += `<td>${fmt(row.Timestamp)}</td>`;
             
             const statusText = row.ApprovalStatus || '';
@@ -596,7 +597,7 @@ html += `<td colspan="2" style="text-align: center; font-weight: bold;">TOTAL (A
     html += `<span class="total-variance-line ${contactsVarianceClass}">${summary.variance.Contacts >= 0 ? '+' : ''}${summary.variance.Contacts.toFixed(1)}% ${Math.abs(summary.variance.Contacts) > 15 ? '⚠️' : '✓'}</span>`;
     html += '</td>';
     
-    html += '<td colspan="3" style="text-align: center;">-</td>';
+    html += '<td colspan="2" style="text-align: center;">-</td>';
     
     html += '<td style="text-align: center;">';
     if (summary.hasAlert) {

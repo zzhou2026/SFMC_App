@@ -1490,3 +1490,63 @@ table tr:hover {
     border-bottom-color: var(--primary-color);
     background-color: transparent;
 }
+/* === Maison Accordion Styles === */
+.maison-accordion-container {
+    margin: 20px 0;
+}
+
+.maison-accordion {
+    background-color: var(--light-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    margin-bottom: 10px;
+    overflow: hidden;
+}
+
+.maison-accordion summary {
+    cursor: pointer;
+    padding: 15px 20px;
+    font-weight: bold;
+    font-size: 1.05em;
+    color: var(--primary-color);
+    background-color: #f5f5f5;
+    user-select: none;
+    list-style: none;
+    transition: background-color 0.2s ease;
+}
+
+.maison-accordion summary::-webkit-details-marker {
+    display: none;
+}
+
+.maison-accordion summary::before {
+    content: "▶ ";
+    display: inline-block;
+    margin-right: 8px;
+    transition: transform 0.3s ease;
+}
+
+.maison-accordion[open] summary::before {
+    content: "▼ ";
+}
+
+.maison-accordion summary:hover {
+    background-color: #e8f5f3;
+}
+
+.maison-accordion-content {
+    padding: 0;
+}
+
+.maison-accordion-content .table-container {
+    border: none;
+    border-radius: 0;
+    margin: 0;
+    max-height: none;
+    padding: 15px;
+    background-color: white;
+}
+
+.maison-accordion-content table {
+    margin-bottom: 0;
+}

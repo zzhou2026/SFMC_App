@@ -17,10 +17,8 @@ let allMaisons = []; // Store all maison names for operator
 
     let monthlyDataCache = {}; // Cache for monthly data
     let allMaisonsList = []; // 所有 Maison 列表
-    let currentFiscalYearOverview = 2026; // Overview 的 Fiscal Year
-    let selectedMaisonOverview = null; // Overview 选中的 Maison
-    let currentFiscalYearActualOverview = 2026; // Actual Overview 的 Fiscal Year
-    let selectedMaisonActual = null; // Actual Overview 选中的 Maison
+    let currentFiscalYearOverview = 2026; 
+    let currentFiscalYearActualOverview = 2026; 
     // ===== 工具函数 =====
     const showPage = page => {
         document.querySelectorAll('.page').forEach(p => { p.classList.add('hidden'); p.classList.remove('active'); });
@@ -124,84 +122,11 @@ const loadAllMaisonsForAdmin = async () => {
     const res = await api('getAllMaisons');
     if (res.success && res.data) {
         allMaisonsList = res.data;
-        renderMaisonSelectorOverview();
-        renderMaisonSelectorActual();
+        renderMaisonAccordionOverview();  // ← 改成这个
+        renderMaisonAccordionActual();     // ← 改成这个
     }
 };
 
-const renderMaisonSelectorOverview = () => {
-    const container = $('maisonSelectorOverview');
-    if (!container || allMaisonsList.length === 0) {
-        if (container) container.innerHTML = '<p class="error-text">No maisons available.</p>';
-        return;
-    }
-    
-    let html = '';
-    allMaisonsList.forEach((maison, index) => {
-        const checked = index === 0 ? 'checked' : '';
-        html += `
-            <label class="maison-radio-item">
-                <input type="radio" 
-                       name="maisonOverview" 
-                       value="${maison}" 
-                       ${checked}
-                       class="maison-radio-overview">
-                <span>${maison}</span>
-            </label>
-        `;
-    });
-    
-    container.innerHTML = html;
-    
-    if (allMaisonsList.length > 0) {
-        selectedMaisonOverview = allMaisonsList[0];
-        loadOverviewData();
-    }
-    
-    container.querySelectorAll('.maison-radio-overview').forEach(radio => {
-        radio.addEventListener('change', (e) => {
-            selectedMaisonOverview = e.target.value;
-            loadOverviewData();
-        });
-    });
-};
-
-const renderMaisonSelectorActual = () => {
-    const container = $('maisonSelectorActual');
-    if (!container || allMaisonsList.length === 0) {
-        if (container) container.innerHTML = '<p class="error-text">No maisons available.</p>';
-        return;
-    }
-    
-    let html = '';
-    allMaisonsList.forEach((maison, index) => {
-        const checked = index === 0 ? 'checked' : '';
-        html += `
-            <label class="maison-radio-item">
-                <input type="radio" 
-                       name="maisonActual" 
-                       value="${maison}" 
-                       ${checked}
-                       class="maison-radio-actual">
-                <span>${maison}</span>
-            </label>
-        `;
-    });
-    
-    container.innerHTML = html;
-    
-    if (allMaisonsList.length > 0) {
-        selectedMaisonActual = allMaisonsList[0];
-        loadActualOverviewData();
-    }
-    
-    container.querySelectorAll('.maison-radio-actual').forEach(radio => {
-        radio.addEventListener('change', (e) => {
-            selectedMaisonActual = e.target.value;
-            loadActualOverviewData();
-        });
-    });
-};
 
 
 // === Render Operator Data Table ===
@@ -467,15 +392,85 @@ const switchFiscalYearTabActual = (fiscalYear) => {
     
     renderMaisonActualDataTable();
 };
-// === 新增：加载 Overview (Forecast) 数据（添加在这里）===
-const loadOverviewData = async () => {
-    const container = $('overviewDataTableContainer');
-    if (!container) return;
+
+
+const switchFiscalYearTabOverview = (fiscalYear) => {
+    currentFiscalYearOverview = fiscalYear;
     
-    if (!selectedMaisonOverview) {
-        container.innerHTML = '<p style="text-align: center; padding: 20px;">Please select a maison.</p>';
+    document.querySelectorAll('.fy-tab-button-overview').forEach(btn => {
+        if (parseInt(btn.dataset.year) === fiscalYear) {
+            btn.classList.add('active');
+        } else {
+            btn.classList.remove('active');
+        }
+    });
+    
+    // 关闭所有 accordion 并重置内容
+    document.querySelectorAll('#maisonAccordionOverview .maison-accordion').forEach(details => {
+        details.removeAttribute('open');
+        const maison = details.dataset.maison;
+        const containerId = `forecast-table-${maison.replace(/\s+/g, '-')}`;
+        const container = document.getElementById(containerId);
+        if (container) {
+            container.innerHTML = '<p style="text-align: center; padding: 20px;">Click to load data...</p>';
+        }
+    });
+};
+
+// === 渲染 Maison Accordion (Forecast) ===
+const renderMaisonAccordionOverview = () => {
+    const container = $('maisonAccordionOverview');
+    if (!container || allMaisonsList.length === 0) {
+        if (container) container.innerHTML = '<p class="error-text">No maisons available.</p>';
         return;
     }
+    
+    let html = '';
+    allMaisonsList.forEach(maison => {
+        html += `
+            <details class="maison-accordion" data-maison="${maison}" data-type="forecast">
+                <summary>${maison}</summary>
+                <div class="maison-accordion-content">
+                    <div class="table-container" id="forecast-table-${maison.replace(/\s+/g, '-')}">
+                        <p style="text-align: center; padding: 20px;">Click to load data...</p>
+                    </div>
+                </div>
+            </details>
+        `;
+    });
+    
+    container.innerHTML = html;
+};
+
+// === 渲染 Maison Accordion (Actual) ===
+const renderMaisonAccordionActual = () => {
+    const container = $('maisonAccordionActual');
+    if (!container || allMaisonsList.length === 0) {
+        if (container) container.innerHTML = '<p class="error-text">No maisons available.</p>';
+        return;
+    }
+    
+    let html = '';
+    allMaisonsList.forEach(maison => {
+        html += `
+            <details class="maison-accordion" data-maison="${maison}" data-type="actual">
+                <summary>${maison}</summary>
+                <div class="maison-accordion-content">
+                    <div class="table-container" id="actual-table-${maison.replace(/\s+/g, '-')}">
+                        <p style="text-align: center; padding: 20px;">Click to load data...</p>
+                    </div>
+                </div>
+            </details>
+        `;
+    });
+    
+    container.innerHTML = html;
+};
+
+// === 加载单个 Maison 的 Forecast 数据 ===
+const loadMaisonForecastData = async (maison, containerSelector) => {
+    const container = document.querySelector(containerSelector);
+    if (!container) return;
     
     container.innerHTML = '<p style="text-align: center; padding: 20px;">Loading...</p>';
     
@@ -491,11 +486,11 @@ const loadOverviewData = async () => {
         const rowMonth = parseInt(row.Month);
         const isFY = (rowYear == currentFiscalYearOverview && rowMonth >= 2) || 
                      (rowYear == (currentFiscalYearOverview + 1) && rowMonth == 1);
-        return row.MaisonName === selectedMaisonOverview && isFY;
+        return row.MaisonName === maison && isFY;
     });
     
     const summaryRes = await api('getMaisonForecastSummary', {
-        maisonName: selectedMaisonOverview,
+        maisonName: maison,
         year: currentFiscalYearOverview
     });
     
@@ -605,7 +600,7 @@ const loadOverviewData = async () => {
     
     html += '<td style="text-align: center;">';
     if (summary.hasAlert) {
-        html += `<button class="alert-button-table" data-type="forecast-maison" data-year="${currentFiscalYearOverview}" data-maison="${selectedMaisonOverview}">🔔 Alert</button>`;
+        html += `<button class="alert-button-table" data-type="forecast-maison" data-year="${currentFiscalYearOverview}" data-maison="${maison}">🔔 Alert</button>`;
     } else {
         html += '-';
     }
@@ -616,31 +611,10 @@ const loadOverviewData = async () => {
     
     container.innerHTML = html;
 };
-
-const switchFiscalYearTabOverview = (fiscalYear) => {
-    currentFiscalYearOverview = fiscalYear;
-    
-    document.querySelectorAll('.fy-tab-button-overview').forEach(btn => {
-        if (parseInt(btn.dataset.year) === fiscalYear) {
-            btn.classList.add('active');
-        } else {
-            btn.classList.remove('active');
-        }
-    });
-    
-    loadOverviewData();
-};
-
-
-// === Load Admin Actual Overview with Total Row ===
-const loadActualOverviewData = async () => {
-    const container = $('actualOverviewTableContainer');
+// === 加载单个 Maison 的 Actual 数据 ===
+const loadMaisonActualData = async (maison, containerSelector) => {
+    const container = document.querySelector(containerSelector);
     if (!container) return;
-    
-    if (!selectedMaisonActual) {
-        container.innerHTML = '<p style="text-align: center; padding: 20px;">Please select a maison.</p>';
-        return;
-    }
     
     container.innerHTML = '<p style="text-align: center; padding: 20px;">Loading...</p>';
     
@@ -656,11 +630,11 @@ const loadActualOverviewData = async () => {
         const rowMonth = parseInt(row.Month);
         const isFY = (rowYear == currentFiscalYearActualOverview && rowMonth >= 2) || 
                      (rowYear == (currentFiscalYearActualOverview + 1) && rowMonth == 1);
-        return row.MaisonName === selectedMaisonActual && isFY;
+        return row.MaisonName === maison && isFY;
     });
     
     const summaryRes = await api('getMaisonActualSummary', {
-        maisonName: selectedMaisonActual,
+        maisonName: maison,
         year: currentFiscalYearActualOverview
     });
     
@@ -730,7 +704,7 @@ const loadActualOverviewData = async () => {
     
     html += '<td style="text-align: center;">';
     if (summary.hasAlert) {
-        html += `<button class="alert-button-table" data-type="actual-maison" data-year="${currentFiscalYearActualOverview}" data-maison="${selectedMaisonActual}">🔔 Alert</button>`;
+        html += `<button class="alert-button-table" data-type="actual-maison" data-year="${currentFiscalYearActualOverview}" data-maison="${maison}">🔔 Alert</button>`;
     } else {
         html += '-';
     }
@@ -753,8 +727,18 @@ const switchFiscalYearTabActualOverview = (fiscalYear) => {
         }
     });
     
-    loadActualOverviewData();
+    // 关闭所有 accordion 并重置内容
+    document.querySelectorAll('#maisonAccordionActual .maison-accordion').forEach(details => {
+        details.removeAttribute('open');
+        const maison = details.dataset.maison;
+        const containerId = `actual-table-${maison.replace(/\s+/g, '-')}`;
+        const container = document.getElementById(containerId);
+        if (container) {
+            container.innerHTML = '<p style="text-align: center; padding: 20px;">Click to load data...</p>';
+        }
+    });
 };
+
 
 
 // === Render Monthly Data Table ===
@@ -2231,6 +2215,26 @@ document.addEventListener('click', (e) => {
         switchFiscalYearTabActualOverview(fiscalYear);
     }
 });
+// === Accordion 展开监听 (懒加载) ===
+document.addEventListener('toggle', (e) => {
+    if (e.target.classList && e.target.classList.contains('maison-accordion')) {
+        const details = e.target;
+        
+        // 只在展开时加载
+        if (details.open) {
+            const maison = details.dataset.maison;
+            const type = details.dataset.type;
+            
+            if (type === 'forecast') {
+                const containerId = `#forecast-table-${maison.replace(/\s+/g, '-')}`;
+                loadMaisonForecastData(maison, containerId);
+            } else if (type === 'actual') {
+                const containerId = `#actual-table-${maison.replace(/\s+/g, '-')}`;
+                loadMaisonActualData(maison, containerId);
+            }
+        }
+    }
+}, true);
 
 // 初始化
 showPage($('loginPage'));

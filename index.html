@@ -318,7 +318,7 @@
                     <p id="budgetSubmitMessage" class="message"></p>
                 </div>
 
-                <!-- Overview of All Maisons Data -->
+               <!-- Overview of All Maisons Data -->
 <h3>Overview of All Maisons Monthly Data</h3>
 
 <!-- Fiscal Year Tabs for Overview -->
@@ -328,19 +328,13 @@
     <button class="fy-tab-button-overview" data-year="2027">FY2027</button>
 </div>
 
-<!-- Maison Selector for Overview -->
-<div class="maison-selector-section">
-    <label class="maison-selector-label">Select Maison:</label>
-    <div id="maisonSelectorOverview" class="maison-selector-container">
-        <!-- 动态生成的单选按钮将插入这里 -->
-        <p class="loading-text">Loading maisons...</p>
-    </div>
+<!-- Maison Accordion Container for Overview -->
+<div id="maisonAccordionOverview" class="maison-accordion-container">
+    <p class="loading-text">Loading maisons...</p>
 </div>
 
-<!-- Overview Data Table -->
-<div id="overviewDataTableContainer" class="table-container">
-    <!-- 数据表格将在这里渲染 -->
-</div>
+<button id="exportOverviewDataButton">Export Overview Data (CSV)</button>
+
 
 <button id="exportOverviewDataButton">Export Overview Data (CSV)</button>
 
@@ -354,19 +348,13 @@
     <button class="fy-tab-button-actual-overview" data-year="2027">FY2027</button>
 </div>
 
-<!-- Maison Selector for Actual -->
-<div class="maison-selector-section">
-    <label class="maison-selector-label">Select Maison:</label>
-    <div id="maisonSelectorActual" class="maison-selector-container">
-        <!-- 动态生成的单选按钮将插入这里 -->
-        <p class="loading-text">Loading maisons...</p>
-    </div>
+<!-- Maison Accordion Container for Actual -->
+<div id="maisonAccordionActual" class="maison-accordion-container">
+    <p class="loading-text">Loading maisons...</p>
 </div>
 
-<!-- Actual Data Table -->
-<div id="actualOverviewTableContainer" class="table-container">
-    <!-- 数据表格将在这里渲染 -->
-</div>
+<button id="exportActualDataButton">Export Actual Data (CSV)</button>
+
 
 <button id="exportActualDataButton">Export Actual Data (CSV)</button>
 

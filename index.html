@@ -319,14 +319,55 @@
                 </div>
 
                 <!-- Overview of All Maisons Data -->
-                <h3>Overview of All Maisons Monthly Data</h3>
-                <div id="overviewDataTableContainer" class="table-container">
-                    <!-- All maisons data will be displayed here -->
-                </div>
-                <button id="exportOverviewDataButton">Export Overview Data (CSV)</button>
+<h3>Overview of All Maisons Monthly Data</h3>
+
+<!-- Fiscal Year Tabs for Overview -->
+<div class="fiscal-year-tabs">
+    <button class="fy-tab-button-overview" data-year="2025">FY2025</button>
+    <button class="fy-tab-button-overview active" data-year="2026">FY2026</button>
+    <button class="fy-tab-button-overview" data-year="2027">FY2027</button>
+</div>
+
+<!-- Maison Selector for Overview -->
+<div class="maison-selector-section">
+    <label class="maison-selector-label">Select Maison:</label>
+    <div id="maisonSelectorOverview" class="maison-selector-container">
+        <!-- 动态生成的单选按钮将插入这里 -->
+        <p class="loading-text">Loading maisons...</p>
+    </div>
+</div>
+
+<!-- Overview Data Table -->
+<div id="overviewDataTableContainer" class="table-container">
+    <!-- 数据表格将在这里渲染 -->
+</div>
+
+<button id="exportOverviewDataButton">Export Overview Data (CSV)</button>
+
 <!-- Actual Data Overview -->
 <h3>Actual Usage Data Overview</h3>
-<div id="actualOverviewTableContainer" class="table-container"></div>
+
+<!-- Fiscal Year Tabs for Actual -->
+<div class="fiscal-year-tabs">
+    <button class="fy-tab-button-actual-overview" data-year="2025">FY2025</button>
+    <button class="fy-tab-button-actual-overview active" data-year="2026">FY2026</button>
+    <button class="fy-tab-button-actual-overview" data-year="2027">FY2027</button>
+</div>
+
+<!-- Maison Selector for Actual -->
+<div class="maison-selector-section">
+    <label class="maison-selector-label">Select Maison:</label>
+    <div id="maisonSelectorActual" class="maison-selector-container">
+        <!-- 动态生成的单选按钮将插入这里 -->
+        <p class="loading-text">Loading maisons...</p>
+    </div>
+</div>
+
+<!-- Actual Data Table -->
+<div id="actualOverviewTableContainer" class="table-container">
+    <!-- 数据表格将在这里渲染 -->
+</div>
+
 <button id="exportActualDataButton">Export Actual Data (CSV)</button>
 
 

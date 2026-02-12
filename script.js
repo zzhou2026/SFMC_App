@@ -16,7 +16,11 @@ let actualDataCache = {}; // Cache for actual data
 let allMaisons = []; // Store all maison names for operator
 
     let monthlyDataCache = {}; // Cache for monthly data
-
+    let allMaisonsList = []; // 所有 Maison 列表
+    let currentFiscalYearOverview = 2026; // Overview 的 Fiscal Year
+    let selectedMaisonOverview = null; // Overview 选中的 Maison
+    let currentFiscalYearActualOverview = 2026; // Actual Overview 的 Fiscal Year
+    let selectedMaisonActual = null; // Actual Overview 选中的 Maison
     // ===== 工具函数 =====
     const showPage = page => {
         document.querySelectorAll('.page').forEach(p => { p.classList.add('hidden'); p.classList.remove('active'); });
@@ -114,6 +118,91 @@ const loadAllMaisons = async () => {
             .map(u => u.maisonName))];
     }
 };
+
+// === 新增：加载所有 Maison 列表（用于 Admin Overview）（添加在这里）===
+const loadAllMaisonsForAdmin = async () => {
+    const res = await api('getAllMaisons');
+    if (res.success && res.data) {
+        allMaisonsList = res.data;
+        renderMaisonSelectorOverview();
+        renderMaisonSelectorActual();
+    }
+};
+
+const renderMaisonSelectorOverview = () => {
+    const container = $('maisonSelectorOverview');
+    if (!container || allMaisonsList.length === 0) {
+        if (container) container.innerHTML = '<p class="error-text">No maisons available.</p>';
+        return;
+    }
+    
+    let html = '';
+    allMaisonsList.forEach((maison, index) => {
+        const checked = index === 0 ? 'checked' : '';
+        html += `
+            <label class="maison-radio-item">
+                <input type="radio" 
+                       name="maisonOverview" 
+                       value="${maison}" 
+                       ${checked}
+                       class="maison-radio-overview">
+                <span>${maison}</span>
+            </label>
+        `;
+    });
+    
+    container.innerHTML = html;
+    
+    if (allMaisonsList.length > 0) {
+        selectedMaisonOverview = allMaisonsList[0];
+        loadOverviewData();
+    }
+    
+    container.querySelectorAll('.maison-radio-overview').forEach(radio => {
+        radio.addEventListener('change', (e) => {
+            selectedMaisonOverview = e.target.value;
+            loadOverviewData();
+        });
+    });
+};
+
+const renderMaisonSelectorActual = () => {
+    const container = $('maisonSelectorActual');
+    if (!container || allMaisonsList.length === 0) {
+        if (container) container.innerHTML = '<p class="error-text">No maisons available.</p>';
+        return;
+    }
+    
+    let html = '';
+    allMaisonsList.forEach((maison, index) => {
+        const checked = index === 0 ? 'checked' : '';
+        html += `
+            <label class="maison-radio-item">
+                <input type="radio" 
+                       name="maisonActual" 
+                       value="${maison}" 
+                       ${checked}
+                       class="maison-radio-actual">
+                <span>${maison}</span>
+            </label>
+        `;
+    });
+    
+    container.innerHTML = html;
+    
+    if (allMaisonsList.length > 0) {
+        selectedMaisonActual = allMaisonsList[0];
+        loadActualOverviewData();
+    }
+    
+    container.querySelectorAll('.maison-radio-actual').forEach(radio => {
+        radio.addEventListener('change', (e) => {
+            selectedMaisonActual = e.target.value;
+            loadActualOverviewData();
+        });
+    });
+};
+
 
 // === Render Operator Data Table ===
 const renderOperatorDataTable = async () => {
@@ -378,11 +467,180 @@ const switchFiscalYearTabActual = (fiscalYear) => {
     
     renderMaisonActualDataTable();
 };
+// === 新增：加载 Overview (Forecast) 数据（添加在这里）===
+const loadOverviewData = async () => {
+    const container = $('overviewDataTableContainer');
+    if (!container) return;
+    
+    if (!selectedMaisonOverview) {
+        container.innerHTML = '<p style="text-align: center; padding: 20px;">Please select a maison.</p>';
+        return;
+    }
+    
+    container.innerHTML = '<p style="text-align: center; padding: 20px;">Loading...</p>';
+    
+    const res = await api('getAllSfmcData');
+    
+    if (!res.success || !res.data || res.data.length === 0) {
+        container.innerHTML = '<p>No data available.</p>';
+        return;
+    }
+    
+    const filteredData = res.data.filter(row => {
+        const rowYear = parseInt(row.Year);
+        const rowMonth = parseInt(row.Month);
+        const isFY = (rowYear == currentFiscalYearOverview && rowMonth >= 2) || 
+                     (rowYear == (currentFiscalYearOverview + 1) && rowMonth == 1);
+        return row.MaisonName === selectedMaisonOverview && isFY;
+    });
+    
+    const summaryRes = await api('getMaisonForecastSummary', {
+        maisonName: selectedMaisonOverview,
+        year: currentFiscalYearOverview
+    });
+    
+    const summary = summaryRes.success ? summaryRes : {
+        totals: { Email: 0, SMS: 0, WhatsApp: 0, Contacts: 0 },
+        budget: { Email: 0, SMS: 0, WhatsApp: 0, Contacts: 0 },
+        variance: { Email: 0, SMS: 0, WhatsApp: 0, Contacts: 0 },
+        hasAlert: false
+    };
+    
+    let html = '<table><thead><tr>';
+    html += '<th>Maison Name</th><th>Year</th><th>Month</th>';
+    html += '<th>Email</th><th>SMS</th><th>WhatsApp</th><th>Contacts</th>';
+    html += '<th>Submitted By</th><th>Submission Time</th>';
+    html += '<th>Approval Status</th><th>Maison Notes</th><th>Approval Action</th>';
+    html += '</tr></thead><tbody>';
+    
+    if (filteredData.length === 0) {
+        html += '<tr><td colspan="12" style="text-align: center; padding: 20px; color: #666;">No data for this selection.</td></tr>';
+    } else {
+        filteredData.forEach(row => {
+            html += '<tr>';
+            html += `<td>${row.MaisonName}</td>`;
+            html += `<td>${row.Year}</td>`;
+            html += `<td>${row.Month}</td>`;
+            html += `<td>${row.EmailCount || 0}</td>`;
+            html += `<td>${row.SMSCount || 0}</td>`;
+            html += `<td>${row.WhatsAppCount || 0}</td>`;
+            html += `<td>${row.ContactsCount || 0}</td>`;
+            html += `<td>${row.SubmittedBy || ''}</td>`;
+            html += `<td>${fmt(row.Timestamp)}</td>`;
+            
+            const statusText = row.ApprovalStatus || '';
+            const statusClass = { Pending: 'status-pending', Approved: 'status-approved', Rejected: 'status-rejected' }[statusText] || 'status-pending';
+            html += `<td><span class="${statusClass}"><span class="status-badge-cell">${statusText}</span></span></td>`;
+            
+            const notes = row.MaisonNotes || '';
+            const displayNotes = notes.length > 50 ? `<span title="${notes}">${notes.substring(0, 50)}...</span>` : notes;
+            html += `<td>${displayNotes}</td>`;
+            
+            const recordId = row.RecordId || '';
+            const submittedBy = row.SubmittedBy || '';
+            const maisonName = row.MaisonName || '';
+            const year = row.Year || '';
+            const month = row.Month || '';
+            const timestamp = row.Timestamp || '';
+            const maisonNotes = row.MaisonNotes || '';
+            const dataDetails = `Email: ${row.EmailCount || 0}, SMS: ${row.SMSCount || 0}, WhatsApp: ${row.WhatsAppCount || 0}, Contacts: ${row.ContactsCount || 0}`;
+            
+            html += `<td>
+                <button class="approve-button-table" 
+                    data-id="${recordId}" 
+                    data-submitted-by="${submittedBy}" 
+                    data-maison-name="${maisonName}" 
+                    data-year="${year}"
+                    data-month="${month}"
+                    data-timestamp="${timestamp}"
+                    data-maison-notes="${maisonNotes}"
+                    data-data-details="${dataDetails}">Approve</button>
+                <button class="reject-button-table" 
+                    data-id="${recordId}" 
+                    data-submitted-by="${submittedBy}" 
+                    data-maison-name="${maisonName}" 
+                    data-year="${year}"
+                    data-month="${month}"
+                    data-timestamp="${timestamp}"
+                    data-maison-notes="${maisonNotes}"
+                    data-data-details="${dataDetails}">Reject</button>
+            </td>`;
+            
+            html += '</tr>';
+        });
+    }
+    
+    html += '<tr class="overview-total-row">';
+    html += `<td colspan="3" style="text-align: center; font-weight: bold;">TOTAL (Approved Only)</td>`;
+    
+    html += '<td class="total-cell-multiline">';
+    html += `<span class="total-main-value">${summary.totals.Email.toLocaleString()}</span>`;
+    html += `<span class="total-budget-line">Budget: ${summary.budget.Email.toLocaleString()}</span>`;
+    const emailVarianceClass = summary.variance.Email >= 0 ? 'variance-positive' : 'variance-negative';
+    html += `<span class="total-variance-line ${emailVarianceClass}">${summary.variance.Email >= 0 ? '+' : ''}${summary.variance.Email.toFixed(1)}% ${Math.abs(summary.variance.Email) > 15 ? '⚠️' : '✓'}</span>`;
+    html += '</td>';
+    
+    html += '<td class="total-cell-multiline">';
+    html += `<span class="total-main-value">${summary.totals.SMS.toLocaleString()}</span>`;
+    html += `<span class="total-budget-line">Budget: ${summary.budget.SMS.toLocaleString()}</span>`;
+    const smsVarianceClass = summary.variance.SMS >= 0 ? 'variance-positive' : 'variance-negative';
+    html += `<span class="total-variance-line ${smsVarianceClass}">${summary.variance.SMS >= 0 ? '+' : ''}${summary.variance.SMS.toFixed(1)}% ${Math.abs(summary.variance.SMS) > 15 ? '⚠️' : '✓'}</span>`;
+    html += '</td>';
+    
+    html += '<td class="total-cell-multiline">';
+    html += `<span class="total-main-value">${summary.totals.WhatsApp.toLocaleString()}</span>`;
+    html += `<span class="total-budget-line">Budget: ${summary.budget.WhatsApp.toLocaleString()}</span>`;
+    const whatsappVarianceClass = summary.variance.WhatsApp >= 0 ? 'variance-positive' : 'variance-negative';
+    html += `<span class="total-variance-line ${whatsappVarianceClass}">${summary.variance.WhatsApp >= 0 ? '+' : ''}${summary.variance.WhatsApp.toFixed(1)}% ${Math.abs(summary.variance.WhatsApp) > 15 ? '⚠️' : '✓'}</span>`;
+    html += '</td>';
+    
+    html += '<td class="total-cell-multiline">';
+    html += `<span class="total-main-value">${summary.totals.Contacts.toLocaleString()}</span>`;
+    html += `<span class="total-budget-line">Budget: ${summary.budget.Contacts.toLocaleString()}</span>`;
+    const contactsVarianceClass = summary.variance.Contacts >= 0 ? 'variance-positive' : 'variance-negative';
+    html += `<span class="total-variance-line ${contactsVarianceClass}">${summary.variance.Contacts >= 0 ? '+' : ''}${summary.variance.Contacts.toFixed(1)}% ${Math.abs(summary.variance.Contacts) > 15 ? '⚠️' : '✓'}</span>`;
+    html += '</td>';
+    
+    html += '<td colspan="3" style="text-align: center;">-</td>';
+    
+    html += '<td style="text-align: center;">';
+    if (summary.hasAlert) {
+        html += `<button class="alert-button-table" data-type="forecast-maison" data-year="${currentFiscalYearOverview}" data-maison="${selectedMaisonOverview}">🔔 Alert</button>`;
+    } else {
+        html += '-';
+    }
+    html += '</td>';
+    
+    html += '</tr>';
+    html += '</tbody></table>';
+    
+    container.innerHTML = html;
+};
+
+const switchFiscalYearTabOverview = (fiscalYear) => {
+    currentFiscalYearOverview = fiscalYear;
+    
+    document.querySelectorAll('.fy-tab-button-overview').forEach(btn => {
+        if (parseInt(btn.dataset.year) === fiscalYear) {
+            btn.classList.add('active');
+        } else {
+            btn.classList.remove('active');
+        }
+    });
+    
+    loadOverviewData();
+};
+
 
 // === Load Admin Actual Overview with Total Row ===
-const loadAdminActualOverview = async () => {
+const loadActualOverviewData = async () => {
     const container = $('actualOverviewTableContainer');
     if (!container) return;
+    
+    if (!selectedMaisonActual) {
+        container.innerHTML = '<p style="text-align: center; padding: 20px;">Please select a maison.</p>';
+        return;
+    }
     
     container.innerHTML = '<p style="text-align: center; padding: 20px;">Loading...</p>';
     
@@ -393,104 +651,86 @@ const loadAdminActualOverview = async () => {
         return;
     }
     
-    // Get current year for budget comparison
-    const currentYear = new Date().getFullYear();
-    
-    // Get budget data
-    const budgetRes = await api('getYearlyBudget', { year: currentYear });
-    const budget = budgetRes.success ? budgetRes.budget : { Email: 0, SMS: 0, WhatsApp: 0, Contacts: 0 };
-    
-    // Calculate totals
-    let totalEmail = 0, totalSms = 0, totalWhatsapp = 0, totalContacts = 0;
-    
-    let html = '<table><thead><tr>';
-html += '<th>Maison</th><th>Year</th><th>Month</th>';
-html += '<th>Email</th><th>SMS</th><th>WhatsApp</th><th>Contacts</th>';
-html += '<th>Recorded By</th><th>Timestamp</th>';
-html += '</tr></thead><tbody>';
-
-    
-    res.data.forEach(row => {
-        totalEmail += parseInt(row.EmailUsage) || 0;
-        totalSms += parseInt(row.SMSUsage) || 0;
-        totalWhatsapp += parseInt(row.WhatsAppUsage) || 0;
-        totalContacts += parseInt(row.ContactsTotal) || 0;
-        
-        html += '<tr>';
-        html += `<td>${row.MaisonName}</td>`;
-        html += `<td>${row.Year}</td>`;
-        html += `<td>${row.Month}</td>`;
-        html += `<td>${row.EmailUsage}</td>`;
-        html += `<td>${row.SMSUsage}</td>`;
-        html += `<td>${row.WhatsAppUsage}</td>`;
-        html += `<td>${row.ContactsTotal}</td>`;
-        html += `<td>${row.RecordedBy}</td>`;
-        html += `<td>${fmt(row.Timestamp)}</td>`;
-        html += '</tr>';
+    const filteredData = res.data.filter(row => {
+        const rowYear = parseInt(row.Year);
+        const rowMonth = parseInt(row.Month);
+        const isFY = (rowYear == currentFiscalYearActualOverview && rowMonth >= 2) || 
+                     (rowYear == (currentFiscalYearActualOverview + 1) && rowMonth == 1);
+        return row.MaisonName === selectedMaisonActual && isFY;
     });
     
-    // Calculate variance
-    const varianceThreshold = parseFloat(configPrices.VarianceThreshold) || 15;
+    const summaryRes = await api('getMaisonActualSummary', {
+        maisonName: selectedMaisonActual,
+        year: currentFiscalYearActualOverview
+    });
     
-    const calcVariance = (total, budgetVal) => {
-        if (budgetVal > 0) {
-            return ((total - budgetVal) / budgetVal) * 100;
-        }
-        return total > 0 ? 100 : 0;
+    const summary = summaryRes.success ? summaryRes : {
+        totals: { Email: 0, SMS: 0, WhatsApp: 0, Contacts: 0 },
+        budget: { Email: 0, SMS: 0, WhatsApp: 0, Contacts: 0 },
+        variance: { Email: 0, SMS: 0, WhatsApp: 0, Contacts: 0 },
+        hasAlert: false
     };
     
-    const emailVariance = calcVariance(totalEmail, budget.Email);
-    const smsVariance = calcVariance(totalSms, budget.SMS);
-    const whatsappVariance = calcVariance(totalWhatsapp, budget.WhatsApp);
-    const contactsVariance = calcVariance(totalContacts, budget.Contacts);
+    let html = '<table><thead><tr>';
+    html += '<th>Maison</th><th>Year</th><th>Month</th>';
+    html += '<th>Email</th><th>SMS</th><th>WhatsApp</th><th>Contacts</th>';
+    html += '<th>Recorded By</th><th>Timestamp</th>';
+    html += '</tr></thead><tbody>';
     
-    const needsAlert = Math.abs(emailVariance) > varianceThreshold || 
-                       Math.abs(smsVariance) > varianceThreshold || 
-                       Math.abs(whatsappVariance) > varianceThreshold || 
-                       Math.abs(contactsVariance) > varianceThreshold;
+    if (filteredData.length === 0) {
+        html += '<tr><td colspan="9" style="text-align: center; padding: 20px; color: #666;">No data for this selection.</td></tr>';
+    } else {
+        filteredData.forEach(row => {
+            html += '<tr>';
+            html += `<td>${row.MaisonName}</td>`;
+            html += `<td>${row.Year}</td>`;
+            html += `<td>${row.Month}</td>`;
+            html += `<td>${row.EmailUsage || 0}</td>`;
+            html += `<td>${row.SMSUsage || 0}</td>`;
+            html += `<td>${row.WhatsAppUsage || 0}</td>`;
+            html += `<td>${row.ContactsTotal || 0}</td>`;
+            html += `<td>${row.RecordedBy || ''}</td>`;
+            html += `<td>${fmt(row.Timestamp)}</td>`;
+            html += '</tr>';
+        });
+    }
     
-    // Total row with budget comparison
     html += '<tr class="overview-total-row">';
-    html += '<td colspan="3" class="overview-total-cell">Total (Actual) - FY' + currentYear + '</td>';
+    html += `<td colspan="3" style="text-align: center; font-weight: bold;">TOTAL</td>`;
     
-    // Email column
-    html += '<td class="budget-comparison-cell">';
-    html += `<span class="budget-line"><span class="budget-label">Total:</span> <span class="budget-value">${totalEmail}</span></span><br>`;
-    html += `<span class="budget-line"><span class="budget-label">Budget:</span> ${budget.Email}</span><br>`;
-    const emailVarianceClass = emailVariance >= 0 ? 'variance-positive' : 'variance-negative';
-    html += `<span class="budget-line"><span class="budget-label">Variance:</span> <span class="variance-value ${emailVarianceClass}">${emailVariance >= 0 ? '+' : ''}${emailVariance.toFixed(1)}%</span></span>`;
+    html += '<td class="total-cell-multiline">';
+    html += `<span class="total-main-value">${summary.totals.Email.toLocaleString()}</span>`;
+    html += `<span class="total-budget-line">Budget: ${summary.budget.Email.toLocaleString()}</span>`;
+    const emailVarianceClass = summary.variance.Email >= 0 ? 'variance-positive' : 'variance-negative';
+    html += `<span class="total-variance-line ${emailVarianceClass}">${summary.variance.Email >= 0 ? '+' : ''}${summary.variance.Email.toFixed(1)}% ${Math.abs(summary.variance.Email) > 15 ? '⚠️' : '✓'}</span>`;
     html += '</td>';
     
-    // SMS column
-    html += '<td class="budget-comparison-cell">';
-    html += `<span class="budget-line"><span class="budget-label">Total:</span> <span class="budget-value">${totalSms}</span></span><br>`;
-    html += `<span class="budget-line"><span class="budget-label">Budget:</span> ${budget.SMS}</span><br>`;
-    const smsVarianceClass = smsVariance >= 0 ? 'variance-positive' : 'variance-negative';
-    html += `<span class="budget-line"><span class="budget-label">Variance:</span> <span class="variance-value ${smsVarianceClass}">${smsVariance >= 0 ? '+' : ''}${smsVariance.toFixed(1)}%</span></span>`;
+    html += '<td class="total-cell-multiline">';
+    html += `<span class="total-main-value">${summary.totals.SMS.toLocaleString()}</span>`;
+    html += `<span class="total-budget-line">Budget: ${summary.budget.SMS.toLocaleString()}</span>`;
+    const smsVarianceClass = summary.variance.SMS >= 0 ? 'variance-positive' : 'variance-negative';
+    html += `<span class="total-variance-line ${smsVarianceClass}">${summary.variance.SMS >= 0 ? '+' : ''}${summary.variance.SMS.toFixed(1)}% ${Math.abs(summary.variance.SMS) > 15 ? '⚠️' : '✓'}</span>`;
     html += '</td>';
     
-    // WhatsApp column
-    html += '<td class="budget-comparison-cell">';
-    html += `<span class="budget-line"><span class="budget-label">Total:</span> <span class="budget-value">${totalWhatsapp}</span></span><br>`;
-    html += `<span class="budget-line"><span class="budget-label">Budget:</span> ${budget.WhatsApp}</span><br>`;
-    const whatsappVarianceClass = whatsappVariance >= 0 ? 'variance-positive' : 'variance-negative';
-    html += `<span class="budget-line"><span class="budget-label">Variance:</span> <span class="variance-value ${whatsappVarianceClass}">${whatsappVariance >= 0 ? '+' : ''}${whatsappVariance.toFixed(1)}%</span></span>`;
+    html += '<td class="total-cell-multiline">';
+    html += `<span class="total-main-value">${summary.totals.WhatsApp.toLocaleString()}</span>`;
+    html += `<span class="total-budget-line">Budget: ${summary.budget.WhatsApp.toLocaleString()}</span>`;
+    const whatsappVarianceClass = summary.variance.WhatsApp >= 0 ? 'variance-positive' : 'variance-negative';
+    html += `<span class="total-variance-line ${whatsappVarianceClass}">${summary.variance.WhatsApp >= 0 ? '+' : ''}${summary.variance.WhatsApp.toFixed(1)}% ${Math.abs(summary.variance.WhatsApp) > 15 ? '⚠️' : '✓'}</span>`;
     html += '</td>';
     
-    // Contacts column
-    html += '<td class="budget-comparison-cell">';
-    html += `<span class="budget-line"><span class="budget-label">Total:</span> <span class="budget-value">${totalContacts}</span></span><br>`;
-    html += `<span class="budget-line"><span class="budget-label">Budget:</span> ${budget.Contacts}</span><br>`;
-    const contactsVarianceClass = contactsVariance >= 0 ? 'variance-positive' : 'variance-negative';
-    html += `<span class="budget-line"><span class="budget-label">Variance:</span> <span class="variance-value ${contactsVarianceClass}">${contactsVariance >= 0 ? '+' : ''}${contactsVariance.toFixed(1)}%</span></span>`;
+    html += '<td class="total-cell-multiline">';
+    html += `<span class="total-main-value">${summary.totals.Contacts.toLocaleString()}</span>`;
+    html += `<span class="total-budget-line">Budget: ${summary.budget.Contacts.toLocaleString()}</span>`;
+    const contactsVarianceClass = summary.variance.Contacts >= 0 ? 'variance-positive' : 'variance-negative';
+    html += `<span class="total-variance-line ${contactsVarianceClass}">${summary.variance.Contacts >= 0 ? '+' : ''}${summary.variance.Contacts.toFixed(1)}% ${Math.abs(summary.variance.Contacts) > 15 ? '⚠️' : '✓'}</span>`;
     html += '</td>';
     
-    html += '<td colspan="1" class="overview-total-cell">-</td>';
+    html += '<td style="text-align: center;">-</td>';
     
-    // Alert button column
-    html += '<td>';
-    if (needsAlert) {
-        html += `<button class="alert-button-table" data-type="actual" data-year="${currentYear}">🔔 Alert</button>`;
+    html += '<td style="text-align: center;">';
+    if (summary.hasAlert) {
+        html += `<button class="alert-button-table" data-type="actual-maison" data-year="${currentFiscalYearActualOverview}" data-maison="${selectedMaisonActual}">🔔 Alert</button>`;
     } else {
         html += '-';
     }
@@ -500,6 +740,20 @@ html += '</tr></thead><tbody>';
     html += '</tbody></table>';
     
     container.innerHTML = html;
+};
+
+const switchFiscalYearTabActualOverview = (fiscalYear) => {
+    currentFiscalYearActualOverview = fiscalYear;
+    
+    document.querySelectorAll('.fy-tab-button-actual-overview').forEach(btn => {
+        if (parseInt(btn.dataset.year) === fiscalYear) {
+            btn.classList.add('active');
+        } else {
+            btn.classList.remove('active');
+        }
+    });
+    
+    loadActualOverviewData();
 };
 
 
@@ -1133,63 +1387,81 @@ const addForecastTotalRow = async (container) => {
                 }
                 
                 // Handle alert buttons
-                if (e.target.classList.contains('alert-button-table')) {
-                    const dataType = e.target.dataset.type;
-                    const year = parseInt(e.target.dataset.year);
-                    
-                    const totalsRes = await api('calculateYearlyTotals', { 
-                        dataType: dataType, 
-                        year: year 
-                    });
-                    const totals = totalsRes.success ? totalsRes.totals : { Email: 0, SMS: 0, WhatsApp: 0, Contacts: 0 };
-                    
-                    const budgetRes = await api('getYearlyBudget', { year: year });
-                    const budget = budgetRes.success ? budgetRes.budget : { Email: 0, SMS: 0, WhatsApp: 0, Contacts: 0 };
-                    
-                    const calcVariance = (total, budgetVal) => {
-                        if (budgetVal > 0) return ((total - budgetVal) / budgetVal) * 100;
-                        return total > 0 ? 100 : 0;
-                    };
-                    
-                    const variance = {
-                        Email: calcVariance(totals.Email, budget.Email),
-                        SMS: calcVariance(totals.SMS, budget.SMS),
-                        WhatsApp: calcVariance(totals.WhatsApp, budget.WhatsApp),
-                        Contacts: calcVariance(totals.Contacts, budget.Contacts)
-                    };
-                    
-                    const emailRes = await api('generateAlertEmail', {
-                        dataType: dataType === 'forecast' ? 'Forecast' : 'Actual',
-                        year: year,
-                        totals: totals,
-                        budget: budget,
-                        variance: variance,
-                        maisonName: null
-                    });
-                    
-                    if (emailRes.success) {
-                        $('emailSubjectInput').value = emailRes.subject;
-                        $('emailContentInput').value = emailRes.body;
-                        
-                        if (allUsers && allUsers.length) {
-                            searchTerm = '';
-                            if ($('userSearchInput')) $('userSearchInput').value = '';
-                            renderU();
-                            
-                            $('userListContainer').querySelectorAll('.user-checkbox').forEach(cb => {
-                                const username = cb.dataset.username || '';
-                                if (username === 'BT-admin' || username.includes('admin')) {
-                                    cb.checked = true;
-                                }
-                            });
-                            updCnt();
-                        }
-                        
-                        $('emailBroadcastSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
-                        msg($('emailBroadcastMessage'), 'Alert email prepared. Click "Open in Outlook" to send.', true);
-                    }
-                    return;
+if (e.target.classList.contains('alert-button-table')) {
+    const dataType = e.target.dataset.type;
+    const year = parseInt(e.target.dataset.year);
+    const maison = e.target.dataset.maison;
+    
+    let totals, budget, variance;
+    
+    if (dataType === 'forecast-maison' || dataType === 'actual-maison') {
+        const summaryApi = dataType === 'forecast-maison' ? 'getMaisonForecastSummary' : 'getMaisonActualSummary';
+        const summaryRes = await api(summaryApi, { maisonName: maison, year: year });
+        
+        if (summaryRes.success) {
+            totals = summaryRes.totals;
+            budget = summaryRes.budget;
+            variance = summaryRes.variance;
+        } else {
+            alert('Failed to load summary data.');
+            return;
+        }
+    } else {
+        const totalsRes = await api('calculateYearlyTotals', { 
+            dataType: dataType, 
+            year: year 
+        });
+        totals = totalsRes.success ? totalsRes.totals : { Email: 0, SMS: 0, WhatsApp: 0, Contacts: 0 };
+        
+        const budgetRes = await api('getYearlyBudget', { year: year });
+        budget = budgetRes.success ? budgetRes.budget : { Email: 0, SMS: 0, WhatsApp: 0, Contacts: 0 };
+        
+        const calcVariance = (total, budgetVal) => {
+            if (budgetVal > 0) return ((total - budgetVal) / budgetVal) * 100;
+            return total > 0 ? 100 : 0;
+        };
+        
+        variance = {
+            Email: calcVariance(totals.Email, budget.Email),
+            SMS: calcVariance(totals.SMS, budget.SMS),
+            WhatsApp: calcVariance(totals.WhatsApp, budget.WhatsApp),
+            Contacts: calcVariance(totals.Contacts, budget.Contacts)
+        };
+    }
+    
+    const emailRes = await api('generateAlertEmail', {
+        dataType: dataType === 'forecast-maison' ? 'Forecast' : (dataType === 'actual-maison' ? 'Actual' : dataType.charAt(0).toUpperCase() + dataType.slice(1)),
+        year: year,
+        totals: totals,
+        budget: budget,
+        variance: variance,
+        maisonName: maison || null
+    });
+    
+    if (emailRes.success) {
+        $('emailSubjectInput').value = emailRes.subject;
+        $('emailContentInput').value = emailRes.body;
+        
+        if (allUsers && allUsers.length) {
+            searchTerm = '';
+            if ($('userSearchInput')) $('userSearchInput').value = '';
+            renderU();
+            
+            $('userListContainer').querySelectorAll('.user-checkbox').forEach(cb => {
+                const username = cb.dataset.username || '';
+                if (username === 'BT-admin' || username.includes('admin')) {
+                    cb.checked = true;
                 }
+            });
+            updCnt();
+        }
+        
+        $('emailBroadcastSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        msg($('emailBroadcastMessage'), 'Alert email prepared. Click "Open in Outlook" to send.', true);
+    }
+    return;
+}
+
                 
                 // Now check for id
                 const id = e.target.dataset.id;
@@ -1576,11 +1848,13 @@ renderMaisonActualDataTable();
                     popYearSelectors();
                     popMaisonSelectors();
                     
-                    loadTable('admin', $('overviewDataTableContainer'));
-                    loadAdminActualOverview();
+                    // === 修改：使用新的加载逻辑 ===
+                    await loadAllMaisonsForAdmin();
+                    
                     loadTable('adminHistory', $('adminHistoryTableContainer'));
                     initBcast();
-                } else if (currentUser.role === 'sfmc-operator') {
+                }
+                 else if (currentUser.role === 'sfmc-operator') {
                     $('operatorView').classList.remove('hidden');
                     $('adminView').classList.add('hidden');
                     $('maisonView').classList.add('hidden');
@@ -1943,6 +2217,22 @@ if ($('logoutButtonOperator')) {
 
 
 
-    // 初始化
-    showPage($('loginPage'));
+   // === 新增：Tab 切换事件监听（添加在这里）===
+document.addEventListener('click', (e) => {
+    if (e.target.classList.contains('fy-tab-button-overview')) {
+        const fiscalYear = parseInt(e.target.dataset.year);
+        switchFiscalYearTabOverview(fiscalYear);
+    }
+});
+
+document.addEventListener('click', (e) => {
+    if (e.target.classList.contains('fy-tab-button-actual-overview')) {
+        const fiscalYear = parseInt(e.target.dataset.year);
+        switchFiscalYearTabActualOverview(fiscalYear);
+    }
+});
+
+// 初始化
+showPage($('loginPage'));
+
 });

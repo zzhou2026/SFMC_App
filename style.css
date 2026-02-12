@@ -1350,3 +1350,143 @@ table tr:hover {
 .variance-neutral {
     color: #666;
 }
+/* === Maison Selector Section === */
+.maison-selector-section {
+    background-color: var(--light-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 20px;
+    margin: 20px 0;
+}
+
+.maison-selector-label {
+    display: block;
+    margin-bottom: 15px;
+    font-weight: bold;
+    color: var(--primary-color);
+    font-size: 1.1em;
+    text-align: left;
+}
+
+.maison-selector-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.maison-radio-item {
+    display: flex;
+    align-items: center;
+    padding: 12px 15px;
+    background-color: white;
+    border: 2px solid var(--border-color);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    user-select: none;
+}
+
+.maison-radio-item:hover {
+    background-color: #f0f8ff;
+    border-color: var(--primary-color);
+}
+
+.maison-radio-item input[type="radio"] {
+    margin-right: 12px;
+    cursor: pointer;
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+}
+
+.maison-radio-item input[type="radio"]:checked + span {
+    color: var(--primary-color);
+    font-weight: bold;
+}
+
+.maison-radio-item span {
+    flex: 1;
+    font-size: 0.95em;
+    color: var(--text-color);
+}
+
+/* === Total Row Styles (方案B格式) === */
+.overview-total-row {
+    background-color: #e0f2f7;
+    font-weight: bold;
+    border-top: 3px solid var(--primary-color);
+}
+
+.overview-total-row:hover {
+    background-color: #e0f2f7 !important;
+}
+
+.total-cell-multiline {
+    text-align: center;
+    line-height: 1.6;
+    vertical-align: middle;
+    padding: 10px 8px;
+}
+
+.total-main-value {
+    display: block;
+    font-size: 1.1em;
+    color: var(--primary-color);
+    font-weight: bold;
+    margin-bottom: 4px;
+}
+
+.total-budget-line {
+    display: block;
+    font-size: 0.85em;
+    color: #666;
+    font-weight: normal;
+}
+
+.total-variance-line {
+    display: block;
+    font-size: 0.9em;
+    font-weight: bold;
+    margin-top: 4px;
+}
+
+.variance-positive {
+    color: #d32f2f;
+}
+
+.variance-negative {
+    color: #388e3c;
+}
+
+.variance-neutral {
+    color: #666;
+}
+
+/* === Fiscal Year Tabs for Overview === */
+.fy-tab-button-overview,
+.fy-tab-button-actual-overview {
+    background-color: transparent;
+    color: var(--gray-color);
+    padding: 10px 30px;
+    border: none;
+    border-bottom: 3px solid transparent;
+    cursor: pointer;
+    font-size: 1.1em;
+    font-weight: bold;
+    margin: 0;
+    transition: all 0.3s ease;
+    border-radius: 0;
+}
+
+.fy-tab-button-overview:hover,
+.fy-tab-button-actual-overview:hover {
+    background-color: var(--light-bg);
+    color: var(--primary-color);
+}
+
+.fy-tab-button-overview.active,
+.fy-tab-button-actual-overview.active {
+    color: var(--primary-color);
+    border-bottom-color: var(--primary-color);
+    background-color: transparent;
+}

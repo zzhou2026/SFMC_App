@@ -288,16 +288,14 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const openAdminForecastNotesModal = (maison, year, month) => {
-        const cacheKey = `${maison}-${year}`;
-        const dataMap = adminForecastDataCache[cacheKey];
+        const key = formatMonth(year, month);
+        const data = adminForecastDataCache[key];
         
-        if (!dataMap) {
-            alert('Data not found. Please refresh the page.');
+        if (!data) {
+            alert('No data found for this period.');
             return;
         }
-        
-        const key = formatMonth(year, month);
-        const data = dataMap[key];
+    
         
         if (!data) {
             alert('No data found for this period.');
@@ -858,7 +856,8 @@ html += '</tr>';
         }
         
 // Cache the data for notes viewing
-adminForecastDataCache[`${adminForecastMaison}-${adminGlobalYear}`] = dataMap;
+adminForecastDataCache = dataMap;
+
 
         let html = '';
         months.forEach(({ year, month }) => {

@@ -404,10 +404,11 @@ const loadAdminActualOverview = async () => {
     let totalEmail = 0, totalSms = 0, totalWhatsapp = 0, totalContacts = 0;
     
     let html = '<table><thead><tr>';
-    html += '<th>Maison</th><th>Year</th><th>Month</th>';
-    html += '<th>Email</th><th>SMS</th><th>WhatsApp</th><th>Contacts</th>';
-    html += '<th>Recorded By</th><th>Timestamp</th><th>Notes</th>';
-    html += '</tr></thead><tbody>';
+html += '<th>Maison</th><th>Year</th><th>Month</th>';
+html += '<th>Email</th><th>SMS</th><th>WhatsApp</th><th>Contacts</th>';
+html += '<th>Recorded By</th><th>Timestamp</th>';
+html += '</tr></thead><tbody>';
+
     
     res.data.forEach(row => {
         totalEmail += parseInt(row.EmailUsage) || 0;
@@ -425,7 +426,6 @@ const loadAdminActualOverview = async () => {
         html += `<td>${row.ContactsTotal}</td>`;
         html += `<td>${row.RecordedBy}</td>`;
         html += `<td>${fmt(row.Timestamp)}</td>`;
-        html += `<td>${row.Notes || '-'}</td>`;
         html += '</tr>';
     });
     
@@ -485,7 +485,7 @@ const loadAdminActualOverview = async () => {
     html += `<span class="budget-line"><span class="budget-label">Variance:</span> <span class="variance-value ${contactsVarianceClass}">${contactsVariance >= 0 ? '+' : ''}${contactsVariance.toFixed(1)}%</span></span>`;
     html += '</td>';
     
-    html += '<td colspan="2" class="overview-total-cell">-</td>';
+    html += '<td colspan="1" class="overview-total-cell">-</td>';
     
     // Alert button column
     html += '<td>';

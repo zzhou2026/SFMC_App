@@ -473,10 +473,8 @@ document.addEventListener('DOMContentLoaded', () => {
         
         let html = `<h4 style="padding: 15px; margin: 0; background-color: #e0f2f7; border-bottom: 1px solid #ddd;">${maisonShortName} - Monthly Forecast - FY${adminGlobalYear}</h4>`;
         html += '<table><thead><tr>';
-html += '<th>Month</th><th>Email</th><th>SMS</th><th>WhatsApp</th><th>Contacts</th><th>Status</th><th>Notes</th><th>Action</th>';
-html += '</tr></thead><tbody>';
-
-
+        html += '<th>Month</th><th>Email</th><th>SMS</th><th>WhatsApp</th><th>Contacts</th><th>Status</th><th>Action</th>';
+        html += '</tr></thead><tbody>';
         
         let annualForecast = { email: 0, sms: 0, whatsapp: 0, contacts: 0 };
         
@@ -508,24 +506,16 @@ if (data) {
                   <button class="reject-button-table" data-record-id="${data.RecordId}">Reject</button>`;
 }
 
-// 构建 Notes 单元格（和 Maison 端一样的逻辑）
-let notesCell = '-';
-if (data && (data.MaisonNotes || data.AdminNotes)) {
-    notesCell = `<a href="javascript:void(0)" class="notes-link admin-notes-link" data-year="${y}" data-month="${m}" data-maison="${adminForecastMaison}">See</a>`;
-}
-
-html += '<tr>';
-html += `<td class="month-cell">${monthDisplay}</td>`;
-html += `<td>${emailVal}</td>`;
-html += `<td>${smsVal}</td>`;
-html += `<td>${whatsappVal}</td>`;
-html += `<td>${contactsVal}</td>`;
-html += `<td><span class="${statusClass}"><span class="status-badge-cell">${status}</span></span></td>`;
-html += `<td>${notesCell}</td>`;
-html += `<td>${actionCell}</td>`;
-html += '</tr>';
-
-
+            
+            html += '<tr>';
+            html += `<td class="month-cell">${monthDisplay}</td>`;
+            html += `<td>${emailVal}</td>`;
+            html += `<td>${smsVal}</td>`;
+            html += `<td>${whatsappVal}</td>`;
+            html += `<td>${contactsVal}</td>`;
+            html += `<td><span class="${statusClass}"><span class="status-badge-cell">${status}</span></span></td>`;
+            html += `<td>${actionCell}</td>`;
+            html += '</tr>';
         });
         
         const variance = {
@@ -541,7 +531,7 @@ html += '</tr>';
         html += `<td class="summary-value">${annualForecast.sms}</td>`;
         html += `<td class="summary-value">${annualForecast.whatsapp}</td>`;
         html += `<td class="summary-value">${annualForecast.contacts}</td>`;
-        html += '<td colspan="3"></td>';
+        html += '<td colspan="2"></td>';
         html += '</tr>';
         
         html += '<tr class="summary-row">';
@@ -550,7 +540,7 @@ html += '</tr>';
         html += `<td class="summary-value">${budget.SMSBudget}</td>`;
         html += `<td class="summary-value">${budget.WhatsAppBudget}</td>`;
         html += `<td class="summary-value">${budget.ContactsBudget}</td>`;
-        html += '<td colspan="3"></td>';
+        html += '<td colspan="2"></td>';
         html += '</tr>';
         
         html += '<tr class="summary-row">';
@@ -559,7 +549,7 @@ html += '</tr>';
         html += `<td class="summary-value ${getVarianceClass(variance.sms)}">${variance.sms >= 0 ? '+' : ''}${variance.sms}%</td>`;
         html += `<td class="summary-value ${getVarianceClass(variance.whatsapp)}">${variance.whatsapp >= 0 ? '+' : ''}${variance.whatsapp}%</td>`;
         html += `<td class="summary-value ${getVarianceClass(variance.contacts)}">${variance.contacts >= 0 ? '+' : ''}${variance.contacts}%</td>`;
-        html += '<td colspan="3"></td>';
+        html += '<td colspan="2"></td>';
         html += '</tr>';
         
         html += '</tbody></table>';
@@ -761,49 +751,6 @@ html += '</tr>';
         
         container.innerHTML = html;
     };
-// Admin Notes View Modal
-const openAdminNotesModal = async (year, month, maisonName) => {
-    // Fetch the data for this specific month
-    const res = await api('getSfmcDataByMaison', { 
-        maisonName: maisonName, 
-        year: year 
-    });
-    
-    if (!res.success || !res.data) return;
-    
-    const formattedMonth = String(month).padStart(2, '0');
-    const record = res.data.find(r => r.Year == year && parseInt(r.Month) === parseInt(month));
-
-    
-    if (!record) return;
-    
-    const modal = $('notesViewModal');
-    const title = $('notesViewTitle');
-    
-    title.textContent = `Notes for ${formatMonth(year, formattedMonth)}`;
-    
-    // Display Maison Notes
-    const maisonNotesDisplay = $('maisonNotesDisplay');
-    if (record.MaisonNotes && record.MaisonNotes.trim()) {
-        maisonNotesDisplay.textContent = record.MaisonNotes;
-    } else {
-        maisonNotesDisplay.textContent = '';
-    }
-    
-    // Display Admin Notes
-    const adminNotesSection = $('adminNotesViewSection');
-    const adminNotesDisplay = $('adminNotesViewDisplay');
-    
-    if (record.AdminNotes && record.AdminNotes.trim()) {
-        adminNotesSection.classList.remove('hidden');
-        adminNotesDisplay.textContent = record.AdminNotes;
-    } else {
-        adminNotesSection.classList.add('hidden');
-        adminNotesDisplay.textContent = '';
-    }
-    
-    modal.classList.remove('hidden');
-};
 
     const calcVariancePercent = (actual, forecast) => {
         if (!forecast || forecast === 0) return '0.0';
@@ -1544,22 +1491,13 @@ const openAdminNotesModal = async (year, month, maisonName) => {
     });
 
     // Notes link click handler
-document.addEventListener('click', (e) => {
-    if (e.target.classList.contains('notes-link')) {
-        const year = parseInt(e.target.dataset.year);
-        const month = e.target.dataset.month;
-        
-        // Check if it's admin notes link
-        if (e.target.classList.contains('admin-notes-link')) {
-            const maison = e.target.dataset.maison;
-            openAdminNotesModal(year, month, maison);
-        } else {
-            // Maison user notes link
+    document.addEventListener('click', (e) => {
+        if (e.target.classList.contains('notes-link')) {
+            const year = parseInt(e.target.dataset.year);
+            const month = e.target.dataset.month;
             openNotesViewModal(year, month);
         }
-    }
-});
-
+    });
 
     // Action buttons in monthly data table
     document.addEventListener('click', (e) => {

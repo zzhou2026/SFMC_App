@@ -11,7 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentYear = new Date().getFullYear();
     let currentFiscalYear = 2026;
     let monthlyDataCache = {};
-
+    let adminForecastDataCache = {};
     // Admin 全局状态
     let adminGlobalYear = 2026;
     let adminBudgetMaison = 'ACQUA DI PARMA SRL';
@@ -287,6 +287,50 @@ document.addEventListener('DOMContentLoaded', () => {
         modal.classList.add('hidden');
     };
 
+    const openAdminForecastNotesModal = (maison, year, month) => {
+        const cacheKey = `${maison}-${year}`;
+        const dataMap = adminForecastDataCache[cacheKey];
+        
+        if (!dataMap) {
+            alert('Data not found. Please refresh the page.');
+            return;
+        }
+        
+        const key = formatMonth(year, month);
+        const data = dataMap[key];
+        
+        if (!data) {
+            alert('No data found for this period.');
+            return;
+        }
+        
+        const modal = $('notesViewModal');
+        const title = $('notesViewTitle');
+        const maisonShortName = getMaisonShortName(maison);
+        
+        title.textContent = `Notes for ${maisonShortName} - ${formatMonth(year, month)}`;
+        
+        const maisonNotesDisplay = $('maisonNotesDisplay');
+        if (data.MaisonNotes && data.MaisonNotes.trim()) {
+            maisonNotesDisplay.textContent = data.MaisonNotes;
+        } else {
+            maisonNotesDisplay.textContent = '';
+        }
+        
+        const adminNotesSection = $('adminNotesViewSection');
+        const adminNotesDisplay = $('adminNotesViewDisplay');
+        
+        if (data.AdminNotes && data.AdminNotes.trim()) {
+            adminNotesSection.classList.remove('hidden');
+            adminNotesDisplay.textContent = data.AdminNotes;
+        } else {
+            adminNotesSection.classList.add('hidden');
+            adminNotesDisplay.textContent = '';
+        }
+        
+        modal.classList.remove('hidden');
+    };
+    
     const switchFiscalYearTab = (fiscalYear) => {
         currentFiscalYear = fiscalYear;
         
@@ -473,7 +517,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         let html = `<h4 style="padding: 15px; margin: 0; background-color: #e0f2f7; border-bottom: 1px solid #ddd;">${maisonShortName} - Monthly Forecast - FY${adminGlobalYear}</h4>`;
         html += '<table><thead><tr>';
-        html += '<th>Month</th><th>Email</th><th>SMS</th><th>WhatsApp</th><th>Contacts</th><th>Status</th><th>Action</th>';
+        html += '<th>Month</th><th>Email</th><th>SMS</th><th>WhatsApp</th><th>Contacts</th><th>Status</th><th>Notes</th><th>Action</th>';
         html += '</tr></thead><tbody>';
         
         let annualForecast = { email: 0, sms: 0, whatsapp: 0, contacts: 0 };
@@ -506,16 +550,26 @@ if (data) {
                   <button class="reject-button-table" data-record-id="${data.RecordId}">Reject</button>`;
 }
 
+let notesCell = '-';
+if (data && (data.MaisonNotes || data.AdminNotes)) {
+    notesCell = `<a href="javascript:void(0)" class="notes-link admin-forecast-notes-link" 
+                    data-maison="${adminForecastMaison}" 
+                    data-year="${y}" 
+                    data-month="${m}">See</a>`;
+}
+
             
-            html += '<tr>';
-            html += `<td class="month-cell">${monthDisplay}</td>`;
-            html += `<td>${emailVal}</td>`;
-            html += `<td>${smsVal}</td>`;
-            html += `<td>${whatsappVal}</td>`;
-            html += `<td>${contactsVal}</td>`;
-            html += `<td><span class="${statusClass}"><span class="status-badge-cell">${status}</span></span></td>`;
-            html += `<td>${actionCell}</td>`;
-            html += '</tr>';
+html += '<tr>';
+html += `<td class="month-cell">${monthDisplay}</td>`;
+html += `<td>${emailVal}</td>`;
+html += `<td>${smsVal}</td>`;
+html += `<td>${whatsappVal}</td>`;
+html += `<td>${contactsVal}</td>`;
+html += `<td><span class="${statusClass}"><span class="status-badge-cell">${status}</span></span></td>`;
+html += `<td>${notesCell}</td>`;
+html += `<td>${actionCell}</td>`;
+html += '</tr>';
+
         });
         
         const variance = {
@@ -531,7 +585,7 @@ if (data) {
         html += `<td class="summary-value">${annualForecast.sms}</td>`;
         html += `<td class="summary-value">${annualForecast.whatsapp}</td>`;
         html += `<td class="summary-value">${annualForecast.contacts}</td>`;
-        html += '<td colspan="2"></td>';
+        html += '<td colspan="3"></td>';
         html += '</tr>';
         
         html += '<tr class="summary-row">';
@@ -540,7 +594,7 @@ if (data) {
         html += `<td class="summary-value">${budget.SMSBudget}</td>`;
         html += `<td class="summary-value">${budget.WhatsAppBudget}</td>`;
         html += `<td class="summary-value">${budget.ContactsBudget}</td>`;
-        html += '<td colspan="2"></td>';
+        html += '<td colspan="3"></td>';
         html += '</tr>';
         
         html += '<tr class="summary-row">';
@@ -549,7 +603,7 @@ if (data) {
         html += `<td class="summary-value ${getVarianceClass(variance.sms)}">${variance.sms >= 0 ? '+' : ''}${variance.sms}%</td>`;
         html += `<td class="summary-value ${getVarianceClass(variance.whatsapp)}">${variance.whatsapp >= 0 ? '+' : ''}${variance.whatsapp}%</td>`;
         html += `<td class="summary-value ${getVarianceClass(variance.contacts)}">${variance.contacts >= 0 ? '+' : ''}${variance.contacts}%</td>`;
-        html += '<td colspan="2"></td>';
+        html += '<td colspan="3"></td>';
         html += '</tr>';
         
         html += '</tbody></table>';
@@ -803,6 +857,9 @@ if (data) {
             });
         }
         
+// Cache the data for notes viewing
+adminForecastDataCache[`${adminForecastMaison}-${adminGlobalYear}`] = dataMap;
+
         let html = '';
         months.forEach(({ year, month }) => {
             const key = formatMonth(year, month);
@@ -1491,13 +1548,24 @@ if (data) {
     });
 
     // Notes link click handler
-    document.addEventListener('click', (e) => {
-        if (e.target.classList.contains('notes-link')) {
+document.addEventListener('click', (e) => {
+    if (e.target.classList.contains('notes-link')) {
+        // Admin forecast notes
+        if (e.target.classList.contains('admin-forecast-notes-link')) {
+            const maison = e.target.dataset.maison;
+            const year = parseInt(e.target.dataset.year);
+            const month = e.target.dataset.month;
+            openAdminForecastNotesModal(maison, year, month);
+        } 
+        // Maison view notes
+        else {
             const year = parseInt(e.target.dataset.year);
             const month = e.target.dataset.month;
             openNotesViewModal(year, month);
         }
-    });
+    }
+});
+
 
     // Action buttons in monthly data table
     document.addEventListener('click', (e) => {

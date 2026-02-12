@@ -288,8 +288,11 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const openAdminForecastNotesModal = (maison, year, month) => {
+        alert('Function called! Maison: ' + maison + ', Year: ' + year + ', Month: ' + month);
+        
         // 确保 month 是两位数格式
         const formattedMonth = String(month).padStart(2, '0');
+    
         const key = `${year}-${formattedMonth}`;
         
         const data = adminForecastDataCache[key];

@@ -409,7 +409,7 @@ const switchFiscalYearTabOverview = (fiscalYear) => {
     document.querySelectorAll('#maisonAccordionOverview .maison-accordion').forEach(details => {
         details.removeAttribute('open');
         const maison = details.dataset.maison;
-        const containerId = `forecast-table-${maison.replace(/\s+/g, '-')}`;
+        const containerId = `forecast-table-${maison.replace(/[^a-zA-Z0-9]/g, '-')}`;
         const container = document.getElementById(containerId);
         if (container) {
             container.innerHTML = '<p style="text-align: center; padding: 20px;">Click to load data...</p>';
@@ -431,7 +431,7 @@ const renderMaisonAccordionOverview = () => {
             <details class="maison-accordion" data-maison="${maison}" data-type="forecast">
                 <summary>${maison}</summary>
                 <div class="maison-accordion-content">
-                    <div class="table-container" id="forecast-table-${maison.replace(/\s+/g, '-')}">
+                   <div class="table-container" id="forecast-table-${maison.replace(/[^a-zA-Z0-9]/g, '-')}">
                         <p style="text-align: center; padding: 20px;">Click to load data...</p>
                     </div>
                 </div>
@@ -456,7 +456,7 @@ const renderMaisonAccordionActual = () => {
             <details class="maison-accordion" data-maison="${maison}" data-type="actual">
                 <summary>${maison}</summary>
                 <div class="maison-accordion-content">
-                    <div class="table-container" id="actual-table-${maison.replace(/\s+/g, '-')}">
+                    <div class="table-container" id="actual-table-${maison.replace(/[^a-zA-Z0-9]/g, '-')}">
                         <p style="text-align: center; padding: 20px;">Click to load data...</p>
                     </div>
                 </div>
@@ -731,7 +731,7 @@ const switchFiscalYearTabActualOverview = (fiscalYear) => {
     document.querySelectorAll('#maisonAccordionActual .maison-accordion').forEach(details => {
         details.removeAttribute('open');
         const maison = details.dataset.maison;
-        const containerId = `actual-table-${maison.replace(/\s+/g, '-')}`;
+        const containerId = `actual-table-${maison.replace(/[^a-zA-Z0-9]/g, '-')}`;
         const container = document.getElementById(containerId);
         if (container) {
             container.innerHTML = '<p style="text-align: center; padding: 20px;">Click to load data...</p>';
@@ -2226,10 +2226,10 @@ document.addEventListener('toggle', (e) => {
             const type = details.dataset.type;
             
             if (type === 'forecast') {
-                const containerId = `#forecast-table-${maison.replace(/\s+/g, '-')}`;
+                const containerId = `#forecast-table-${maison.replace(/[^a-zA-Z0-9]/g, '-')}`;
                 loadMaisonForecastData(maison, containerId);
             } else if (type === 'actual') {
-                const containerId = `#actual-table-${maison.replace(/\s+/g, '-')}`;
+                const containerId = `#actual-table-${maison.replace(/[^a-zA-Z0-9]/g, '-')}`;
                 loadMaisonActualData(maison, containerId);
             }
         }

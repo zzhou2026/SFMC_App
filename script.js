@@ -1134,8 +1134,78 @@ const addForecastTotalRow = async (container) => {
 
     // ===== 事件委托：表格按钮 =====
     document.addEventListener('click', async e => {
-        const id = e.target.dataset.id;
-        if (!id) return;
+                // Handle operator action buttons FIRST
+                if (e.target.classList.contains('operator-action-button')) {
+                    const maison = e.target.dataset.maison;
+                    const year = parseInt(e.target.dataset.year);
+                    const month = e.target.dataset.month;
+                    openOperatorModal(maison, year, month);
+                    return;
+                }
+                
+                // Handle alert buttons
+                if (e.target.classList.contains('alert-button-table')) {
+                    const dataType = e.target.dataset.type;
+                    const year = parseInt(e.target.dataset.year);
+                    
+                    const totalsRes = await api('calculateYearlyTotals', { 
+                        dataType: dataType, 
+                        year: year 
+                    });
+                    const totals = totalsRes.success ? totalsRes.totals : { Email: 0, SMS: 0, WhatsApp: 0, Contacts: 0 };
+                    
+                    const budgetRes = await api('getYearlyBudget', { year: year });
+                    const budget = budgetRes.success ? budgetRes.budget : { Email: 0, SMS: 0, WhatsApp: 0, Contacts: 0 };
+                    
+                    const calcVariance = (total, budgetVal) => {
+                        if (budgetVal > 0) return ((total - budgetVal) / budgetVal) * 100;
+                        return total > 0 ? 100 : 0;
+                    };
+                    
+                    const variance = {
+                        Email: calcVariance(totals.Email, budget.Email),
+                        SMS: calcVariance(totals.SMS, budget.SMS),
+                        WhatsApp: calcVariance(totals.WhatsApp, budget.WhatsApp),
+                        Contacts: calcVariance(totals.Contacts, budget.Contacts)
+                    };
+                    
+                    const emailRes = await api('generateAlertEmail', {
+                        dataType: dataType === 'forecast' ? 'Forecast' : 'Actual',
+                        year: year,
+                        totals: totals,
+                        budget: budget,
+                        variance: variance,
+                        maisonName: null
+                    });
+                    
+                    if (emailRes.success) {
+                        $('emailSubjectInput').value = emailRes.subject;
+                        $('emailContentInput').value = emailRes.body;
+                        
+                        if (allUsers && allUsers.length) {
+                            searchTerm = '';
+                            if ($('userSearchInput')) $('userSearchInput').value = '';
+                            renderU();
+                            
+                            $('userListContainer').querySelectorAll('.user-checkbox').forEach(cb => {
+                                const username = cb.dataset.username || '';
+                                if (username === 'BT-admin' || username.includes('admin')) {
+                                    cb.checked = true;
+                                }
+                            });
+                            updCnt();
+                        }
+                        
+                        $('emailBroadcastSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        msg($('emailBroadcastMessage'), 'Alert email prepared. Click "Open in Outlook" to send.', true);
+                    }
+                    return;
+                }
+                
+                // Now check for id
+                const id = e.target.dataset.id;
+                if (!id) return;
+        
 
         if (e.target.classList.contains('approve-button-table') || e.target.classList.contains('reject-button-table')) {
             const st = e.target.classList.contains('approve-button-table') ? 'Approved' : 'Rejected';
@@ -1169,75 +1239,6 @@ const addForecastTotalRow = async (container) => {
                     sendApprovalNotification(submittedBy, st, maisonName, year, month, dataDetails, timestamp, maisonNotes, adminNotes);
                 }
             }
-        }
-        // Handle operator action buttons
-        if (e.target.classList.contains('operator-action-button')) {
-            const maison = e.target.dataset.maison;
-            const year = parseInt(e.target.dataset.year);
-            const month = e.target.dataset.month;
-            openOperatorModal(maison, year, month);
-            return;
-        }
-        
-        // Handle alert buttons
-        if (e.target.classList.contains('alert-button-table')) {
-            const dataType = e.target.dataset.type; // 'forecast' or 'actual'
-            const year = parseInt(e.target.dataset.year);
-            
-            // Generate alert email
-            const totalsRes = await api('calculateYearlyTotals', { 
-                dataType: dataType, 
-                year: year 
-            });
-            const totals = totalsRes.success ? totalsRes.totals : { Email: 0, SMS: 0, WhatsApp: 0, Contacts: 0 };
-            
-            const budgetRes = await api('getYearlyBudget', { year: year });
-            const budget = budgetRes.success ? budgetRes.budget : { Email: 0, SMS: 0, WhatsApp: 0, Contacts: 0 };
-            
-            const calcVariance = (total, budgetVal) => {
-                if (budgetVal > 0) return ((total - budgetVal) / budgetVal) * 100;
-                return total > 0 ? 100 : 0;
-            };
-            
-            const variance = {
-                Email: calcVariance(totals.Email, budget.Email),
-                SMS: calcVariance(totals.SMS, budget.SMS),
-                WhatsApp: calcVariance(totals.WhatsApp, budget.WhatsApp),
-                Contacts: calcVariance(totals.Contacts, budget.Contacts)
-            };
-            
-            const emailRes = await api('generateAlertEmail', {
-                dataType: dataType === 'forecast' ? 'Forecast' : 'Actual',
-                year: year,
-                totals: totals,
-                budget: budget,
-                variance: variance,
-                maisonName: null
-            });
-            
-            if (emailRes.success) {
-                $('emailSubjectInput').value = emailRes.subject;
-                $('emailContentInput').value = emailRes.body;
-                
-                // Auto-select BT admin
-                if (allUsers && allUsers.length) {
-                    searchTerm = '';
-                    if ($('userSearchInput')) $('userSearchInput').value = '';
-                    renderU();
-                    
-                    $('userListContainer').querySelectorAll('.user-checkbox').forEach(cb => {
-                        const username = cb.dataset.username || '';
-                        if (username === 'BT-admin' || username.includes('admin')) {
-                            cb.checked = true;
-                        }
-                    });
-                    updCnt();
-                }
-                
-                $('emailBroadcastSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
-                msg($('emailBroadcastMessage'), 'Alert email prepared. Click "Open in Outlook" to send.', true);
-            }
-            return;
         }
     
     });

@@ -528,17 +528,24 @@ html += '</tr></thead><tbody>';
             const statusClass = { Pending: 'status-pending', Approved: 'status-approved', Rejected: 'status-rejected' }[statusText] || 'status-pending';
             html += `<td><span class="${statusClass}"><span class="status-badge-cell">${statusText}</span></span></td>`;
             
-            // 新代码 - 使用 "See" 链接
+            // Notes 列改为 "See" 链接（使用缓存）
 let notesCell = '-';
 if (row.MaisonNotes || row.AdminNotes) {
-    notesCell = `<a href="javascript:void(0)" class="notes-link admin-notes-link" 
-                    data-maison="${row.MaisonName}" 
-                    data-year="${row.Year}" 
-                    data-month="${row.Month}"
-                    data-maison-notes="${(row.MaisonNotes || '').replace(/"/g, '&quot;')}"
-                    data-admin-notes="${(row.AdminNotes || '').replace(/"/g, '&quot;')}">See</a>`;
+    const noteDataId = `note-${row.MaisonName}-${row.Year}-${String(row.Month).padStart(2, '0')}`;
+    notesCell = `<a href="#" class="notes-link admin-notes-link" data-note-id="${noteDataId}">See</a>`;
+    
+    // 将完整数据存储到缓存
+    if (!window.adminNotesCache) window.adminNotesCache = {};
+    window.adminNotesCache[noteDataId] = {
+        maisonName: row.MaisonName,
+        year: row.Year,
+        month: String(row.Month).padStart(2, '0'),
+        maisonNotes: row.MaisonNotes || '',
+        adminNotes: row.AdminNotes || ''
+    };
 }
 html += `<td>${notesCell}</td>`;
+
 
             
             const recordId = row.RecordId || '';
@@ -2117,15 +2124,23 @@ document.addEventListener('click', (e) => {
 // Admin Notes link click handler (for Overview)
 document.addEventListener('click', (e) => {
     if (e.target.classList.contains('admin-notes-link')) {
-        const maisonName = e.target.dataset.maisonName;
-        const year = e.target.dataset.year;
-        const month = e.target.dataset.month;
-        const maisonNotes = e.target.dataset.maisonNotes || '';
-        const adminNotes = e.target.dataset.adminNotes || '';
+        e.preventDefault(); // 阻止默认跳转行为
         
-        openAdminNotesViewModal(maisonName, year, month, maisonNotes, adminNotes);
+        const noteId = e.target.dataset.noteId;
+        
+        if (window.adminNotesCache && window.adminNotesCache[noteId]) {
+            const data = window.adminNotesCache[noteId];
+            openAdminNotesViewModal(
+                data.maisonName, 
+                data.year, 
+                data.month, 
+                data.maisonNotes, 
+                data.adminNotes
+            );
+        }
     }
 });
+
 
 // Fiscal Year Tab buttons for Actual (Maison view)
 document.addEventListener('click', (e) => {

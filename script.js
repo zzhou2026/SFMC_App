@@ -1465,18 +1465,14 @@ const addForecastTotalRow = async (container) => {
                 
                 // Handle alert buttons
 if (e.target.classList.contains('alert-button-table')) {
-    console.log('🔔 Alert button clicked!', e.target.dataset); 
     const dataType = e.target.dataset.type;
     const year = parseInt(e.target.dataset.year);
     const maison = e.target.dataset.maison;
-    console.log('📊 DataType:', dataType, 'Year:', year, 'Maison:', maison);  
     let totals, budget, variance;
     
     if (dataType === 'forecast-maison' || dataType === 'actual-maison') {
-        console.log('✅ Entering forecast-maison logic'); 
         const summaryApi = dataType === 'forecast-maison' ? 'getMaisonForecastSummary' : 'getMaisonActualSummary';
         const summaryRes = await api(summaryApi, { maisonName: maison, year: year });
-        console.log('📦 Summary response:', summaryRes); 
         if (summaryRes.success) {
             totals = summaryRes.totals;
             budget = summaryRes.budget;
@@ -1486,7 +1482,6 @@ if (e.target.classList.contains('alert-button-table')) {
             return;
         }
     } else {
-        console.log('⚠️ Entering else branch (should not happen)'); 
         const totalsRes = await api('calculateYearlyTotals', { 
             dataType: dataType, 
             year: year 
@@ -1508,7 +1503,6 @@ if (e.target.classList.contains('alert-button-table')) {
             Contacts: calcVariance(totals.Contacts, budget.Contacts)
         };
     }
-    console.log('📧 Calling generateAlertEmail...'); 
     const emailRes = await api('generateAlertEmail', {
         dataType: dataType === 'forecast-maison' ? 'Forecast' : (dataType === 'actual-maison' ? 'Actual' : dataType.charAt(0).toUpperCase() + dataType.slice(1)),
         year: year,
@@ -1517,15 +1511,10 @@ if (e.target.classList.contains('alert-button-table')) {
         variance: variance,
         maisonName: maison || null
     });
-    console.log('📬 Email response:', emailRes); 
     if (emailRes.success) {
-        console.log('✉️ Email success, filling form...');
         $('emailSubjectInput').value = emailRes.subject;
         $('emailContentInput').value = emailRes.body;
-        console.log('📝 Subject set to:', emailRes.subject);  // ← 加这一行
-    console.log('📝 Body length:', emailRes.body.length);  // ← 加这一行
         if (allUsers && allUsers.length) {
-            console.log('👥 Setting up user checkboxes...'); 
             searchTerm = '';
             if ($('userSearchInput')) $('userSearchInput').value = '';
             renderU();
@@ -1539,10 +1528,8 @@ if (e.target.classList.contains('alert-button-table')) {
             });
             updCnt();
         }
-        console.log('📜 Scrolling to email section...');
         $('emailBroadcastSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
         msg($('emailBroadcastMessage'), 'Alert email prepared. Click "Open in Outlook" to send.', true);
-        console.log('✅ Alert handling complete!'); 
     }
     return;
 }

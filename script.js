@@ -1469,13 +1469,14 @@ if (e.target.classList.contains('alert-button-table')) {
     const dataType = e.target.dataset.type;
     const year = parseInt(e.target.dataset.year);
     const maison = e.target.dataset.maison;
-    
+    console.log('📊 DataType:', dataType, 'Year:', year, 'Maison:', maison);  
     let totals, budget, variance;
     
     if (dataType === 'forecast-maison' || dataType === 'actual-maison') {
+        console.log('✅ Entering forecast-maison logic'); 
         const summaryApi = dataType === 'forecast-maison' ? 'getMaisonForecastSummary' : 'getMaisonActualSummary';
         const summaryRes = await api(summaryApi, { maisonName: maison, year: year });
-        
+        console.log('📦 Summary response:', summaryRes); 
         if (summaryRes.success) {
             totals = summaryRes.totals;
             budget = summaryRes.budget;
@@ -1485,6 +1486,7 @@ if (e.target.classList.contains('alert-button-table')) {
             return;
         }
     } else {
+        console.log('⚠️ Entering else branch (should not happen)'); 
         const totalsRes = await api('calculateYearlyTotals', { 
             dataType: dataType, 
             year: year 
@@ -1506,7 +1508,7 @@ if (e.target.classList.contains('alert-button-table')) {
             Contacts: calcVariance(totals.Contacts, budget.Contacts)
         };
     }
-    
+    console.log('📧 Calling generateAlertEmail...'); 
     const emailRes = await api('generateAlertEmail', {
         dataType: dataType === 'forecast-maison' ? 'Forecast' : (dataType === 'actual-maison' ? 'Actual' : dataType.charAt(0).toUpperCase() + dataType.slice(1)),
         year: year,
@@ -1515,7 +1517,7 @@ if (e.target.classList.contains('alert-button-table')) {
         variance: variance,
         maisonName: maison || null
     });
-    
+    console.log('📬 Email response:', emailRes); 
     if (emailRes.success) {
         $('emailSubjectInput').value = emailRes.subject;
         $('emailContentInput').value = emailRes.body;

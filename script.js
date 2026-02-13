@@ -591,14 +591,7 @@ const loadMaisonForecastData = async (maison, containerSelector) => {
         variance: { Email: 0, SMS: 0, WhatsApp: 0, Contacts: 0 },
         hasAlert: false
     };
-    // 检查是否已发送过 Alert
-const alertStatusRes = await api('checkMaisonForecastAlertSent', {
-    maisonName: maison,
-    year: currentFiscalYearOverview
-});
-
-const alertSent = alertStatusRes.success ? alertStatusRes.alreadySent : false;
-
+    
     let html = '<table><thead><tr>';
 html += '<th>Maison Name</th><th>Year-Month</th>';
 html += '<th>Email</th><th>SMS</th><th>WhatsApp</th><th>Contacts</th>';
@@ -698,15 +691,12 @@ html += `<td colspan="2" style="text-align: center; font-weight: bold;">TOTAL (A
     html += '<td colspan="2" style="text-align: center;">-</td>';
     
     html += '<td style="text-align: center;">';
-if (alertSent) {
-    // 已发送，显示灰色禁用按钮
-    html += `<button class="alert-button-table alert-sent-button" disabled data-type="forecast-maison" data-year="${currentFiscalYearOverview}" data-maison="${maison}">Alert Sent</button>`;
-} else {
-    // 未发送或数据已更新，显示可点击按钮
-    html += `<button class="alert-button-table" data-type="forecast-maison" data-year="${currentFiscalYearOverview}" data-maison="${maison}">Alert</button>`;
-}
-html += '</td>';
-
+    if (summary.hasAlert) {
+        html += `<button class="alert-button-table" data-type="forecast-maison" data-year="${currentFiscalYearOverview}" data-maison="${maison}">🔔 Alert</button>`;
+    } else {
+        html += '-';
+    }
+    html += '</td>';
     
     html += '</tr>';
     html += '</tbody></table>';
@@ -746,14 +736,7 @@ const loadMaisonActualData = async (maison, containerSelector) => {
         variance: { Email: 0, SMS: 0, WhatsApp: 0, Contacts: 0 },
         hasAlert: false
     };
-    // 检查是否已发送过 Alert
-const alertStatusRes = await api('checkMaisonActualAlertSent', {
-    maisonName: maison,
-    year: currentFiscalYearActualOverview
-});
-
-const alertSent = alertStatusRes.success ? alertStatusRes.alreadySent : false;
-
+    
     let html = '<table><thead><tr>';
 html += '<th>Maison</th><th>Year-Month</th>';  // 合并为一列
 html += '<th>Email</th><th>SMS</th><th>WhatsApp</th><th>Contacts</th>';
@@ -813,13 +796,12 @@ html += `<td colspan="2" style="text-align: center; font-weight: bold;">TOTAL</t
     html += '<td style="text-align: center;">-</td>';
     
     html += '<td style="text-align: center;">';
-if (alertSent) {
-    html += `<button class="alert-button-table alert-sent-button" disabled data-type="actual-maison" data-year="${currentFiscalYearActualOverview}" data-maison="${maison}">Alert Sent</button>`;
-} else {
-    html += `<button class="alert-button-table" data-type="actual-maison" data-year="${currentFiscalYearActualOverview}" data-maison="${maison}">Alert</button>`;
-}
-html += '</td>';
-
+    if (summary.hasAlert) {
+        html += `<button class="alert-button-table" data-type="actual-maison" data-year="${currentFiscalYearActualOverview}" data-maison="${maison}">🔔 Alert</button>`;
+    } else {
+        html += '-';
+    }
+    html += '</td>';
     
     html += '</tr>';
     html += '</tbody></table>';
@@ -1483,6 +1465,7 @@ const addForecastTotalRow = async (container) => {
                 
                 // Handle alert buttons
 if (e.target.classList.contains('alert-button-table')) {
+    console.log('🔔 Alert button clicked!', e.target.dataset); 
     const dataType = e.target.dataset.type;
     const year = parseInt(e.target.dataset.year);
     const maison = e.target.dataset.maison;
@@ -1544,35 +1527,15 @@ if (e.target.classList.contains('alert-button-table')) {
             
             $('userListContainer').querySelectorAll('.user-checkbox').forEach(cb => {
                 const username = cb.dataset.username || '';
-                const userMaison = allUsers.find(u => u.username === username)?.maisonName || '';
-                
-                // 选中 Admin 和对应 Maison 的用户
-                if (username === 'BT-admin' || username.includes('admin') || (maison && userMaison === maison)) {
+                if (username === 'BT-admin' || username.includes('admin')) {
                     cb.checked = true;
                 }
             });
-            
             updCnt();
         }
         
         $('emailBroadcastSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
         msg($('emailBroadcastMessage'), 'Alert email prepared. Click "Open in Outlook" to send.', true);
-    // 记录 Alert 已发送
-if (dataType === 'forecast-maison' || dataType === 'actual-maison') {
-    const alertType = dataType === 'forecast-maison' ? 'Forecast' : 'Actual';
-    await api('recordMaisonAlertSent', {
-        maisonName: maison,
-        year: year,
-        dataType: alertType,
-        sentBy: currentUser.username
-    });
-    
-    // 禁用按钮并改变文字
-    e.target.textContent = 'Alert Sent';
-    e.target.disabled = true;
-    e.target.classList.add('alert-sent-button');
-}
-
     }
     return;
 }

@@ -676,9 +676,6 @@ html += '</tr></thead><tbody>';
     
     html += '<tr class="overview-total-row">';
     html += `<td colspan="2" style="text-align: center; font-weight: bold;">TOTAL (Approved Only)</td>`;
-
-    html += '<tr class="overview-total-row">';
-html += `<td colspan="2" style="text-align: center; font-weight: bold;">TOTAL (Approved Only)</td>`;
     
     html += '<td class="total-cell-multiline">';
     html += `<span class="total-main-value">${summary.totals.Email.toLocaleString()}</span>`;
@@ -793,7 +790,6 @@ const alertStatusRes = await api('checkAlertStatus', {
 
 const alertSent = alertStatusRes.success && alertStatusRes.alreadySent;
 
-html += '<tr class="overview-total-row">';
 
     html += '<tr class="overview-total-row">';
 html += `<td colspan="2" style="text-align: center; font-weight: bold;">TOTAL</td>`;

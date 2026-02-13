@@ -656,7 +656,27 @@ html += '</tr></thead><tbody>';
             html += '</tr>';
         });
     }
+    html += '</tbody></table>';
     
+    // === 检查 Alert 状态 ===
+    const triggerValue = `Email:${summary.totals.Email}|SMS:${summary.totals.SMS}|WhatsApp:${summary.totals.WhatsApp}|Contacts:${summary.totals.Contacts}`;
+    const alertStatusRes = await api('checkAlertStatus', {
+        maisonName: maison,
+        year: currentFiscalYearOverview,
+        month: '',
+        dataType: 'forecast-maison',
+        triggerValue: triggerValue
+    });
+    
+    const alertSent = alertStatusRes.success && alertStatusRes.alreadySent;
+    
+    // 重新打开 tbody 添加 Total 行
+    const tableEndIndex = html.lastIndexOf('</tbody></table>');
+    html = html.substring(0, tableEndIndex);
+    
+    html += '<tr class="overview-total-row">';
+    html += `<td colspan="2" style="text-align: center; font-weight: bold;">TOTAL (Approved Only)</td>`;
+
     html += '<tr class="overview-total-row">';
 html += `<td colspan="2" style="text-align: center; font-weight: bold;">TOTAL (Approved Only)</td>`;
     
@@ -691,12 +711,13 @@ html += `<td colspan="2" style="text-align: center; font-weight: bold;">TOTAL (A
     html += '<td colspan="2" style="text-align: center;">-</td>';
     
     html += '<td style="text-align: center;">';
-    if (summary.hasAlert) {
-        html += `<button class="alert-button-table" data-type="forecast-maison" data-year="${currentFiscalYearOverview}" data-maison="${maison}">🔔 Alert</button>`;
-    } else {
-        html += '-';
-    }
-    html += '</td>';
+if (alertSent) {
+    html += `<button class="alert-button-table" data-type="forecast-maison" data-year="${currentFiscalYearOverview}" data-maison="${maison}" data-trigger-value="${triggerValue}" disabled style="background-color: #ccc; cursor: not-allowed;">Alert Sent</button>`;
+} else {
+    html += `<button class="alert-button-table" data-type="forecast-maison" data-year="${currentFiscalYearOverview}" data-maison="${maison}" data-trigger-value="${triggerValue}">🔔 Alert</button>`;
+}
+html += '</td>';
+
     
     html += '</tr>';
     html += '</tbody></table>';
@@ -760,7 +781,20 @@ html += '</tr></thead><tbody>';
             html += '</tr>';
         });
     }
-    
+    // === 检查 Alert 状态 ===
+const triggerValue = `Email:${summary.totals.Email}|SMS:${summary.totals.SMS}|WhatsApp:${summary.totals.WhatsApp}|Contacts:${summary.totals.Contacts}`;
+const alertStatusRes = await api('checkAlertStatus', {
+    maisonName: maison,
+    year: currentFiscalYearActualOverview,
+    month: '',
+    dataType: 'actual-maison',
+    triggerValue: triggerValue
+});
+
+const alertSent = alertStatusRes.success && alertStatusRes.alreadySent;
+
+html += '<tr class="overview-total-row">';
+
     html += '<tr class="overview-total-row">';
 html += `<td colspan="2" style="text-align: center; font-weight: bold;">TOTAL</td>`;
 
@@ -796,12 +830,13 @@ html += `<td colspan="2" style="text-align: center; font-weight: bold;">TOTAL</t
     html += '<td style="text-align: center;">-</td>';
     
     html += '<td style="text-align: center;">';
-    if (summary.hasAlert) {
-        html += `<button class="alert-button-table" data-type="actual-maison" data-year="${currentFiscalYearActualOverview}" data-maison="${maison}">🔔 Alert</button>`;
-    } else {
-        html += '-';
-    }
-    html += '</td>';
+if (alertSent) {
+    html += `<button class="alert-button-table" data-type="actual-maison" data-year="${currentFiscalYearActualOverview}" data-maison="${maison}" data-trigger-value="${triggerValue}" disabled style="background-color: #ccc; cursor: not-allowed;">Alert Sent</button>`;
+} else {
+    html += `<button class="alert-button-table" data-type="actual-maison" data-year="${currentFiscalYearActualOverview}" data-maison="${maison}" data-trigger-value="${triggerValue}">🔔 Alert</button>`;
+}
+html += '</td>';
+
     
     html += '</tr>';
     html += '</tbody></table>';
@@ -1530,9 +1565,29 @@ if (e.target.classList.contains('alert-button-table')) {
         }
         $('emailBroadcastSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
         msg($('emailBroadcastMessage'), 'Alert email prepared. Click "Open in Outlook" to send.', true);
+        
+        // === 记录 Alert 已发送 ===
+        const triggerValue = `Email:${totals.Email}|SMS:${totals.SMS}|WhatsApp:${totals.WhatsApp}|Contacts:${totals.Contacts}`;
+        const recordRes = await api('recordAlertSent', {
+            maisonName: maison || '',
+            year: year,
+            month: '',
+            dataType: dataType,
+            triggerValue: triggerValue,
+            sentBy: currentUser.username
+        });
+        
+        // 更新按钮状态
+        if (recordRes.success && e.target) {
+            e.target.textContent = 'Alert Sent';
+            e.target.disabled = true;
+            e.target.style.backgroundColor = '#ccc';
+            e.target.style.cursor = 'not-allowed';
+        }
     }
     return;
 }
+
 
                 
                 // Now check for id

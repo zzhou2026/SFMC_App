@@ -1289,14 +1289,17 @@ table tr:hover {
     transition: background-color 0.2s;
 }
 
-.alert-button-table:hover {
+.alert-button-table:hover:not(:disabled) {
     background-color: #f57c00;
 }
 
-.alert-button-table:disabled {
-    background-color: #ccc;
-    cursor: not-allowed;
+.alert-button-table:disabled,
+.alert-sent-button {
+    background-color: #ccc !important;
+    color: #666 !important;
+    cursor: not-allowed !important;
 }
+
 
 /* === Total Row in Overview Tables === */
 .overview-total-row {

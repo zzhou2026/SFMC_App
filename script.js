@@ -1519,10 +1519,13 @@ if (e.target.classList.contains('alert-button-table')) {
     });
     console.log('📬 Email response:', emailRes); 
     if (emailRes.success) {
+        console.log('✉️ Email success, filling form...');
         $('emailSubjectInput').value = emailRes.subject;
         $('emailContentInput').value = emailRes.body;
-        
+        console.log('📝 Subject set to:', emailRes.subject);  // ← 加这一行
+    console.log('📝 Body length:', emailRes.body.length);  // ← 加这一行
         if (allUsers && allUsers.length) {
+            console.log('👥 Setting up user checkboxes...'); 
             searchTerm = '';
             if ($('userSearchInput')) $('userSearchInput').value = '';
             renderU();
@@ -1535,9 +1538,10 @@ if (e.target.classList.contains('alert-button-table')) {
             });
             updCnt();
         }
-        
+        console.log('📜 Scrolling to email section...');
         $('emailBroadcastSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
         msg($('emailBroadcastMessage'), 'Alert email prepared. Click "Open in Outlook" to send.', true);
+        console.log('✅ Alert handling complete!'); 
     }
     return;
 }

@@ -1943,7 +1943,78 @@ if (e.target.classList.contains('alert-button-table')) {
                     VarianceThreshold: parseFloat(cfg.data.VarianceThreshold) || 15
                 });
             }
-            
+             // === 新增：Start Data Collection 按钮 ===
+    startDataCollectionButton: () => {
+        if (!currentUser || currentUser.role !== 'admin') {
+            alert('Admin only!');
+            return;
+        }
+        
+        // 1. 选中所有 Maison 用户
+        searchTerm = '';
+        if ($('userSearchInput')) $('userSearchInput').value = '';
+        renderU();
+        
+        $('userListContainer').querySelectorAll('.user-checkbox').forEach(cb => {
+            const userRole = allUsers.find(u => u.username === cb.dataset.username)?.role;
+            // 只选中 Maison 用户，排除 Admin 和 Operator
+            if (userRole === 'maison') {
+                cb.checked = true;
+            } else {
+                cb.checked = false;
+            }
+        });
+        updCnt();
+        
+        // 2. 生成邮件内容
+        const currentDate = new Date();
+        const currentMonth = currentDate.getMonth() + 1; // 1-12
+        const currentYear = currentDate.getFullYear();
+        
+        // 判断当前财年
+        const fiscalYear = currentMonth === 1 ? currentYear - 1 : currentYear;
+        
+        // 计算下一个需要提交的月份
+        let nextMonth = currentMonth + 1;
+        let nextYear = currentYear;
+        if (nextMonth > 12) {
+            nextMonth = 1;
+            nextYear += 1;
+        }
+        
+        const subject = `Reminder: Submit SFMC Forecast Data for ${nextYear}-${String(nextMonth).padStart(2, '0')}`;
+        
+        const body = `Dear Maison Team,
+
+This is a friendly reminder to submit your SFMC forecast data for the upcoming month.
+
+📅 Target Month: ${nextYear}-${String(nextMonth).padStart(2, '0')}
+📊 Fiscal Year: FY${fiscalYear}
+
+Please submit the following metrics through the SFMC Cost Management Application:
+- Email Count
+- SMS Count
+- WhatsApp Count
+- Contacts Count
+
+⏰ Deadline: Please submit your data by the end of this week.
+
+If you have any questions or need assistance, please don't hesitate to contact the Beauty Tech team.
+
+Thank you for your cooperation!
+
+Best regards,
+BT-Admin`;
+        
+        $('emailSubjectInput').value = subject;
+        $('emailContentInput').value = body;
+        
+        // 3. 显示成功消息
+        msg($('emailBroadcastMessage'), 'Data collection email prepared! Click "Open in Outlook" to send.', true);
+        
+        // 4. 滚动到邮件内容区域
+        $('emailSubjectInput').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    },
             setTimeout(async () => {
                 showPage($('mainPage'));
                 $('welcomeMessage').textContent = `Welcome, ${currentUser.username} (${currentUser.role})!`;
@@ -2197,14 +2268,15 @@ renderMaisonActualDataTable();
     };
 
     // 统一绑定事件
-    Object.keys(handlers).forEach(id => {
-        const element = $(id);
-        if (element) {
-            element.addEventListener('click', handlers[id]);
-        } else {
-            console.warn(`Element with ID "${id}" not found. Skipping event listener.`);
-        }
-    });
+Object.keys(handlers).forEach(id => {
+    const element = $(id);
+    if (element) {
+        element.addEventListener('click', handlers[id]);
+    } else {
+        console.warn(`Element with ID "${id}" not found. Skipping event listener.`);
+    }
+});
+
     // === New Event Listeners for Monthly Data Table ===
 
 // Fiscal Year Tab buttons

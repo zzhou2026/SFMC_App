@@ -2018,75 +2018,87 @@ renderMaisonActualDataTable();
         },
 
          // 新增：Start Data Collection 快捷按钮
-    startDataCollectionButton: async () => {
-        if (!currentUser || currentUser.role !== 'admin') {
-            msg($('emailBroadcastMessage'), 'Admin only!', false);
-            return;
-        }
+startDataCollectionButton: async () => {
+    if (!currentUser || currentUser.role !== 'admin') {
+        msg($('emailBroadcastMessage'), 'Admin only!', false);
+        return;
+    }
 
-        // 获取当前财年和月份
-        const now = new Date();
-        const currentMonth = now.getMonth() + 1; // 1-12
-        const fiscalYear = currentMonth === 1 ? now.getFullYear() - 1 : now.getFullYear();
-        const nextMonth = currentMonth === 12 ? 1 : currentMonth + 1;
-        const nextMonthYear = currentMonth === 12 ? fiscalYear + 1 : fiscalYear;
-        
-        // 格式化月份
-        const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-        const nextMonthName = monthNames[nextMonth - 1];
-        
-        // 生成邮件主题和内容
-        const subject = `Action Required: Submit SFMC Forecast Data for ${nextMonthName} ${nextMonthYear}`;
-        
-        const body = `Dear Maison Teams,\n\n` +
-            `This is a reminder to submit your SFMC forecast data for ${nextMonthName} ${nextMonthYear}.\n\n` +
-            `Please log in to the SFMC Cost Management Application and submit your forecast for the following metrics:\n` +
-            `• Email\n` +
-            `• SMS\n` +
-            `• WhatsApp\n` +
-            `• Contacts\n\n` +
-            `Deadline: ${new Date(nextMonthYear, nextMonth - 1, 5).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}\n\n` +
-            `Application URL: ${window.location.origin}${window.location.pathname}\n\n` +
-            `If you have any questions or need assistance, please contact the Beauty Tech team.\n\n` +
-            `Thank you for your cooperation.\n\n` +
-            `Best regards,\n` +
-            `BT-Admin Team`;
-        
-        // 设置邮件主题和内容
-        $('emailSubjectInput').value = subject;
-        $('emailContentInput').value = body;
-        
-        // 确保用户列表已加载
-        if (!allUsers || !allUsers.length) {
-            const res = await api('getAllUsers');
-            if (res.success && res.data) {
-                allUsers = res.data.filter(u => u.email && u.email.trim());
-            }
+    // 获取当前财年和月份
+    const now = new Date();
+    const currentMonth = now.getMonth() + 1; // 1-12
+    const fiscalYear = currentMonth === 1 ? now.getFullYear() - 1 : now.getFullYear();
+    const nextMonth = currentMonth === 12 ? 1 : currentMonth + 1;
+    const nextMonthYear = currentMonth === 12 ? fiscalYear + 1 : fiscalYear;
+    
+    // 格式化月份
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const nextMonthName = monthNames[nextMonth - 1];
+    
+    // 生成邮件主题和内容
+    const subject = `Action Required: Submit SFMC Forecast Data for ${nextMonthName} ${nextMonthYear}`;
+    
+    const body = `Dear Maison Teams,\n\n` +
+        `This is a reminder to submit your SFMC forecast data for ${nextMonthName} ${nextMonthYear}.\n\n` +
+        `Please log in to the SFMC Cost Management Application and submit your forecast for the following metrics:\n` +
+        `• Email\n` +
+        `• SMS\n` +
+        `• WhatsApp\n` +
+        `• Contacts\n\n` +
+        `Deadline: ${new Date(nextMonthYear, nextMonth - 1, 5).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}\n\n` +
+        `Application URL: ${window.location.origin}${window.location.pathname}\n\n` +
+        `If you have any questions or need assistance, please contact the Beauty Tech team.\n\n` +
+        `Thank you for your cooperation.\n\n` +
+        `Best regards,\n` +
+        `BT-Admin Team`;
+    
+    // 设置邮件主题和内容
+    $('emailSubjectInput').value = subject;
+    $('emailContentInput').value = body;
+    
+    // 确保用户列表已加载
+    if (!allUsers || !allUsers.length) {
+        const res = await api('getAllUsers');
+        if (res.success && res.data) {
+            allUsers = res.data.filter(u => u.email && u.email.trim());
         }
+    }
+    
+    // 渲染用户列表
+    if (allUsers && allUsers.length) {
+        searchTerm = '';
+        if ($('userSearchInput')) $('userSearchInput').value = '';
+        renderU();
         
-        // 渲染用户列表并选中所有 Maison 用户
-        if (allUsers && allUsers.length) {
-            searchTerm = '';
-            if ($('userSearchInput')) $('userSearchInput').value = '';
-            renderU();
-            
+        // 使用 setTimeout 确保 DOM 已经渲染完成后再选择用户
+        setTimeout(() => {
             // 选中所有 Maison 角色的用户（排除 admin 和 sfmc-operator）
             $('userListContainer').querySelectorAll('.user-checkbox').forEach(cb => {
-                const userElement = allUsers.find(u => u.email === cb.dataset.email);
-                if (userElement && userElement.role === 'maison') {
+                // 直接通过 dataset 获取用户信息
+                const userEmail = cb.dataset.email;
+                const userMaison = cb.dataset.maison;
+                
+                // 查找对应的用户对象
+                const user = allUsers.find(u => u.email === userEmail);
+                
+                // 选中所有 Maison 角色的用户
+                if (user && user.role === 'maison') {
                     cb.checked = true;
                 }
             });
             
+            // 更新计数
             updCnt();
-        }
-        
-        // 显示成功消息
-        msg($('emailBroadcastMessage'), `Data collection email prepared for ${nextMonthName} ${nextMonthYear}. All Maison users selected. Click "Open in Outlook" to send.`, true);
-        
-        // 滚动到邮件区域
-        $('emailSubjectInput').scrollIntoView({ behavior: 'smooth', block: 'center' });
-    },
+            
+            // 显示成功消息
+            msg($('emailBroadcastMessage'), `Data collection email prepared for ${nextMonthName} ${nextMonthYear}. All Maison users selected. Click "Open in Outlook" to send.`, true);
+        }, 100); // 延迟100ms确保DOM渲染完成
+    }
+    
+    // 滚动到邮件区域
+    $('emailSubjectInput').scrollIntoView({ behavior: 'smooth', block: 'center' });
+},
+
 
 
         submitEmailButton: async () => {

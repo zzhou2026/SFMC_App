@@ -1531,8 +1531,9 @@ if (e.target.classList.contains('alert-button-table')) {
             renderU();
             
             $('userListContainer').querySelectorAll('.user-checkbox').forEach(cb => {
-                const username = cb.dataset.username || '';
-                if (username === 'BT-admin' || username.includes('admin')) {
+                const userMaison = cb.dataset.maison || '';
+                // 只选中该 Maison 的用户
+                if (maison && userMaison === maison) {
                     cb.checked = true;
                 }
             });
@@ -1694,7 +1695,7 @@ if (e.target.classList.contains('alert-button-table')) {
         $('userListContainer').innerHTML = f.map((u, i) => {
             const id = `user-${i}-${(u.email || '').replace(/[^a-zA-Z0-9]/g, '_')}`;
             return `<div class="user-checkbox-item">
-                <input type="checkbox" id="${id}" class="user-checkbox" data-email="${u.email || ''}" data-username="${u.username || ''}" ${u.email ? '' : 'disabled'}>
+                <input type="checkbox" id="${id}" class="user-checkbox" data-email="${u.email || ''}" data-username="data-maison="${u.maisonName || ''}" ${u.username || ''}" ${u.email ? '' : 'disabled'}>
                 <label for="${id}" class="user-checkbox-label">
                     <span class="user-name">${u.username || 'N/A'}</span>
                     <span class="user-email">${u.email || 'No email'}</span>

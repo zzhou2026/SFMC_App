@@ -311,7 +311,7 @@ const renderMaisonActualDataTable = async () => {
     const tbody = $('actualDataTableBody');
     if (!tbody) return;
     
-    tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 20px;">Loading...</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 20px;">Loading...</td></tr>';
     
     const months = getFiscalYearMonths(currentFiscalYearActual);
     const res = await api('getMaisonActualData', { maisonName: currentUser.maisonName });
@@ -337,7 +337,6 @@ const renderMaisonActualDataTable = async () => {
         const smsVal = existingData ? existingData.SMSUsage : '-';
         const whatsappVal = existingData ? existingData.WhatsAppUsage : '-';
         const contactsVal = existingData ? existingData.ContactsTotal : '-';
-        const recordedBy = existingData ? existingData.RecordedBy : '-';
         const timestamp = existingData ? fmt(existingData.Timestamp) : '-';
         
         if (existingData) {
@@ -354,7 +353,6 @@ const renderMaisonActualDataTable = async () => {
                 <td>${smsVal}</td>
                 <td>${whatsappVal}</td>
                 <td>${contactsVal}</td>
-                <td>${recordedBy}</td>
                 <td style="font-size: 0.8em;">${timestamp}</td>
             </tr>
         `;
@@ -369,7 +367,6 @@ const renderMaisonActualDataTable = async () => {
             <td class="total-value"><strong>${totalSms}</strong></td>
             <td class="total-value"><strong>${totalWhatsapp}</strong></td>
             <td class="total-value"><strong>${totalContacts}</strong></td>
-            <td class="total-cell">-</td>
             <td class="total-grand"><strong>Grand Total: ${grandTotal}</strong></td>
         </tr>
     `;
@@ -377,6 +374,7 @@ const renderMaisonActualDataTable = async () => {
     tbody.innerHTML = html;
     actualDataCache[currentFiscalYearActual] = dataMap;
 };
+
 
 // === Switch Fiscal Year Tab for Maison Actual ===
 const switchFiscalYearTabActual = (fiscalYear) => {

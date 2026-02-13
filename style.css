@@ -1462,7 +1462,10 @@ table tr:hover {
     color: #666;
 }
 
-/* === Fiscal Year Tabs for Overview === */
+/* === Fiscal Year Tabs - Unified Styles === */
+.fy-tab-button,
+.fy-tab-button-actual,
+.fy-tab-button-operator,
 .fy-tab-button-overview,
 .fy-tab-button-actual-overview {
     background-color: transparent;
@@ -1478,18 +1481,25 @@ table tr:hover {
     border-radius: 0;
 }
 
+.fy-tab-button:hover,
+.fy-tab-button-actual:hover,
+.fy-tab-button-operator:hover,
 .fy-tab-button-overview:hover,
 .fy-tab-button-actual-overview:hover {
     background-color: var(--light-bg);
     color: var(--primary-color);
 }
 
+.fy-tab-button.active,
+.fy-tab-button-actual.active,
+.fy-tab-button-operator.active,
 .fy-tab-button-overview.active,
 .fy-tab-button-actual-overview.active {
     color: var(--primary-color);
     border-bottom-color: var(--primary-color);
     background-color: transparent;
 }
+
 /* === Maison Accordion Styles === */
 .maison-accordion-container {
     margin: 20px 0;

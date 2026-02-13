@@ -1782,7 +1782,7 @@ if (e.target.classList.contains('alert-button-table')) {
     // ===== 填充选择器 =====
     const popYearSelectors = () => {
         const years = [currentYear - 1, currentYear, currentYear + 1];
-        const yearOptions = years.map(y => `<option value="${y}">${y}</option>`).join('');
+        const yearOptions = years.map(y => `<option value="${y}">FY${y}</option>`).join('');
         
         if ($('budgetYearSelect')) $('budgetYearSelect').innerHTML = yearOptions;
         if ($('dataYearSelect')) $('dataYearSelect').innerHTML = yearOptions;
@@ -1792,6 +1792,7 @@ if (e.target.classList.contains('alert-button-table')) {
         if ($('dataYearSelect')) $('dataYearSelect').value = currentYear;
         if ($('forecastYearSelect')) $('forecastYearSelect').value = currentYear;
     };
+    
 
     const popMaisonSelectors = async () => {
         const res = await api('getAllUsers');

@@ -303,8 +303,18 @@ const switchFiscalYearTabOperator = (fiscalYear) => {
         }
     });
     
-    renderOperatorDataTable();
+    // 关闭所有 accordion 并重置内容
+    document.querySelectorAll('#maisonAccordionOperator .maison-accordion').forEach(details => {
+        details.removeAttribute('open');
+        const maison = details.dataset.maison;
+        const containerId = `operator-table-${maison.replace(/[^a-zA-Z0-9]/g, '-')}`;
+        const container = document.getElementById(containerId);
+        if (container) {
+            container.innerHTML = '<p style="text-align: center; padding: 20px;">Click to load data...</p>';
+        }
+    });
 };
+
 
 // === Render Maison Actual Data Table (Read-only) ===
 const renderMaisonActualDataTable = async () => {
@@ -462,6 +472,89 @@ const renderMaisonAccordionActual = () => {
         `;
     });
     
+    container.innerHTML = html;
+};
+// === 渲染 Operator 的 Maison Accordion ===
+const renderMaisonAccordionOperator = () => {
+    const container = $('maisonAccordionOperator');
+    if (!container || allMaisons.length === 0) {
+        if (container) container.innerHTML = '<p class="error-text">No maisons available.</p>';
+        return;
+    }
+    
+    let html = '';
+    allMaisons.forEach(maison => {
+        html += `
+            <details class="maison-accordion" data-maison="${maison}" data-type="operator">
+                <summary>${maison}</summary>
+                <div class="maison-accordion-content">
+                    <div class="table-container" id="operator-table-${maison.replace(/[^a-zA-Z0-9]/g, '-')}">
+                        <p style="text-align: center; padding: 20px;">Click to load data...</p>
+                    </div>
+                </div>
+            </details>
+        `;
+    });
+    
+    container.innerHTML = html;
+};
+// === 加载单个 Maison 的 Operator 数据 ===
+const loadMaisonOperatorData = async (maison, containerSelector) => {
+    const container = document.querySelector(containerSelector);
+    if (!container) return;
+    
+    container.innerHTML = '<p style="text-align: center; padding: 20px;">Loading...</p>';
+    
+    const months = getFiscalYearMonths(currentFiscalYearOperator);
+    const res = await api('getAllActualData');
+    
+    const dataMap = {};
+    if (res.success && res.data) {
+        res.data.forEach(record => {
+            const formattedMonth = String(record.Month).padStart(2, '0');
+            const key = `${record.MaisonName}-${record.Year}-${formattedMonth}`;
+            dataMap[key] = record;
+        });
+    }
+    
+    let html = '<table><thead><tr>';
+    html += '<th>Month</th><th>Email</th><th>SMS</th><th>WhatsApp</th><th>Contacts</th><th>Action</th>';
+    html += '</tr></thead><tbody>';
+    
+    months.forEach(({ year, month }) => {
+        const key = `${maison}-${year}-${month}`;
+        const existingData = dataMap[key];
+        
+        const monthDisplay = `${year}-${month}`;
+        const emailVal = existingData ? existingData.EmailUsage : '';
+        const smsVal = existingData ? existingData.SMSUsage : '';
+        const whatsappVal = existingData ? existingData.WhatsAppUsage : '';
+        const contactsVal = existingData ? existingData.ContactsTotal : '';
+        
+        const buttonText = existingData ? 'Update' : 'Submit';
+        const buttonClass = existingData ? 'action-button-table update-button' : 'action-button-table';
+        
+        html += `
+            <tr>
+                <td class="month-cell">${monthDisplay}</td>
+                <td>${emailVal}</td>
+                <td>${smsVal}</td>
+                <td>${whatsappVal}</td>
+                <td>${contactsVal}</td>
+                <td>
+                    <button class="${buttonClass} operator-action-button" 
+                            data-maison="${maison}"
+                            data-year="${year}" 
+                            data-month="${month}"
+                            data-has-data="${existingData ? 'true' : 'false'}">
+                        ${buttonText}
+                    </button>
+                </td>
+            </tr>
+        `;
+    });
+    
+    html += '</tbody></table>';
     container.innerHTML = html;
 };
 
@@ -1838,7 +1931,7 @@ renderMaisonActualDataTable();
                     loadTable('adminHistory', $('adminHistoryTableContainer'));
                     initBcast();
                 }
-                 else if (currentUser.role === 'sfmc-operator') {
+                else if (currentUser.role === 'sfmc-operator') {
                     $('operatorView').classList.remove('hidden');
                     $('adminView').classList.add('hidden');
                     $('maisonView').classList.add('hidden');
@@ -1847,11 +1940,12 @@ renderMaisonActualDataTable();
                     const currentMonth = now.getMonth() + 1;
                     currentFiscalYearOperator = currentMonth === 1 ? now.getFullYear() - 1 : now.getFullYear();
                     
-                    loadAllMaisons();
-                    renderOperatorDataTable();
+                    await loadAllMaisons();
+                    renderMaisonAccordionOperator();
                     
                     clr($('operatorDataMessage'));
                 }
+                
                 
                 
             }, 500);
@@ -2231,10 +2325,14 @@ document.addEventListener('toggle', (e) => {
             } else if (type === 'actual') {
                 const containerId = `#actual-table-${maison.replace(/[^a-zA-Z0-9]/g, '-')}`;
                 loadMaisonActualData(maison, containerId);
+            } else if (type === 'operator') {
+                const containerId = `#operator-table-${maison.replace(/[^a-zA-Z0-9]/g, '-')}`;
+                loadMaisonOperatorData(maison, containerId);
             }
         }
     }
 }, true);
+
 
 // 初始化
 showPage($('loginPage'));

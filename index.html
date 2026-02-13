@@ -205,30 +205,21 @@
     
     <h3>Submit Monthly Actual Usage Data</h3>
     
+    <!-- Fiscal Year Tabs -->
     <div class="fiscal-year-tabs">
         <button class="fy-tab-button-operator" data-year="2025">FY2025</button>
         <button class="fy-tab-button-operator active" data-year="2026">FY2026</button>
         <button class="fy-tab-button-operator" data-year="2027">FY2027</button>
     </div>
     
-    <div class="monthly-data-table-container">
-        <table class="monthly-data-table" id="operatorDataTable">
-            <thead>
-                <tr>
-                    <th>Maison</th>
-                    <th>Month</th>
-                    <th>Email</th>
-                    <th>SMS</th>
-                    <th>WhatsApp</th>
-                    <th>Contacts</th>
-                    <th>Action</th>
-                </tr>
-            </thead>
-            <tbody id="operatorDataTableBody"></tbody>
-        </table>
+    <!-- Maison Accordion Container -->
+    <div id="maisonAccordionOperator" class="maison-accordion-container">
+        <p class="loading-text">Loading maisons...</p>
     </div>
+    
     <p id="operatorDataMessage" class="message"></p>
 </div>
+
 
 <!-- Operator Modal -->
 <div id="operatorSubmissionModal" class="modal hidden">

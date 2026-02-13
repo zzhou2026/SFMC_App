@@ -620,8 +620,16 @@ html += '</tr></thead><tbody>';
             html += `<td><span class="${statusClass}"><span class="status-badge-cell">${statusText}</span></span></td>`;
             
             const notes = row.MaisonNotes || '';
-            const displayNotes = notes.length > 50 ? `<span title="${notes}">${notes.substring(0, 50)}...</span>` : notes;
-            html += `<td>${displayNotes}</td>`;
+let notesCell = '-';
+if (notes && notes.trim()) {
+    notesCell = `<a href="javascript:void(0)" class="notes-link admin-notes-link" 
+                    data-maison="${row.MaisonName}" 
+                    data-year="${row.Year}" 
+                    data-month="${row.Month}" 
+                    data-notes="${notes.replace(/"/g, '&quot;')}">See</a>`;
+}
+html += `<td>${notesCell}</td>`;
+
             
             const recordId = row.RecordId || '';
             const submittedBy = row.SubmittedBy || '';
@@ -2378,6 +2386,53 @@ document.addEventListener('toggle', (e) => {
         }
     }
 }, true);
+// Admin Notes View Modal - Open
+document.addEventListener('click', (e) => {
+    if (e.target.classList.contains('admin-notes-link')) {
+        const maison = e.target.dataset.maison;
+        const year = e.target.dataset.year;
+        const month = e.target.dataset.month;
+        const notes = e.target.dataset.notes;
+        
+        openAdminNotesViewModal(maison, year, month, notes);
+    }
+});
+
+// Open Admin Notes View Modal
+const openAdminNotesViewModal = (maison, year, month, notes) => {
+    const modal = $('adminNotesViewModal');
+    const title = $('adminNotesViewTitle');
+    const notesDisplay = $('adminNotesViewDisplay');
+    
+    title.textContent = `Maison Notes - ${maison} (${year}-${String(month).padStart(2, '0')})`;
+    notesDisplay.textContent = notes || 'No notes available.';
+    
+    modal.classList.remove('hidden');
+};
+
+// Close Admin Notes View Modal
+const closeAdminNotesViewModal = () => {
+    const modal = $('adminNotesViewModal');
+    modal.classList.add('hidden');
+};
+
+// Admin Notes View Modal - Close handlers
+if ($('adminNotesViewClose')) {
+    $('adminNotesViewClose').addEventListener('click', closeAdminNotesViewModal);
+}
+
+if ($('adminNotesViewCloseButton')) {
+    $('adminNotesViewCloseButton').addEventListener('click', closeAdminNotesViewModal);
+}
+
+// Close when clicking outside
+if ($('adminNotesViewModal')) {
+    $('adminNotesViewModal').addEventListener('click', (e) => {
+        if (e.target.id === 'adminNotesViewModal') {
+            closeAdminNotesViewModal();
+        }
+    });
+}
 
 
 // 初始化

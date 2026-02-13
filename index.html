@@ -385,6 +385,24 @@
                     <!-- Admin historical actions log will be displayed here -->
                 </div>
                 <button id="exportHistoryDataButton">Export History Data (CSV)</button>
+                 <!-- Admin Notes View Modal -->
+                 <div id="adminNotesViewModal" class="modal hidden">
+                    <div class="modal-content modal-content-small">
+                        <div class="modal-header">
+                            <h3 id="adminNotesViewTitle">Maison Notes</h3>
+                            <span class="modal-close" id="adminNotesViewClose">&times;</span>
+                        </div>
+                        <div class="modal-body">
+                            <div class="notes-section">
+                                <label>Maison Notes:</label>
+                                <div id="adminNotesViewDisplay" class="notes-display"></div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button id="adminNotesViewCloseButton" class="modal-button-secondary">Close</button>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

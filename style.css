@@ -978,8 +978,8 @@ table tr:hover {
 .data-tips-bottom {
     background-color: var(--light-blue-bg);
     padding: 10px 15px;  /* 原来是 15px，改为上下 10px，左右 15px */
-    margin-top: 5px;    /* 原来是 20px，改为 10px */
-    margin-bottom: 5px; /* 新增：控制下边距 */
+    margin-top: 0;    /* 原来是 20px，改为 10px */
+    margin-bottom: 0; /* 新增：控制下边距 */
     border-radius: 6px;
     border: 1px solid #b3e0ff;
 }

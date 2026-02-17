@@ -838,9 +838,10 @@ html += `<td colspan="2" style="text-align: center; font-weight: bold;">TOTAL</t
     html += `<span class="total-variance-line ${contactsVarianceClass}">${summary.variance.Contacts >= 0 ? '+' : ''}${summary.variance.Contacts.toFixed(1)}% ${Math.abs(summary.variance.Contacts) > 15 ? '⚠️' : '✓'}</span>`;
     html += '</td>';
     
-    html += '<td style="text-align: center;">-</td>';
-    
-    html += '<td style="text-align: center;">';
+    html += '<td style="text-align: center;">-</td>';  // Recorded By
+html += '<td style="text-align: center;">-</td>';  // Timestamp
+
+html += '<td style="text-align: center;">';  // Alert按钮（最后一列）
 if (alertSent) {
     html += `<button class="alert-button-table" data-type="actual-maison" data-year="${currentFiscalYearActualOverview}" data-maison="${maison}" data-trigger-value="${triggerValue}" disabled style="background-color: #ccc; cursor: not-allowed;">Alert Sent</button>`;
 } else {
@@ -848,9 +849,9 @@ if (alertSent) {
 }
 html += '</td>';
 
-    
-    html += '</tr>';
-    html += '</tbody></table>';
+html += '</tr>';
+html += '</tbody></table>';
+
     
     container.innerHTML = html;
 };

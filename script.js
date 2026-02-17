@@ -369,18 +369,17 @@ const renderMaisonActualDataTable = async () => {
     });
     
     const grandTotal = totalEmail + totalSms + totalWhatsapp + totalContacts;
-
-html += `
-    <tr>
-        <td><strong>Total (Actual)</strong></td>
-        <td><strong>${totalEmail}</strong></td>
-        <td><strong>${totalSms}</strong></td>
-        <td><strong>${totalWhatsapp}</strong></td>
-        <td><strong>${totalContacts}</strong></td>
-        <td><strong>Grand Total: ${grandTotal}</strong></td>
-    </tr>
-`;
-
+    
+    html += `
+        <tr class="total-row">
+            <td class="total-cell"><strong>Total (Actual)</strong></td>
+            <td class="total-value"><strong>${totalEmail}</strong></td>
+            <td class="total-value"><strong>${totalSms}</strong></td>
+            <td class="total-value"><strong>${totalWhatsapp}</strong></td>
+            <td class="total-value"><strong>${totalContacts}</strong></td>
+            <td class="total-grand"><strong>Grand Total: ${grandTotal}</strong></td>
+        </tr>
+    `;
     
     tbody.innerHTML = html;
     actualDataCache[currentFiscalYearActual] = dataMap;
@@ -967,21 +966,20 @@ const renderMonthlyDataTable = async () => {
     });
     
     const grandTotal = totalEmail + totalSms + totalWhatsapp + totalContacts;
-
-// Add total row
-html += `
-    <tr>
-        <td><strong>Total (Approved)</strong></td>
-        <td><strong>${totalEmail}</strong></td>
-        <td><strong>${totalSms}</strong></td>
-        <td><strong>${totalWhatsapp}</strong></td>
-        <td><strong>${totalContacts}</strong></td>
-        <td>-</td>
-        <td>-</td>
-        <td><strong>Grand Total: ${grandTotal}</strong></td>
-    </tr>
-`;
-
+    
+    // Add total row
+    html += `
+        <tr class="total-row">
+            <td class="total-cell"><strong>Total (Approved)</strong></td>
+            <td class="total-value"><strong>${totalEmail}</strong></td>
+            <td class="total-value"><strong>${totalSms}</strong></td>
+            <td class="total-value"><strong>${totalWhatsapp}</strong></td>
+            <td class="total-value"><strong>${totalContacts}</strong></td>
+            <td class="total-cell">-</td>
+            <td class="total-cell">-</td>
+            <td class="total-grand"><strong>Grand Total: ${grandTotal}</strong></td>
+        </tr>
+    `;
     
     tbody.innerHTML = html;
 

@@ -717,14 +717,16 @@ html += `<td>${notesCell}</td>`;
     html += '</td>';
     
     html += '<td colspan="2" style="text-align: center;">-</td>';
-    
-    html += '<td style="text-align: center;">';
+html += '<td style="text-align: center;">-</td>';  // ← 新增这一列，对应 Maison Notes
+
+html += '<td style="text-align: center;">';  // ← 这一列才是 Approval Action（Alert按钮）
 if (alertSent) {
     html += `<button class="alert-button-table" data-type="forecast-maison" data-year="${currentFiscalYearOverview}" data-maison="${maison}" data-trigger-value="${triggerValue}" disabled style="background-color: #ccc; cursor: not-allowed;">Alert Sent</button>`;
 } else {
     html += `<button class="alert-button-table" data-type="forecast-maison" data-year="${currentFiscalYearOverview}" data-maison="${maison}" data-trigger-value="${triggerValue}">🔔 Alert</button>`;
 }
 html += '</td>';
+
 
     
     html += '</tr>';

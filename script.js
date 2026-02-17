@@ -716,16 +716,18 @@ html += `<td>${notesCell}</td>`;
     html += `<span class="total-variance-line ${contactsVarianceClass}">${summary.variance.Contacts >= 0 ? '+' : ''}${summary.variance.Contacts.toFixed(1)}% ${Math.abs(summary.variance.Contacts) > 15 ? '⚠️' : '✓'}</span>`;
     html += '</td>';
     
-    html += '<td colspan="2" style="text-align: center;">-</td>';
-html += '<td style="text-align: center;">-</td>';  // ← 新增这一列，对应 Maison Notes
+    html += '<td style="text-align: center;">-</td>';  // Submission Time
+html += '<td style="text-align: center;">-</td>';  // Approval Status
+html += '<td style="text-align: center;">-</td>';  // Maison Notes
 
-html += '<td style="text-align: center;">';  // ← 这一列才是 Approval Action（Alert按钮）
+html += '<td style="text-align: center;">';  // Approval Action (Alert按钮)
 if (alertSent) {
     html += `<button class="alert-button-table" data-type="forecast-maison" data-year="${currentFiscalYearOverview}" data-maison="${maison}" data-trigger-value="${triggerValue}" disabled style="background-color: #ccc; cursor: not-allowed;">Alert Sent</button>`;
 } else {
     html += `<button class="alert-button-table" data-type="forecast-maison" data-year="${currentFiscalYearOverview}" data-maison="${maison}" data-trigger-value="${triggerValue}">🔔 Alert</button>`;
 }
 html += '</td>';
+
 
 
     

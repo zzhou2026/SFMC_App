@@ -686,7 +686,9 @@ html += `<td>${notesCell}</td>`;
     html = html.substring(0, tableEndIndex);
     
     html += '<tr class="overview-total-row">';
-    html += `<td colspan="2" style="text-align: center; font-weight: bold;">TOTAL (Approved Only)</td>`;
+html += `<td style="text-align: center; font-weight: bold;">TOTAL (Approved Only)</td>`;
+html += `<td style="text-align: center;">-</td>`;
+
     
     html += '<td class="total-cell-multiline">';
     html += `<span class="total-main-value">${summary.totals.Email.toLocaleString()}</span>`;
@@ -806,8 +808,10 @@ const alertStatusRes = await api('checkAlertStatus', {
 const alertSent = alertStatusRes.success && alertStatusRes.alreadySent;
 
 
-    html += '<tr class="overview-total-row">';
-html += `<td colspan="2" style="text-align: center; font-weight: bold;">TOTAL</td>`;
+html += '<tr class="overview-total-row">';
+html += `<td style="text-align: center; font-weight: bold;">TOTAL</td>`;
+html += `<td style="text-align: center;">-</td>`;
+
 
     
     html += '<td class="total-cell-multiline">';

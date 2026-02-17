@@ -1188,6 +1188,24 @@ const handleModalSubmit = async () => {
             headers: [...baseHistoryHeaders, { key: 'MaisonNotes', label: 'Maison Notes' }, { key: 'AdminNotes', label: 'Admin Notes' }],
             renderStatusBadge: false,
             actionColumn: null
+        },  // ← 这行末尾加逗号
+        // ← 在这里添加下面的新配置
+        operatorHistory: {
+            action: 'getOperatorActualHistory',
+            headers: [
+                { key: 'MaisonName', label: 'Maison Name' },
+                { key: 'Year', label: 'Year' },
+                { key: 'Month', label: 'Month' },
+                { key: 'EmailUsage', label: 'Email' },
+                { key: 'SMSUsage', label: 'SMS' },
+                { key: 'WhatsAppUsage', label: 'WhatsApp' },
+                { key: 'ContactsTotal', label: 'Contacts' },
+                { key: 'RecordedBy', label: 'Recorded By' },
+                { key: 'Timestamp', label: 'Timestamp' },
+                { key: 'Action', label: 'Action Type' }
+            ],
+            renderStatusBadge: false,
+            actionColumn: null
         }
     };
 
@@ -2006,7 +2024,7 @@ renderMaisonActualDataTable();
                     
                     await loadAllMaisons();
                     renderMaisonAccordionOperator();
-                    
+                    loadTable('operatorHistory', $('operatorHistoryTableContainer'), { recordedBy: currentUser.username });
                     clr($('operatorDataMessage'));
                 }
                 

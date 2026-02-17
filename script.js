@@ -1744,7 +1744,12 @@ if (e.target.classList.contains('alert-button-table')) {
         $('userListContainer').innerHTML = f.map((u, i) => {
             const id = `user-${i}-${(u.email || '').replace(/[^a-zA-Z0-9]/g, '_')}`;
             return `<div class="user-checkbox-item">
-                <input type="checkbox" id="${id}" class="user-checkbox" data-email="${u.email || ''}" data-username="${u.username || ''}" data-maison="${u.maisonName || ''}" ${u.email ? '' : 'disabled'}>
+                <input type="checkbox" id="${id}" class="user-checkbox" 
+                       data-email="${u.email || ''}" 
+                       data-username="${u.username || ''}" 
+                       data-maison="${u.maisonName || ''}" 
+                       data-role="${u.role || ''}" 
+                       ${u.email ? '' : 'disabled'}>
                 <label for="${id}" class="user-checkbox-label">
                     <span class="user-name">${u.username || 'N/A'}</span>
                     <span class="user-email">${u.email || 'No email'}</span>
@@ -1753,6 +1758,7 @@ if (e.target.classList.contains('alert-button-table')) {
             </div>`;
         }).join('');
     };
+    
 
     const updCnt = () => {
         const cnt = selected().length;
@@ -2067,25 +2073,20 @@ startDataCollectionButton: async () => {
         }
     }
     
-    // 渲染用户列表
-    if (allUsers && allUsers.length) {
+       // 渲染用户列表
+       if (allUsers && allUsers.length) {
         searchTerm = '';
         if ($('userSearchInput')) $('userSearchInput').value = '';
         renderU();
         
         // 使用 setTimeout 确保 DOM 已经渲染完成后再选择用户
         setTimeout(() => {
-            // 选中所有 Maison 角色的用户（排除 admin 和 sfmc-operator）
+            // 选中所有 Maison 角色的用户
             $('userListContainer').querySelectorAll('.user-checkbox').forEach(cb => {
-                // 直接通过 dataset 获取用户信息
-                const userEmail = cb.dataset.email;
-                const userMaison = cb.dataset.maison;
+                const userRole = cb.dataset.role;  // 直接从 dataset 获取 role
                 
-                // 查找对应的用户对象
-                const user = allUsers.find(u => u.email === userEmail);
-                
-                // 选中所有 Maison 角色的用户
-                if (user && user.role === 'maison') {
+                // 选中所有 role 为 'maison' 的用户
+                if (userRole === 'maison') {
                     cb.checked = true;
                 }
             });
@@ -2095,7 +2096,7 @@ startDataCollectionButton: async () => {
             
             // 显示成功消息
             msg($('emailBroadcastMessage'), `Data collection email prepared for ${nextMonthName} ${nextMonthYear}. All Maison users selected. Click "Open in Outlook" to send.`, true);
-        }, 100); // 延迟100ms确保DOM渲染完成
+        }, 100);
     }
     
     // 滚动到邮件区域

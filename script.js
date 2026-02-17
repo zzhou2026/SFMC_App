@@ -518,41 +518,44 @@ const loadMaisonOperatorData = async (maison, containerSelector) => {
     }
     
     let html = '<table><thead><tr>';
-    html += '<th>Month</th><th>Email</th><th>SMS</th><th>WhatsApp</th><th>Contacts</th><th>Action</th>';
-    html += '</tr></thead><tbody>';
+html += '<th>Month</th><th>Email</th><th>SMS</th><th>WhatsApp</th><th>Contacts</th><th>Timestamp</th><th>Action</th>';  // 添加 Timestamp 列
+html += '</tr></thead><tbody>';
+
+months.forEach(({ year, month }) => {
+    const key = `${maison}-${year}-${month}`;
+    const existingData = dataMap[key];
     
-    months.forEach(({ year, month }) => {
-        const key = `${maison}-${year}-${month}`;
-        const existingData = dataMap[key];
-        
-        const monthDisplay = `${year}-${month}`;
-        const emailVal = existingData ? existingData.EmailUsage : '';
-        const smsVal = existingData ? existingData.SMSUsage : '';
-        const whatsappVal = existingData ? existingData.WhatsAppUsage : '';
-        const contactsVal = existingData ? existingData.ContactsTotal : '';
-        
-        const buttonText = existingData ? 'Update' : 'Submit';
-        const buttonClass = existingData ? 'action-button-table update-button' : 'action-button-table';
-        
-        html += `
-            <tr>
-                <td class="month-cell">${monthDisplay}</td>
-                <td>${emailVal}</td>
-                <td>${smsVal}</td>
-                <td>${whatsappVal}</td>
-                <td>${contactsVal}</td>
-                <td>
-                    <button class="${buttonClass} operator-action-button" 
-                            data-maison="${maison}"
-                            data-year="${year}" 
-                            data-month="${month}"
-                            data-has-data="${existingData ? 'true' : 'false'}">
-                        ${buttonText}
-                    </button>
-                </td>
-            </tr>
-        `;
-    });
+    const monthDisplay = `${year}-${month}`;
+    const emailVal = existingData ? existingData.EmailUsage : '';
+    const smsVal = existingData ? existingData.SMSUsage : '';
+    const whatsappVal = existingData ? existingData.WhatsAppUsage : '';
+    const contactsVal = existingData ? existingData.ContactsTotal : '';
+    const timestamp = existingData ? fmt(existingData.Timestamp) : '-';  // 添加时间戳
+    
+    const buttonText = existingData ? 'Update' : 'Submit';
+    const buttonClass = existingData ? 'action-button-table update-button' : 'action-button-table';
+    
+    html += `
+        <tr>
+            <td class="month-cell">${monthDisplay}</td>
+            <td>${emailVal}</td>
+            <td>${smsVal}</td>
+            <td>${whatsappVal}</td>
+            <td>${contactsVal}</td>
+            <td style="font-size: 0.8em;">${timestamp}</td>  <!-- 添加时间戳单元格 -->
+            <td>
+                <button class="${buttonClass} operator-action-button" 
+                        data-maison="${maison}"
+                        data-year="${year}" 
+                        data-month="${month}"
+                        data-has-data="${existingData ? 'true' : 'false'}">
+                    ${buttonText}
+                </button>
+            </td>
+        </tr>
+    `;
+});
+
     
     html += '</tbody></table>';
     container.innerHTML = html;

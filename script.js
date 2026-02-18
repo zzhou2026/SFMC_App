@@ -331,9 +331,17 @@ const renderMaisonActualDataTable = async () => {
         res.data.forEach(record => {
             const formattedMonth = String(record.Month).padStart(2, '0');
             const key = `${record.Year}-${formattedMonth}`;
-            dataMap[key] = record;
+            
+            // === 新增：只保留最新的记录 ===
+            if (!dataMap[key] || new Date(record.Timestamp) > new Date(dataMap[key].Timestamp)) {
+                dataMap[key] = record;
+            }
+            // === 去重逻辑结束 ===
         });
     }
+    
+    // ... 后面的代码保持不变 ...
+
     
     let html = '';
     let totalEmail = 0, totalSms = 0, totalWhatsapp = 0, totalContacts = 0;
@@ -759,7 +767,20 @@ const loadMaisonActualData = async (maison, containerSelector) => {
                      (rowYear == (currentFiscalYearActualOverview + 1) && rowMonth == 1);
         return row.MaisonName === maison && isFY;
     });
+    // === 新增：去重逻辑，只保留每个 Year-Month 的最新记录 ===
+    const latestRecords = {};
+    filteredData.forEach(record => {
+        const key = `${record.Year}-${String(record.Month).padStart(2, '0')}`;
+        
+        // 如果这个 key 还没有记录，或者当前记录的时间戳更新
+        if (!latestRecords[key] || new Date(record.Timestamp) > new Date(latestRecords[key].Timestamp)) {
+            latestRecords[key] = record;
+        }
+    });
     
+    // 将去重后的对象转换回数组
+    const uniqueFilteredData = Object.values(latestRecords);
+    // === 去重逻辑结束 ===
     const summaryRes = await api('getMaisonActualSummary', {
         maisonName: maison,
         year: currentFiscalYearActualOverview
@@ -779,10 +800,10 @@ html += '<th>Recorded By</th><th>Timestamp</th>';
 html += '</tr></thead><tbody>';
 
     
-    if (filteredData.length === 0) {
+if (uniqueFilteredData.length === 0) {
         html += '<tr><td colspan="8" style="text-align: center; padding: 20px; color: #666;">No data for this selection.</td></tr>';
     } else {
-        filteredData.forEach(row => {
+        uniqueFilteredData.forEach(row => {
             html += '<tr>';
             html += `<td>${row.MaisonName}</td>`;
             html += `<td>${row.Year}-${String(row.Month).padStart(2, '0')}</td>`;  // 合并显示

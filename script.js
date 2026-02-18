@@ -1214,6 +1214,23 @@ const handleModalSubmit = async () => {
             ],
             renderStatusBadge: false,
             actionColumn: null
+        },  // ← 注意这里加逗号
+        operatorHistoryAdmin: {
+            action: 'getAllActualHistory',
+            headers: [
+                { key: 'MaisonName', label: 'Maison Name' },
+                { key: 'Year', label: 'Year' },
+                { key: 'Month', label: 'Month' },
+                { key: 'EmailUsage', label: 'Email' },
+                { key: 'SMSUsage', label: 'SMS' },
+                { key: 'WhatsAppUsage', label: 'WhatsApp' },
+                { key: 'ContactsTotal', label: 'Contacts' },
+                { key: 'RecordedBy', label: 'Recorded By' },
+                { key: 'Timestamp', label: 'Timestamp' },
+                { key: 'Action', label: 'Action Type' }
+            ],
+            renderStatusBadge: false,
+            actionColumn: null
         }
     };
 
@@ -1902,7 +1919,39 @@ if (e.target.classList.contains('alert-button-table')) {
         
         msg($('loginMessage'), 'History data exported successfully!', true);
     };
-
+    const exportOperatorHistoryData = async () => {
+        if (!currentUser || currentUser.role !== 'admin') { 
+            alert('Admin only!'); 
+            return; 
+        }
+        
+        const res = await api('getAllActualHistory');
+        if (!res.success || !res.data || !res.data.length) { 
+            msg($('loginMessage'), 'Export failed: No operator history data available.', false); 
+            return; 
+        }
+        
+        const h = configs.operatorHistoryAdmin.headers;
+        let csv = h.map(x => x.label).join(',') + '\n';
+        
+        res.data.forEach(r => { 
+            csv += h.map(x => { 
+                let v = r[x.key]; 
+                if (x.key === 'Timestamp') v = fmt(v);
+                return typeof v === 'string' ? `"${v.replace(/"/g, '""')}"` : (v ?? ''); 
+            }).join(',') + '\n'; 
+        });
+        
+        const b = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const l = document.createElement('a');
+        l.href = URL.createObjectURL(b);
+        l.download = `SFMC_Operator_History_Export_${new Date().toLocaleDateString('en-US').replace(/\//g, '-')}.csv`;
+        document.body.appendChild(l);
+        l.click();
+        document.body.removeChild(l);
+        
+        msg($('loginMessage'), 'Operator history data exported successfully!', true);
+    };
     const exportForecastData = async () => {
         if (!currentUser || currentUser.role !== 'admin') { alert('Admin only!'); return; }
         
@@ -2015,12 +2064,13 @@ renderMaisonActualDataTable();
                     popYearSelectors();
                     popMaisonSelectors();
                     
-                    // === 修改：使用新的加载逻辑 ===
                     await loadAllMaisonsForAdmin();
                     
                     loadTable('adminHistory', $('adminHistoryTableContainer'));
+                    loadTable('operatorHistoryAdmin', $('operatorHistoryTableContainerAdmin'));  // ← 添加这一行
                     initBcast();
                 }
+                
                 else if (currentUser.role === 'sfmc-operator') {
                     $('operatorView').classList.remove('hidden');
                     $('adminView').classList.add('hidden');
@@ -2214,6 +2264,7 @@ startDataCollectionButton: async () => {
 
         exportOverviewDataButton: exportOverviewData,
         exportHistoryDataButton: exportHistoryData,
+        exportOperatorHistoryDataButton: exportOperatorHistoryData,
         exportActualDataButton: async () => {
             if (!currentUser || currentUser.role !== 'admin') { alert('Admin only!'); return; }
             const res = await api('getAllActualData');

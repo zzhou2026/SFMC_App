@@ -581,13 +581,6 @@ months.forEach(({ year, month }) => {
 html += '</tbody></table>';
 container.innerHTML = html;
 
-// Add footnote if there's data
-if (months.length > 0) {
-    const footnote = document.createElement('p');
-    footnote.className = 'table-footnote';
-    footnote.textContent = '* Contacts total represents the maximum value among 12 months (snapshot)';
-    container.appendChild(footnote);
-}
 
 };
 

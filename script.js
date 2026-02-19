@@ -717,28 +717,28 @@ html += `<td style="text-align: center;">-</td>`;
     html += `<span class="total-main-value">${summary.totals.Email.toLocaleString()}</span>`;
     html += `<span class="total-budget-line">Budget: ${summary.budget.Email.toLocaleString()}</span>`;
     const emailVarianceClass = summary.variance.Email >= 0 ? 'variance-positive' : 'variance-negative';
-    html += `<span class="total-variance-line ${emailVarianceClass}">${summary.variance.Email >= 0 ? '+' : ''}${summary.variance.Email.toFixed(1)}% ${Math.abs(summary.variance.Email) > 15 ? '⚠️' : '✓'}</span>`;
+    html += `<span class="total-variance-line ${emailVarianceClass}">${summary.variance.Email >= 0 ? '+' : ''}${summary.variance.Email.toFixed(1)}%</span>`;
     html += '</td>';
     
     html += '<td class="total-cell-multiline">';
     html += `<span class="total-main-value">${summary.totals.SMS.toLocaleString()}</span>`;
     html += `<span class="total-budget-line">Budget: ${summary.budget.SMS.toLocaleString()}</span>`;
     const smsVarianceClass = summary.variance.SMS >= 0 ? 'variance-positive' : 'variance-negative';
-    html += `<span class="total-variance-line ${smsVarianceClass}">${summary.variance.SMS >= 0 ? '+' : ''}${summary.variance.SMS.toFixed(1)}% ${Math.abs(summary.variance.SMS) > 15 ? '⚠️' : '✓'}</span>`;
+    html += `<span class="total-variance-line ${smsVarianceClass}">${summary.variance.SMS >= 0 ? '+' : ''}${summary.variance.SMS.toFixed(1)}% </span>`;
     html += '</td>';
     
     html += '<td class="total-cell-multiline">';
     html += `<span class="total-main-value">${summary.totals.WhatsApp.toLocaleString()}</span>`;
     html += `<span class="total-budget-line">Budget: ${summary.budget.WhatsApp.toLocaleString()}</span>`;
     const whatsappVarianceClass = summary.variance.WhatsApp >= 0 ? 'variance-positive' : 'variance-negative';
-    html += `<span class="total-variance-line ${whatsappVarianceClass}">${summary.variance.WhatsApp >= 0 ? '+' : ''}${summary.variance.WhatsApp.toFixed(1)}% ${Math.abs(summary.variance.WhatsApp) > 15 ? '⚠️' : '✓'}</span>`;
+    html += `<span class="total-variance-line ${whatsappVarianceClass}">${summary.variance.WhatsApp >= 0 ? '+' : ''}${summary.variance.WhatsApp.toFixed(1)}% </span>`;
     html += '</td>';
     
     html += '<td class="total-cell-multiline">';
 html += `<span class="total-main-value">${summary.totals.Contacts.toLocaleString()}*</span>`;
 html += `<span class="total-budget-line">Budget: ${summary.budget.Contacts.toLocaleString()}</span>`;
 const contactsVarianceClass = summary.variance.Contacts >= 0 ? 'variance-positive' : 'variance-negative';
-html += `<span class="total-variance-line ${contactsVarianceClass}">${summary.variance.Contacts >= 0 ? '+' : ''}${summary.variance.Contacts.toFixed(1)}% ${Math.abs(summary.variance.Contacts) > 15 ? '⚠️' : '✓'}</span>`;
+html += `<span class="total-variance-line ${contactsVarianceClass}">${summary.variance.Contacts >= 0 ? '+' : ''}${summary.variance.Contacts.toFixed(1)}% </span>`;
 html += '</td>';
 
     
@@ -750,7 +750,7 @@ html += '<td style="text-align: center;">';  // Approval Action (Alert按钮)
 if (alertSent) {
     html += `<button class="alert-button-table" data-type="forecast-maison" data-year="${currentFiscalYearOverview}" data-maison="${maison}" data-trigger-value="${triggerValue}" disabled style="background-color: #ccc; cursor: not-allowed;">Alert Sent</button>`;
 } else {
-    html += `<button class="alert-button-table" data-type="forecast-maison" data-year="${currentFiscalYearOverview}" data-maison="${maison}" data-trigger-value="${triggerValue}">🔔 Alert</button>`;
+    html += `<button class="alert-button-table" data-type="forecast-maison" data-year="${currentFiscalYearOverview}" data-maison="${maison}" data-trigger-value="${triggerValue}">Alert</button>`;
 }
 html += '</td>';
 
@@ -862,28 +862,28 @@ html += `<td style="text-align: center;">-</td>`;
     html += `<span class="total-main-value">${summary.totals.Email.toLocaleString()}</span>`;
     html += `<span class="total-budget-line">Budget: ${summary.budget.Email.toLocaleString()}</span>`;
     const emailVarianceClass = summary.variance.Email >= 0 ? 'variance-positive' : 'variance-negative';
-    html += `<span class="total-variance-line ${emailVarianceClass}">${summary.variance.Email >= 0 ? '+' : ''}${summary.variance.Email.toFixed(1)}% ${Math.abs(summary.variance.Email) > 15 ? '⚠️' : '✓'}</span>`;
+    html += `<span class="total-variance-line ${emailVarianceClass}">${summary.variance.Email >= 0 ? '+' : ''}${summary.variance.Email.toFixed(1)}% </span>`;
     html += '</td>';
     
     html += '<td class="total-cell-multiline">';
     html += `<span class="total-main-value">${summary.totals.SMS.toLocaleString()}</span>`;
     html += `<span class="total-budget-line">Budget: ${summary.budget.SMS.toLocaleString()}</span>`;
     const smsVarianceClass = summary.variance.SMS >= 0 ? 'variance-positive' : 'variance-negative';
-    html += `<span class="total-variance-line ${smsVarianceClass}">${summary.variance.SMS >= 0 ? '+' : ''}${summary.variance.SMS.toFixed(1)}% ${Math.abs(summary.variance.SMS) > 15 ? '⚠️' : '✓'}</span>`;
+    html += `<span class="total-variance-line ${smsVarianceClass}">${summary.variance.SMS >= 0 ? '+' : ''}${summary.variance.SMS.toFixed(1)}% </span>`;
     html += '</td>';
     
     html += '<td class="total-cell-multiline">';
     html += `<span class="total-main-value">${summary.totals.WhatsApp.toLocaleString()}</span>`;
     html += `<span class="total-budget-line">Budget: ${summary.budget.WhatsApp.toLocaleString()}</span>`;
     const whatsappVarianceClass = summary.variance.WhatsApp >= 0 ? 'variance-positive' : 'variance-negative';
-    html += `<span class="total-variance-line ${whatsappVarianceClass}">${summary.variance.WhatsApp >= 0 ? '+' : ''}${summary.variance.WhatsApp.toFixed(1)}% ${Math.abs(summary.variance.WhatsApp) > 15 ? '⚠️' : '✓'}</span>`;
+    html += `<span class="total-variance-line ${whatsappVarianceClass}">${summary.variance.WhatsApp >= 0 ? '+' : ''}${summary.variance.WhatsApp.toFixed(1)}% </span>`;
     html += '</td>';
     
     html += '<td class="total-cell-multiline">';
 html += `<span class="total-main-value">${summary.totals.Contacts.toLocaleString()}*</span>`;
 html += `<span class="total-budget-line">Budget: ${summary.budget.Contacts.toLocaleString()}</span>`;
 const contactsVarianceClass = summary.variance.Contacts >= 0 ? 'variance-positive' : 'variance-negative';
-html += `<span class="total-variance-line ${contactsVarianceClass}">${summary.variance.Contacts >= 0 ? '+' : ''}${summary.variance.Contacts.toFixed(1)}% ${Math.abs(summary.variance.Contacts) > 15 ? '⚠️' : '✓'}</span>`;
+html += `<span class="total-variance-line ${contactsVarianceClass}">${summary.variance.Contacts >= 0 ? '+' : ''}${summary.variance.Contacts.toFixed(1)}%</span>`;
 html += '</td>';
 
     
@@ -893,7 +893,7 @@ html += '</td>';
 if (alertSent) {
     html += `<button class="alert-button-table" data-type="actual-maison" data-year="${currentFiscalYearActualOverview}" data-maison="${maison}" data-trigger-value="${triggerValue}" disabled style="background-color: #ccc; cursor: not-allowed;">Alert Sent</button>`;
 } else {
-    html += `<button class="alert-button-table" data-type="actual-maison" data-year="${currentFiscalYearActualOverview}" data-maison="${maison}" data-trigger-value="${triggerValue}">🔔 Alert</button>`;
+    html += `<button class="alert-button-table" data-type="actual-maison" data-year="${currentFiscalYearActualOverview}" data-maison="${maison}" data-trigger-value="${triggerValue}">Alert</button>`;
 }
 html += '</td>';
 

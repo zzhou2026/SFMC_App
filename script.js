@@ -730,13 +730,22 @@ html += `<td style="text-align: center;">-</td>`;
 html += '<td style="text-align: center;">-</td>';  // Approval Status
 html += '<td style="text-align: center;">-</td>';  // Maison Notes
 
-html += '<td style="text-align: center;">';  // Approval Action (Alert按钮)
-if (alertSent) {
-    html += `<button class="alert-button-table" data-type="forecast-maison" data-year="${currentFiscalYearOverview}" data-maison="${maison}" data-trigger-value="${triggerValue}" disabled style="background-color: #ccc; cursor: not-allowed;">Alert Sent</button>`;
+html += '<td style="text-align: center;">';
+// Adjust Contacts 按钮
+if (summary.contactsAdjusted !== null && summary.contactsAdjusted !== undefined) {
+    html += `<button class="adjust-contacts-button" data-maison="${maison}" data-year="${currentFiscalYearActualOverview}" data-original-max="${summary.contactsOriginalMax}" data-adjusted-value="${summary.contactsAdjusted}" data-adjustment-notes="${(summary.adjustmentNotes || '').replace(/"/g, '&quot;')}" style="background-color: #ff9800; color: white; padding: 5px 10px; margin-right: 5px;">✏️ Edit Adjustment</button>`;
 } else {
-    html += `<button class="alert-button-table" data-type="forecast-maison" data-year="${currentFiscalYearOverview}" data-maison="${maison}" data-trigger-value="${triggerValue}">🔔 Alert</button>`;
+    html += `<button class="adjust-contacts-button" data-maison="${maison}" data-year="${currentFiscalYearActualOverview}" data-original-max="${summary.contactsOriginalMax}" style="background-color: #2196F3; color: white; padding: 5px 10px; margin-right: 5px;">⚙️ Adjust Contacts</button>`;
+}
+
+// Alert 按钮
+if (alertSent) {
+    html += `<button class="alert-button-table" data-type="actual-maison" data-year="${currentFiscalYearActualOverview}" data-maison="${maison}" data-trigger-value="${triggerValue}" disabled style="background-color: #ccc; cursor: not-allowed;">Alert Sent</button>`;
+} else {
+    html += `<button class="alert-button-table" data-type="actual-maison" data-year="${currentFiscalYearActualOverview}" data-maison="${maison}" data-trigger-value="${triggerValue}">🔔 Alert</button>`;
 }
 html += '</td>';
+
 
 
 
@@ -857,21 +866,19 @@ html += `<td style="text-align: center;">-</td>`;
     html += '</td>';
     
     html += '<td class="total-cell-multiline">';
+// 如果有调整值，显示调整后的值
+if (summary.contactsAdjusted !== null && summary.contactsAdjusted !== undefined) {
+    html += `<span class="total-main-value">${summary.contactsAdjusted.toLocaleString()} (Adjusted)</span>`;
+    html += `<span class="total-budget-line">Original Max: ${summary.contactsOriginalMax.toLocaleString()}</span>`;
+    html += `<span class="total-budget-line">Budget: ${summary.budget.Contacts.toLocaleString()}</span>`;
+} else {
     html += `<span class="total-main-value">${summary.totals.Contacts.toLocaleString()}</span>`;
     html += `<span class="total-budget-line">Budget: ${summary.budget.Contacts.toLocaleString()}</span>`;
-    const contactsVarianceClass = summary.variance.Contacts >= 0 ? 'variance-positive' : 'variance-negative';
-    html += `<span class="total-variance-line ${contactsVarianceClass}">${summary.variance.Contacts >= 0 ? '+' : ''}${summary.variance.Contacts.toFixed(1)}% ${Math.abs(summary.variance.Contacts) > 15 ? '⚠️' : '✓'}</span>`;
-    html += '</td>';
-    
-    html += '<td style="text-align: center;">-</td>';
-    
-    html += '<td style="text-align: center;">';
-if (alertSent) {
-    html += `<button class="alert-button-table" data-type="actual-maison" data-year="${currentFiscalYearActualOverview}" data-maison="${maison}" data-trigger-value="${triggerValue}" disabled style="background-color: #ccc; cursor: not-allowed;">Alert Sent</button>`;
-} else {
-    html += `<button class="alert-button-table" data-type="actual-maison" data-year="${currentFiscalYearActualOverview}" data-maison="${maison}" data-trigger-value="${triggerValue}">🔔 Alert</button>`;
 }
+const contactsVarianceClass = summary.variance.Contacts >= 0 ? 'variance-positive' : 'variance-negative';
+html += `<span class="total-variance-line ${contactsVarianceClass}">${summary.variance.Contacts >= 0 ? '+' : ''}${summary.variance.Contacts.toFixed(1)}% ${Math.abs(summary.variance.Contacts) > 15 ? '⚠️' : '✓'}</span>`;
 html += '</td>';
+
 
     
     html += '</tr>';
@@ -2600,6 +2607,115 @@ const closeAdminNotesViewModal = () => {
     const modal = $('adminNotesViewModal');
     modal.classList.add('hidden');
 };
+// === Adjust Contacts Modal Functions ===
+const openAdjustContactsModal = async (maison, year, originalMax, adjustedValue = null, adjustmentNotes = '') => {
+    const modal = $('adjustContactsModal');
+    const title = $('adjustContactsTitle');
+    
+    $('adjustContactsMaison').value = maison;
+    $('adjustContactsYear').value = year;
+    $('adjustContactsMaisonDisplay').textContent = maison;
+    $('adjustContactsYearDisplay').textContent = `FY${year}`;
+    $('adjustContactsOriginalMax').textContent = originalMax.toLocaleString();
+    
+    // 如果有调整值，填入
+    if (adjustedValue !== null && adjustedValue !== undefined) {
+        $('adjustContactsInput').value = adjustedValue;
+        title.textContent = 'Edit Contacts Adjustment';
+    } else {
+        $('adjustContactsInput').value = '';
+        title.textContent = 'Adjust Contacts - Actual Usage';
+    }
+    
+    $('adjustContactsNotesInput').value = adjustmentNotes || '';
+    const notesLength = $('adjustContactsNotesInput').value.length;
+    $('adjustContactsCharCount').textContent = `${notesLength}/200`;
+    
+    // 加载月度明细
+    const res = await api('getMaisonActualData', { maisonName: maison });
+    const monthlyList = $('adjustContactsMonthlyList');
+    
+    if (res.success && res.data && res.data.length > 0) {
+        // 过滤该年份的数据
+        const yearData = res.data.filter(r => r.Year == year);
+        
+        if (yearData.length > 0) {
+            let listHtml = '<ul style="list-style: none; padding: 0; margin: 0;">';
+            yearData.forEach(record => {
+                const monthDisplay = `${record.Year}-${String(record.Month).padStart(2, '0')}`;
+                const contacts = record.ContactsTotal || 0;
+                const isMax = contacts == originalMax;
+                listHtml += `<li style="padding: 5px 0; ${isMax ? 'font-weight: bold; color: #00796b;' : ''}">
+                    ${monthDisplay}: ${contacts.toLocaleString()} ${isMax ? '← Max' : ''}
+                </li>`;
+            });
+            listHtml += '</ul>';
+            monthlyList.innerHTML = listHtml;
+        } else {
+            monthlyList.innerHTML = '<p style="color: #999; font-style: italic;">No data for this fiscal year.</p>';
+        }
+    } else {
+        monthlyList.innerHTML = '<p style="color: #999; font-style: italic;">No monthly data available.</p>';
+    }
+    
+    modal.classList.remove('hidden');
+};
+
+const closeAdjustContactsModal = () => {
+    const modal = $('adjustContactsModal');
+    modal.classList.add('hidden');
+    
+    $('adjustContactsInput').value = '';
+    $('adjustContactsNotesInput').value = '';
+    $('adjustContactsCharCount').textContent = '0/200';
+};
+
+const handleAdjustContactsSubmit = async () => {
+    const maison = $('adjustContactsMaison').value;
+    const year = parseInt($('adjustContactsYear').value);
+    const adjustedValue = $('adjustContactsInput').value.trim();
+    const adjustmentNotes = $('adjustContactsNotesInput').value.trim();
+    
+    if (!adjustedValue) {
+        alert('Please enter an adjusted value!');
+        return;
+    }
+    
+    const adjustedNum = parseInt(adjustedValue);
+    
+    if (adjustedNum < 0) {
+        alert('Adjusted value cannot be negative!');
+        return;
+    }
+    
+    let confirmMsg = `Adjust Contacts for ${maison} (FY${year}):\n\n`;
+    confirmMsg += `Adjusted Value: ${adjustedNum.toLocaleString()}\n`;
+    if (adjustmentNotes) {
+        confirmMsg += `\nReason: ${adjustmentNotes}\n`;
+    }
+    confirmMsg += '\nProceed with this adjustment?';
+    
+    if (!confirm(confirmMsg)) return;
+    
+    const res = await api('adjustContactsActual', {
+        maisonName: maison,
+        year: year,
+        adjustedValue: adjustedNum,
+        adjustmentNotes: adjustmentNotes,
+        adjustedBy: currentUser.username
+    });
+    
+    if (res.success) {
+        alert('Contacts adjusted successfully!');
+        closeAdjustContactsModal();
+        
+        // 重新加载该 Maison 的 Actual 数据
+        const containerId = `#actual-table-${maison.replace(/[^a-zA-Z0-9]/g, '-')}`;
+        await loadMaisonActualData(maison, containerId);
+    } else {
+        alert('Failed to adjust contacts: ' + res.message);
+    }
+};
 
 // Admin Notes View Modal - Close handlers
 if ($('adminNotesViewClose')) {
@@ -2618,7 +2734,51 @@ if ($('adminNotesViewModal')) {
         }
     });
 }
+// === Adjust Contacts Modal Events === ← 从这里开始添加
+document.addEventListener('click', (e) => {
+    if (e.target.classList.contains('adjust-contacts-button')) {
+        const maison = e.target.dataset.maison;
+        const year = parseInt(e.target.dataset.year);
+        const originalMax = parseInt(e.target.dataset.originalMax);
+        const adjustedValue = e.target.dataset.adjustedValue ? parseInt(e.target.dataset.adjustedValue) : null;
+        const adjustmentNotes = e.target.dataset.adjustmentNotes || '';
+        
+        openAdjustContactsModal(maison, year, originalMax, adjustedValue, adjustmentNotes);
+    }
+});
 
+if ($('adjustContactsClose')) {
+    $('adjustContactsClose').addEventListener('click', closeAdjustContactsModal);
+}
+
+if ($('adjustContactsCancelButton')) {
+    $('adjustContactsCancelButton').addEventListener('click', closeAdjustContactsModal);
+}
+
+if ($('adjustContactsSubmitButton')) {
+    $('adjustContactsSubmitButton').addEventListener('click', handleAdjustContactsSubmit);
+}
+
+if ($('adjustContactsModal')) {
+    $('adjustContactsModal').addEventListener('click', (e) => {
+        if (e.target.id === 'adjustContactsModal') {
+            closeAdjustContactsModal();
+        }
+    });
+}
+
+// Notes character count for adjust contacts
+if ($('adjustContactsNotesInput')) {
+    $('adjustContactsNotesInput').addEventListener('input', () => {
+        const count = $('adjustContactsNotesInput').value.length;
+        $('adjustContactsCharCount').textContent = `${count}/200`;
+        if (count >= 200) {
+            $('adjustContactsCharCount').style.color = '#d32f2f';
+        } else {
+            $('adjustContactsCharCount').style.color = '#666';
+        }
+    });
+}
 
 // 初始化
 showPage($('loginPage'));

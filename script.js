@@ -384,18 +384,26 @@ const renderMaisonActualDataTable = async () => {
     const grandTotal = totalEmail + totalSms + totalWhatsapp + totalContacts;
     
     html += `
-        <tr class="total-row">
-            <td class="total-cell"><strong>Total (Actual)</strong></td>
-            <td class="total-value"><strong>${totalEmail}</strong></td>
-            <td class="total-value"><strong>${totalSms}</strong></td>
-            <td class="total-value"><strong>${totalWhatsapp}</strong></td>
-            <td class="total-value"><strong>${totalContacts}</strong></td>
-            <td class="total-grand"><strong>Grand Total: ${grandTotal}</strong></td>
-        </tr>
-    `;
-    
-    tbody.innerHTML = html;
-    actualDataCache[currentFiscalYearActual] = dataMap;
+    <tr class="total-row">
+        <td class="total-cell"><strong>Total (Actual)</strong></td>
+        <td class="total-value"><strong>${totalEmail}</strong></td>
+        <td class="total-value"><strong>${totalSms}</strong></td>
+        <td class="total-value"><strong>${totalWhatsapp}</strong></td>
+        <td class="total-value"><strong>${totalContacts}*</strong></td>
+        <td class="total-grand"><strong>Grand Total: ${grandTotal}</strong></td>
+    </tr>
+`;
+
+tbody.innerHTML = html;
+
+// Add footnote
+const footnote = document.createElement('p');
+footnote.className = 'table-footnote';
+footnote.textContent = '* Contacts total represents the maximum value among 12 months (snapshot)';
+tbody.parentElement.parentElement.appendChild(footnote);
+
+actualDataCache[currentFiscalYearActual] = dataMap;
+
 };
 
 
@@ -570,8 +578,17 @@ months.forEach(({ year, month }) => {
 });
 
     
-    html += '</tbody></table>';
-    container.innerHTML = html;
+html += '</tbody></table>';
+container.innerHTML = html;
+
+// Add footnote if there's data
+if (months.length > 0) {
+    const footnote = document.createElement('p');
+    footnote.className = 'table-footnote';
+    footnote.textContent = '* Contacts total represents the maximum value among 12 months (snapshot)';
+    container.appendChild(footnote);
+}
+
 };
 
 // === 加载单个 Maison 的 Forecast 数据 ===
@@ -725,11 +742,12 @@ html += `<td style="text-align: center;">-</td>`;
     html += '</td>';
     
     html += '<td class="total-cell-multiline">';
-    html += `<span class="total-main-value">${summary.totals.Contacts.toLocaleString()}</span>`;
-    html += `<span class="total-budget-line">Budget: ${summary.budget.Contacts.toLocaleString()}</span>`;
-    const contactsVarianceClass = summary.variance.Contacts >= 0 ? 'variance-positive' : 'variance-negative';
-    html += `<span class="total-variance-line ${contactsVarianceClass}">${summary.variance.Contacts >= 0 ? '+' : ''}${summary.variance.Contacts.toFixed(1)}% ${Math.abs(summary.variance.Contacts) > 15 ? '⚠️' : '✓'}</span>`;
-    html += '</td>';
+html += `<span class="total-main-value">${summary.totals.Contacts.toLocaleString()}*</span>`;
+html += `<span class="total-budget-line">Budget: ${summary.budget.Contacts.toLocaleString()}</span>`;
+const contactsVarianceClass = summary.variance.Contacts >= 0 ? 'variance-positive' : 'variance-negative';
+html += `<span class="total-variance-line ${contactsVarianceClass}">${summary.variance.Contacts >= 0 ? '+' : ''}${summary.variance.Contacts.toFixed(1)}% ${Math.abs(summary.variance.Contacts) > 15 ? '⚠️' : '✓'}</span>`;
+html += '</td>';
+
     
     html += '<td style="text-align: center;">-</td>';  // Submission Time
 html += '<td style="text-align: center;">-</td>';  // Approval Status
@@ -748,8 +766,15 @@ html += '</td>';
     
     html += '</tr>';
     html += '</tbody></table>';
-    
-    container.innerHTML = html;
+
+container.innerHTML = html;
+
+// Add footnote
+const footnote = document.createElement('p');
+footnote.className = 'table-footnote';
+footnote.textContent = '* Contacts total represents the maximum value among 12 months (snapshot)';
+container.appendChild(footnote);
+
 };
 // === 加载单个 Maison 的 Actual 数据 ===
 const loadMaisonActualData = async (maison, containerSelector) => {
@@ -862,11 +887,12 @@ html += `<td style="text-align: center;">-</td>`;
     html += '</td>';
     
     html += '<td class="total-cell-multiline">';
-    html += `<span class="total-main-value">${summary.totals.Contacts.toLocaleString()}</span>`;
-    html += `<span class="total-budget-line">Budget: ${summary.budget.Contacts.toLocaleString()}</span>`;
-    const contactsVarianceClass = summary.variance.Contacts >= 0 ? 'variance-positive' : 'variance-negative';
-    html += `<span class="total-variance-line ${contactsVarianceClass}">${summary.variance.Contacts >= 0 ? '+' : ''}${summary.variance.Contacts.toFixed(1)}% ${Math.abs(summary.variance.Contacts) > 15 ? '⚠️' : '✓'}</span>`;
-    html += '</td>';
+html += `<span class="total-main-value">${summary.totals.Contacts.toLocaleString()}*</span>`;
+html += `<span class="total-budget-line">Budget: ${summary.budget.Contacts.toLocaleString()}</span>`;
+const contactsVarianceClass = summary.variance.Contacts >= 0 ? 'variance-positive' : 'variance-negative';
+html += `<span class="total-variance-line ${contactsVarianceClass}">${summary.variance.Contacts >= 0 ? '+' : ''}${summary.variance.Contacts.toFixed(1)}% ${Math.abs(summary.variance.Contacts) > 15 ? '⚠️' : '✓'}</span>`;
+html += '</td>';
+
     
     html += '<td style="text-align: center;">-</td>';
     
@@ -881,8 +907,15 @@ html += '</td>';
     
     html += '</tr>';
     html += '</tbody></table>';
-    
-    container.innerHTML = html;
+
+container.innerHTML = html;
+
+// Add footnote
+const footnote = document.createElement('p');
+footnote.className = 'table-footnote';
+footnote.textContent = '* Contacts total represents the maximum value among 12 months (snapshot)';
+container.appendChild(footnote);
+
 };
 
 const switchFiscalYearTabActualOverview = (fiscalYear) => {
@@ -1008,20 +1041,27 @@ const renderMonthlyDataTable = async () => {
     const grandTotal = totalEmail + totalSms + totalWhatsapp + totalContacts;
     
     // Add total row
-    html += `
-        <tr class="total-row">
-            <td class="total-cell"><strong>Total (Approved)</strong></td>
-            <td class="total-value"><strong>${totalEmail}</strong></td>
-            <td class="total-value"><strong>${totalSms}</strong></td>
-            <td class="total-value"><strong>${totalWhatsapp}</strong></td>
-            <td class="total-value"><strong>${totalContacts}</strong></td>
-            <td class="total-cell">-</td>
-            <td class="total-cell">-</td>
-            <td class="total-grand"><strong>Grand Total: ${grandTotal}</strong></td>
-        </tr>
-    `;
-    
-    tbody.innerHTML = html;
+html += `
+<tr class="total-row">
+    <td class="total-cell"><strong>Total (Approved)</strong></td>
+    <td class="total-value"><strong>${totalEmail}</strong></td>
+    <td class="total-value"><strong>${totalSms}</strong></td>
+    <td class="total-value"><strong>${totalWhatsapp}</strong></td>
+    <td class="total-value"><strong>${totalContacts}*</strong></td>
+    <td class="total-cell">-</td>
+    <td class="total-cell">-</td>
+    <td class="total-grand"><strong>Grand Total: ${grandTotal}</strong></td>
+</tr>
+`;
+
+tbody.innerHTML = html;
+
+// Add footnote
+const footnote = document.createElement('p');
+footnote.className = 'table-footnote';
+footnote.textContent = '* Contacts total represents the maximum value among 12 months (snapshot)';
+tbody.parentElement.parentElement.appendChild(footnote);
+
 
     
     // Cache the data

@@ -385,14 +385,15 @@ const renderMaisonActualDataTable = async () => {
     
     html += `
     <tr class="total-row">
-        <td class="total-cell"><strong>Total (Actual)</strong></td>
-        <td class="total-value"><strong>${totalEmail}</strong></td>
-        <td class="total-value"><strong>${totalSms}</strong></td>
-        <td class="total-value"><strong>${totalWhatsapp}</strong></td>
-        <td class="total-value"><strong>${totalContacts}*</strong></td>
-        <td class="total-grand"><strong>Grand Total: ${grandTotal}</strong></td>
+        <td class="total-cell">Total (Actual)</td>
+        <td class="total-value">${totalEmail}</td>
+        <td class="total-value">${totalSms}</td>
+        <td class="total-value">${totalWhatsapp}</td>
+        <td class="total-value">${totalContacts}*</td>
+        <td class="total-grand">Grand Total: ${grandTotal}</td>
     </tr>
 `;
+
 
 tbody.innerHTML = html;
 
@@ -1036,16 +1037,17 @@ const renderMonthlyDataTable = async () => {
     // Add total row
 html += `
 <tr class="total-row">
-    <td class="total-cell"><strong>Total (Approved)</strong></td>
-    <td class="total-value"><strong>${totalEmail}</strong></td>
-    <td class="total-value"><strong>${totalSms}</strong></td>
-    <td class="total-value"><strong>${totalWhatsapp}</strong></td>
-    <td class="total-value"><strong>${totalContacts}*</strong></td>
+    <td class="total-cell">Total (Approved)</td>
+    <td class="total-value">${totalEmail}</td>
+    <td class="total-value">${totalSms}</td>
+    <td class="total-value">${totalWhatsapp}</td>
+    <td class="total-value">${totalContacts}*</td>
     <td class="total-cell">-</td>
     <td class="total-cell">-</td>
-    <td class="total-grand"><strong>Grand Total: ${grandTotal}</strong></td>
+    <td class="total-grand">Grand Total: ${grandTotal}</td>
 </tr>
 `;
+
 
 tbody.innerHTML = html;
 

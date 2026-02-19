@@ -1612,3 +1612,11 @@ table tr:hover {
     padding-left: 15px;
     text-align: left;
 }
+/* === Admin Overview 表格全部居中 === */
+#maisonAccordionOverview table td,
+#maisonAccordionOverview table th,
+#maisonAccordionActual table td,
+#maisonAccordionActual table th {
+    text-align: center !important;
+    vertical-align: middle !important;
+}

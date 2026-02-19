@@ -710,37 +710,42 @@ html += `<td>${notesCell}</td>`;
     html = html.substring(0, tableEndIndex);
     
     html += '<tr class="overview-total-row">';
-html += `<td style="text-align: center; font-weight: bold;">TOTAL (Approved Only)</td>`;
-html += `<td style="text-align: center;">-</td>`;
+html += `<td style="text-align: center; font-weight: bold; color: #004d40;">TOTAL (Approved Only)</td>`;
+html += `<td style="text-align: center; color: #004d40;">FY${currentFiscalYearOverview}</td>`;
+
 
     
-    html += '<td class="total-cell-multiline">';
-    html += `<span class="total-main-value">${summary.totals.Email.toLocaleString()}</span>`;
-    html += `<span class="total-budget-line">Budget: ${summary.budget.Email.toLocaleString()}</span>`;
-    const emailVarianceClass = summary.variance.Email >= 0 ? 'variance-positive' : 'variance-negative';
-    html += `<span class="total-variance-line ${emailVarianceClass}">${summary.variance.Email >= 0 ? '+' : ''}${summary.variance.Email.toFixed(1)}%</span>`;
-    html += '</td>';
+html += '<td class="total-cell-multiline">';
+html += `<span class="total-main-value">${summary.totals.Email.toLocaleString()}</span>`;
+html += `<span class="total-budget-line">Budget: ${summary.budget.Email.toLocaleString()}</span>`;
+const emailPercentage = summary.budget.Email > 0 ? ((summary.totals.Email / summary.budget.Email) * 100).toFixed(1) : 'N/A';
+html += `<span class="total-variance-line">${emailPercentage}%</span>`;
+html += '</td>';
+
     
-    html += '<td class="total-cell-multiline">';
-    html += `<span class="total-main-value">${summary.totals.SMS.toLocaleString()}</span>`;
-    html += `<span class="total-budget-line">Budget: ${summary.budget.SMS.toLocaleString()}</span>`;
-    const smsVarianceClass = summary.variance.SMS >= 0 ? 'variance-positive' : 'variance-negative';
-    html += `<span class="total-variance-line ${smsVarianceClass}">${summary.variance.SMS >= 0 ? '+' : ''}${summary.variance.SMS.toFixed(1)}% </span>`;
-    html += '</td>';
+html += '<td class="total-cell-multiline">';
+html += `<span class="total-main-value">${summary.totals.SMS.toLocaleString()}</span>`;
+html += `<span class="total-budget-line">Budget: ${summary.budget.SMS.toLocaleString()}</span>`;
+const smsPercentage = summary.budget.SMS > 0 ? ((summary.totals.SMS / summary.budget.SMS) * 100).toFixed(1) : 'N/A';
+html += `<span class="total-variance-line">${smsPercentage}%</span>`;
+html += '</td>';
+
     
-    html += '<td class="total-cell-multiline">';
-    html += `<span class="total-main-value">${summary.totals.WhatsApp.toLocaleString()}</span>`;
-    html += `<span class="total-budget-line">Budget: ${summary.budget.WhatsApp.toLocaleString()}</span>`;
-    const whatsappVarianceClass = summary.variance.WhatsApp >= 0 ? 'variance-positive' : 'variance-negative';
-    html += `<span class="total-variance-line ${whatsappVarianceClass}">${summary.variance.WhatsApp >= 0 ? '+' : ''}${summary.variance.WhatsApp.toFixed(1)}% </span>`;
-    html += '</td>';
+html += '<td class="total-cell-multiline">';
+html += `<span class="total-main-value">${summary.totals.WhatsApp.toLocaleString()}</span>`;
+html += `<span class="total-budget-line">Budget: ${summary.budget.WhatsApp.toLocaleString()}</span>`;
+const whatsappPercentage = summary.budget.WhatsApp > 0 ? ((summary.totals.WhatsApp / summary.budget.WhatsApp) * 100).toFixed(1) : 'N/A';
+html += `<span class="total-variance-line">${whatsappPercentage}%</span>`;
+html += '</td>';
+
     
-    html += '<td class="total-cell-multiline">';
+html += '<td class="total-cell-multiline">';
 html += `<span class="total-main-value">${summary.totals.Contacts.toLocaleString()}*</span>`;
 html += `<span class="total-budget-line">Budget: ${summary.budget.Contacts.toLocaleString()}</span>`;
-const contactsVarianceClass = summary.variance.Contacts >= 0 ? 'variance-positive' : 'variance-negative';
-html += `<span class="total-variance-line ${contactsVarianceClass}">${summary.variance.Contacts >= 0 ? '+' : ''}${summary.variance.Contacts.toFixed(1)}% </span>`;
+const contactsPercentage = summary.budget.Contacts > 0 ? ((summary.totals.Contacts / summary.budget.Contacts) * 100).toFixed(1) : 'N/A';
+html += `<span class="total-variance-line">${contactsPercentage}%</span>`;
 html += '</td>';
+
 
     
     html += '<td style="text-align: center;">-</td>';  // Submission Time
@@ -854,38 +859,44 @@ const alertSent = alertStatusRes.success && alertStatusRes.alreadySent;
 
 
 html += '<tr class="overview-total-row">';
-html += `<td style="text-align: center; font-weight: bold;">TOTAL</td>`;
-html += `<td style="text-align: center;">-</td>`;
+html += `<td style="text-align: center; font-weight: bold; color: #004d40;">TOTAL</td>`;
+html += `<td style="text-align: center; color: #004d40;">FY${currentFiscalYearActualOverview}</td>`;
+
+
+
+    
+html += '<td class="total-cell-multiline">';
+html += `<span class="total-main-value">${summary.totals.Email.toLocaleString()}</span>`;
+html += `<span class="total-budget-line">Budget: ${summary.budget.Email.toLocaleString()}</span>`;
+const emailPercentage = summary.budget.Email > 0 ? ((summary.totals.Email / summary.budget.Email) * 100).toFixed(1) : 'N/A';
+html += `<span class="total-variance-line">${emailPercentage}%</span>`;
+html += '</td>';
+
+    
+html += '<td class="total-cell-multiline">';
+html += `<span class="total-main-value">${summary.totals.SMS.toLocaleString()}</span>`;
+html += `<span class="total-budget-line">Budget: ${summary.budget.SMS.toLocaleString()}</span>`;
+const smsPercentage = summary.budget.SMS > 0 ? ((summary.totals.SMS / summary.budget.SMS) * 100).toFixed(1) : 'N/A';
+html += `<span class="total-variance-line">${smsPercentage}%</span>`;
+html += '</td>';
 
 
     
-    html += '<td class="total-cell-multiline">';
-    html += `<span class="total-main-value">${summary.totals.Email.toLocaleString()}</span>`;
-    html += `<span class="total-budget-line">Budget: ${summary.budget.Email.toLocaleString()}</span>`;
-    const emailVarianceClass = summary.variance.Email >= 0 ? 'variance-positive' : 'variance-negative';
-    html += `<span class="total-variance-line ${emailVarianceClass}">${summary.variance.Email >= 0 ? '+' : ''}${summary.variance.Email.toFixed(1)}% </span>`;
-    html += '</td>';
+html += '<td class="total-cell-multiline">';
+html += `<span class="total-main-value">${summary.totals.WhatsApp.toLocaleString()}</span>`;
+html += `<span class="total-budget-line">Budget: ${summary.budget.WhatsApp.toLocaleString()}</span>`;
+const whatsappPercentage = summary.budget.WhatsApp > 0 ? ((summary.totals.WhatsApp / summary.budget.WhatsApp) * 100).toFixed(1) : 'N/A';
+html += `<span class="total-variance-line">${whatsappPercentage}%</span>`;
+html += '</td>';
+
     
-    html += '<td class="total-cell-multiline">';
-    html += `<span class="total-main-value">${summary.totals.SMS.toLocaleString()}</span>`;
-    html += `<span class="total-budget-line">Budget: ${summary.budget.SMS.toLocaleString()}</span>`;
-    const smsVarianceClass = summary.variance.SMS >= 0 ? 'variance-positive' : 'variance-negative';
-    html += `<span class="total-variance-line ${smsVarianceClass}">${summary.variance.SMS >= 0 ? '+' : ''}${summary.variance.SMS.toFixed(1)}% </span>`;
-    html += '</td>';
-    
-    html += '<td class="total-cell-multiline">';
-    html += `<span class="total-main-value">${summary.totals.WhatsApp.toLocaleString()}</span>`;
-    html += `<span class="total-budget-line">Budget: ${summary.budget.WhatsApp.toLocaleString()}</span>`;
-    const whatsappVarianceClass = summary.variance.WhatsApp >= 0 ? 'variance-positive' : 'variance-negative';
-    html += `<span class="total-variance-line ${whatsappVarianceClass}">${summary.variance.WhatsApp >= 0 ? '+' : ''}${summary.variance.WhatsApp.toFixed(1)}% </span>`;
-    html += '</td>';
-    
-    html += '<td class="total-cell-multiline">';
+html += '<td class="total-cell-multiline">';
 html += `<span class="total-main-value">${summary.totals.Contacts.toLocaleString()}*</span>`;
 html += `<span class="total-budget-line">Budget: ${summary.budget.Contacts.toLocaleString()}</span>`;
-const contactsVarianceClass = summary.variance.Contacts >= 0 ? 'variance-positive' : 'variance-negative';
-html += `<span class="total-variance-line ${contactsVarianceClass}">${summary.variance.Contacts >= 0 ? '+' : ''}${summary.variance.Contacts.toFixed(1)}%</span>`;
+const contactsPercentage = summary.budget.Contacts > 0 ? ((summary.totals.Contacts / summary.budget.Contacts) * 100).toFixed(1) : 'N/A';
+html += `<span class="total-variance-line">${contactsPercentage}%</span>`;
 html += '</td>';
+
 
     
     html += '<td style="text-align: center;">-</td>';

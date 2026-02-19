@@ -361,7 +361,12 @@ const renderMaisonActualDataTable = async () => {
             totalEmail += parseInt(existingData.EmailUsage) || 0;
             totalSms += parseInt(existingData.SMSUsage) || 0;
             totalWhatsapp += parseInt(existingData.WhatsAppUsage) || 0;
-            totalContacts += parseInt(existingData.ContactsTotal) || 0;
+            
+            // ✅ Contacts 改为取最大值
+            const currentContacts = parseInt(existingData.ContactsTotal) || 0;
+            if (currentContacts > totalContacts) {
+                totalContacts = currentContacts;
+            }
         }
         
         html += `
@@ -990,9 +995,15 @@ const renderMonthlyDataTable = async () => {
             totalEmail += parseInt(data.EmailCount) || 0;
             totalSms += parseInt(data.SMSCount) || 0;
             totalWhatsapp += parseInt(data.WhatsAppCount) || 0;
-            totalContacts += parseInt(data.ContactsCount) || 0;
+            
+            // ✅ Contacts 改为取最大值
+            const currentContacts = parseInt(data.ContactsCount) || 0;
+            if (currentContacts > totalContacts) {
+                totalContacts = currentContacts;
+            }
         }
     });
+    
     
     const grandTotal = totalEmail + totalSms + totalWhatsapp + totalContacts;
     

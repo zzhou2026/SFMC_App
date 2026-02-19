@@ -719,31 +719,42 @@ html += '<td class="total-cell-multiline">';
 html += `<span class="total-main-value">${summary.totals.Email.toLocaleString()}</span>`;
 html += `<span class="total-budget-line">Budget: ${summary.budget.Email.toLocaleString()}</span>`;
 const emailPercentage = summary.budget.Email > 0 ? ((summary.totals.Email / summary.budget.Email) * 100).toFixed(1) : 'N/A';
-html += `<span class="total-variance-line">${emailPercentage}%</span>`;
+const emailRatio = summary.budget.Email > 0 ? (summary.totals.Email / summary.budget.Email) : 0;
+const emailColor = emailRatio <= 1 ? 'color: #28a745;' : 'color: #d32f2f;';
+html += `<span class="total-variance-line" style="${emailColor}">${emailPercentage}%</span>`;
 html += '</td>';
+
 
     
 html += '<td class="total-cell-multiline">';
 html += `<span class="total-main-value">${summary.totals.SMS.toLocaleString()}</span>`;
 html += `<span class="total-budget-line">Budget: ${summary.budget.SMS.toLocaleString()}</span>`;
 const smsPercentage = summary.budget.SMS > 0 ? ((summary.totals.SMS / summary.budget.SMS) * 100).toFixed(1) : 'N/A';
-html += `<span class="total-variance-line">${smsPercentage}%</span>`;
+const smsRatio = summary.budget.SMS > 0 ? (summary.totals.SMS / summary.budget.SMS) : 0;
+const smsColor = smsRatio <= 1 ? 'color: #28a745;' : 'color: #d32f2f;';
+html += `<span class="total-variance-line" style="${smsColor}">${smsPercentage}%</span>`;
 html += '</td>';
+
 
     
 html += '<td class="total-cell-multiline">';
 html += `<span class="total-main-value">${summary.totals.WhatsApp.toLocaleString()}</span>`;
 html += `<span class="total-budget-line">Budget: ${summary.budget.WhatsApp.toLocaleString()}</span>`;
 const whatsappPercentage = summary.budget.WhatsApp > 0 ? ((summary.totals.WhatsApp / summary.budget.WhatsApp) * 100).toFixed(1) : 'N/A';
-html += `<span class="total-variance-line">${whatsappPercentage}%</span>`;
+const whatsappRatio = summary.budget.WhatsApp > 0 ? (summary.totals.WhatsApp / summary.budget.WhatsApp) : 0;
+const whatsappColor = whatsappRatio <= 1 ? 'color: #28a745;' : 'color: #d32f2f;';
+html += `<span class="total-variance-line" style="${whatsappColor}">${whatsappPercentage}%</span>`;
 html += '</td>';
+
 
     
 html += '<td class="total-cell-multiline">';
 html += `<span class="total-main-value">${summary.totals.Contacts.toLocaleString()}*</span>`;
 html += `<span class="total-budget-line">Budget: ${summary.budget.Contacts.toLocaleString()}</span>`;
 const contactsPercentage = summary.budget.Contacts > 0 ? ((summary.totals.Contacts / summary.budget.Contacts) * 100).toFixed(1) : 'N/A';
-html += `<span class="total-variance-line">${contactsPercentage}%</span>`;
+const contactsRatio = summary.budget.Contacts > 0 ? (summary.totals.Contacts / summary.budget.Contacts) : 0;
+const contactsColor = contactsRatio <= 1 ? 'color: #28a745;' : 'color: #d32f2f;';
+html += `<span class="total-variance-line" style="${contactsColor}">${contactsPercentage}%</span>`;
 html += '</td>';
 
 
@@ -869,16 +880,22 @@ html += '<td class="total-cell-multiline">';
 html += `<span class="total-main-value">${summary.totals.Email.toLocaleString()}</span>`;
 html += `<span class="total-budget-line">Budget: ${summary.budget.Email.toLocaleString()}</span>`;
 const emailPercentage = summary.budget.Email > 0 ? ((summary.totals.Email / summary.budget.Email) * 100).toFixed(1) : 'N/A';
-html += `<span class="total-variance-line">${emailPercentage}%</span>`;
+const emailRatio = summary.budget.Email > 0 ? (summary.totals.Email / summary.budget.Email) : 0;
+const emailColor = emailRatio <= 1 ? 'color: #28a745;' : 'color: #d32f2f;';
+html += `<span class="total-variance-line" style="${emailColor}">${emailPercentage}%</span>`;
 html += '</td>';
+
 
     
 html += '<td class="total-cell-multiline">';
 html += `<span class="total-main-value">${summary.totals.SMS.toLocaleString()}</span>`;
 html += `<span class="total-budget-line">Budget: ${summary.budget.SMS.toLocaleString()}</span>`;
 const smsPercentage = summary.budget.SMS > 0 ? ((summary.totals.SMS / summary.budget.SMS) * 100).toFixed(1) : 'N/A';
-html += `<span class="total-variance-line">${smsPercentage}%</span>`;
+const smsRatio = summary.budget.SMS > 0 ? (summary.totals.SMS / summary.budget.SMS) : 0;
+const smsColor = smsRatio <= 1 ? 'color: #28a745;' : 'color: #d32f2f;';
+html += `<span class="total-variance-line" style="${smsColor}">${smsPercentage}%</span>`;
 html += '</td>';
+
 
 
     
@@ -886,16 +903,22 @@ html += '<td class="total-cell-multiline">';
 html += `<span class="total-main-value">${summary.totals.WhatsApp.toLocaleString()}</span>`;
 html += `<span class="total-budget-line">Budget: ${summary.budget.WhatsApp.toLocaleString()}</span>`;
 const whatsappPercentage = summary.budget.WhatsApp > 0 ? ((summary.totals.WhatsApp / summary.budget.WhatsApp) * 100).toFixed(1) : 'N/A';
-html += `<span class="total-variance-line">${whatsappPercentage}%</span>`;
+const whatsappRatio = summary.budget.WhatsApp > 0 ? (summary.totals.WhatsApp / summary.budget.WhatsApp) : 0;
+const whatsappColor = whatsappRatio <= 1 ? 'color: #28a745;' : 'color: #d32f2f;';
+html += `<span class="total-variance-line" style="${whatsappColor}">${whatsappPercentage}%</span>`;
 html += '</td>';
+
 
     
 html += '<td class="total-cell-multiline">';
 html += `<span class="total-main-value">${summary.totals.Contacts.toLocaleString()}*</span>`;
 html += `<span class="total-budget-line">Budget: ${summary.budget.Contacts.toLocaleString()}</span>`;
 const contactsPercentage = summary.budget.Contacts > 0 ? ((summary.totals.Contacts / summary.budget.Contacts) * 100).toFixed(1) : 'N/A';
-html += `<span class="total-variance-line">${contactsPercentage}%</span>`;
+const contactsRatio = summary.budget.Contacts > 0 ? (summary.totals.Contacts / summary.budget.Contacts) : 0;
+const contactsColor = contactsRatio <= 1 ? 'color: #28a745;' : 'color: #d32f2f;';
+html += `<span class="total-variance-line" style="${contactsColor}">${contactsPercentage}%</span>`;
 html += '</td>';
+
 
 
     

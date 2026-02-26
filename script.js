@@ -60,10 +60,60 @@ const performLogin = async () => {
         loadTable('operatorHistory', $('operatorHistoryTableContainer'), { recordedBy: currentUser.username });
         clr($('operatorDataMessage'));
     }
+    restoreAccordionState();
+};
+// ===== 新增结束 =====
+
+// ===== 新增：手风琴状态管理 =====
+const saveAccordionState = () => {
+    const openAccordions = [];
+    document.querySelectorAll('.maison-accordion[open]').forEach(details => {
+        const maison = details.dataset.maison;
+        const type = details.dataset.type;
+        if (maison && type) {
+            openAccordions.push({ maison, type });
+        }
+    });
+    sessionStorage.setItem('sfmcAccordionState', JSON.stringify(openAccordions));
+};
+
+const restoreAccordionState = () => {
+    const saved = sessionStorage.getItem('sfmcAccordionState');
+    if (!saved) return;
+    
+    try {
+        const openAccordions = JSON.parse(saved);
+        
+        // 等待 DOM 渲染完成后再恢复状态
+        setTimeout(() => {
+            openAccordions.forEach(({ maison, type }) => {
+                const selector = `.maison-accordion[data-maison="${maison}"][data-type="${type}"]`;
+                const accordion = document.querySelector(selector);
+                if (accordion) {
+                    accordion.setAttribute('open', '');
+                    
+                    // 触发数据加载
+                    if (type === 'forecast') {
+                        const containerId = `#forecast-table-${maison.replace(/[^a-zA-Z0-9]/g, '-')}`;
+                        loadMaisonForecastData(maison, containerId);
+                    } else if (type === 'actual') {
+                        const containerId = `#actual-table-${maison.replace(/[^a-zA-Z0-9]/g, '-')}`;
+                        loadMaisonActualData(maison, containerId);
+                    } else if (type === 'operator') {
+                        const containerId = `#operator-table-${maison.replace(/[^a-zA-Z0-9]/g, '-')}`;
+                        loadMaisonOperatorData(maison, containerId);
+                    }
+                }
+            });
+        }, 500);
+    } catch (e) {
+        console.error('Failed to restore accordion state:', e);
+    }
 };
 // ===== 新增结束 =====
 
 let configPrices = { BeautyTechEmail: 'zzhou@pcis.lvmh-pc.com', VarianceThreshold: 15 };
+
 
     let allUsers = [];
     let searchTerm = '';
@@ -372,6 +422,7 @@ const switchFiscalYearTabOperator = (fiscalYear) => {
             container.innerHTML = '<p style="text-align: center; padding: 20px;">Click to load data...</p>';
         }
     });
+    saveAccordionState();
 };
 
 
@@ -504,6 +555,7 @@ const switchFiscalYearTabOverview = (fiscalYear) => {
             container.innerHTML = '<p style="text-align: center; padding: 20px;">Click to load data...</p>';
         }
     });
+    saveAccordionState();
 };
 
 // === 渲染 Maison Accordion (Forecast) ===
@@ -1026,6 +1078,7 @@ const switchFiscalYearTabActualOverview = (fiscalYear) => {
             container.innerHTML = '<p style="text-align: center; padding: 20px;">Click to load data...</p>';
         }
     });
+    saveAccordionState();
 };
 
 
@@ -2200,6 +2253,7 @@ setTimeout(() => {
         logoutButton: () => {
             currentUser = null;
             sessionStorage.removeItem('sfmcUser');
+            sessionStorage.removeItem('sfmcAccordionState');
             console.log('User logged out, sessionStorage cleared');
             $('username').value = $('password').value = '';
             clr($('loginMessage')); 
@@ -2656,6 +2710,7 @@ document.addEventListener('toggle', (e) => {
                 loadMaisonOperatorData(maison, containerId);
             }
         }
+        saveAccordionState();
     }
 }, true);
 // Admin Notes View Modal - Open

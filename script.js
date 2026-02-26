@@ -5,7 +5,66 @@ document.addEventListener('DOMContentLoaded', () => {
     const $ = id => document.getElementById(id);
     
     let currentUser = null;
-    let configPrices = { BeautyTechEmail: 'zzhou@pcis.lvmh-pc.com', VarianceThreshold: 15 };
+
+// ===== 新增：自动登录函数 =====
+const performLogin = async () => {
+    const cfg = await api('getConfig');
+    if (cfg.success && cfg.data) {
+        Object.assign(configPrices, { 
+            BeautyTechEmail: cfg.data.BeautyTechEmail || 'zzhou@pcis.lvmh-pc.com',
+            VarianceThreshold: parseFloat(cfg.data.VarianceThreshold) || 15
+        });
+    }
+    
+    showPage($('mainPage'));
+    $('welcomeMessage').textContent = `Welcome, ${currentUser.username} (${currentUser.role})!`;
+    
+    if (currentUser.role === 'maison') {
+        $('maisonView').classList.remove('hidden'); 
+        $('adminView').classList.add('hidden');
+        $('operatorView').classList.add('hidden');
+        
+        const now = new Date();
+        const currentMonth = now.getMonth() + 1;
+        currentFiscalYear = currentMonth === 1 ? now.getFullYear() - 1 : now.getFullYear();
+        
+        renderMonthlyDataTable();
+        loadTable('maisonHistory', $('maisonHistoryTableContainer'), { submittedBy: currentUser.username });
+        initEmail();
+        renderMaisonActualDataTable();
+        clr($('monthlyDataMessage'));
+        
+    } else if (currentUser.role === 'admin') {
+        $('adminView').classList.remove('hidden'); 
+        $('maisonView').classList.add('hidden');
+        $('operatorView').classList.add('hidden');
+        
+        popYearSelectors();
+        popMaisonSelectors();
+        await loadAllMaisonsForAdmin();
+        loadTable('adminHistory', $('adminHistoryTableContainer'));
+        loadTable('operatorHistoryAdmin', $('operatorHistoryTableContainerAdmin'));
+        initBcast();
+        
+    } else if (currentUser.role === 'sfmc-operator') {
+        $('operatorView').classList.remove('hidden');
+        $('adminView').classList.add('hidden');
+        $('maisonView').classList.add('hidden');
+        
+        const now = new Date();
+        const currentMonth = now.getMonth() + 1;
+        currentFiscalYearOperator = currentMonth === 1 ? now.getFullYear() - 1 : now.getFullYear();
+        
+        await loadAllMaisons();
+        renderMaisonAccordionOperator();
+        loadTable('operatorHistory', $('operatorHistoryTableContainer'), { recordedBy: currentUser.username });
+        clr($('operatorDataMessage'));
+    }
+};
+// ===== 新增结束 =====
+
+let configPrices = { BeautyTechEmail: 'zzhou@pcis.lvmh-pc.com', VarianceThreshold: 15 };
+
     let allUsers = [];
     let searchTerm = '';
     let currentYear = new Date().getFullYear();
@@ -2121,7 +2180,7 @@ if (e.target.classList.contains('alert-button-table')) {
             if (!res.success) { msg($('loginMessage'), 'Login failed: ' + res.message, false); return; }
             msg($('loginMessage'), 'Login successful!', true);
             currentUser = { username: u, role: res.role, maisonName: res.maisonName };
-            
+            sessionStorage.setItem('sfmcUser', JSON.stringify(currentUser));
             const cfg = await api('getConfig');
             if (cfg.success && cfg.data) {
                 Object.assign(configPrices, { 
@@ -2130,70 +2189,18 @@ if (e.target.classList.contains('alert-button-table')) {
                 });
             }
             
-            setTimeout(async () => {
-                showPage($('mainPage'));
-                $('welcomeMessage').textContent = `Welcome, ${currentUser.username} (${currentUser.role})!`;
-                
-                if (currentUser.role === 'maison') {
-                    $('maisonView').classList.remove('hidden'); 
-                    $('adminView').classList.add('hidden');
-                    
-                    // Initialize fiscal year to current year
-                    const now = new Date();
-                    const currentMonth = now.getMonth() + 1; // 1-12
-                    // If current month is Jan, we're in previous fiscal year
-                    currentFiscalYear = currentMonth === 1 ? now.getFullYear() - 1 : now.getFullYear();
-                    
-                    // Render monthly data table
-                    renderMonthlyDataTable();
-                    
-                    // Load other tables
-                    loadTable('maisonHistory', $('maisonHistoryTableContainer'), { submittedBy: currentUser.username });
-                    
-                    // Initialize email management
-                    initEmail();
-                    // Initialize actual data view
-renderMaisonActualDataTable();
+            // ===== 修改：使用新的登录函数 =====
+setTimeout(() => {
+    performLogin();
+}, 500);
+// ===== 修改结束 =====
 
-                    // Clear any messages
-                    clr($('monthlyDataMessage'));
-                } else if (currentUser.role === 'admin') {
-                    $('adminView').classList.remove('hidden'); 
-                    $('maisonView').classList.add('hidden');
-                    $('operatorView').classList.add('hidden');
-                    
-                    popYearSelectors();
-                    popMaisonSelectors();
-                    
-                    await loadAllMaisonsForAdmin();
-                    
-                    loadTable('adminHistory', $('adminHistoryTableContainer'));
-                    loadTable('operatorHistoryAdmin', $('operatorHistoryTableContainerAdmin'));  // ← 添加这一行
-                    initBcast();
-                }
-                
-                else if (currentUser.role === 'sfmc-operator') {
-                    $('operatorView').classList.remove('hidden');
-                    $('adminView').classList.add('hidden');
-                    $('maisonView').classList.add('hidden');
-                    
-                    const now = new Date();
-                    const currentMonth = now.getMonth() + 1;
-                    currentFiscalYearOperator = currentMonth === 1 ? now.getFullYear() - 1 : now.getFullYear();
-                    
-                    await loadAllMaisons();
-                    renderMaisonAccordionOperator();
-                    loadTable('operatorHistory', $('operatorHistoryTableContainer'), { recordedBy: currentUser.username });
-                    clr($('operatorDataMessage'));
-                }
-                
-                
-                
-            }, 500);
         },
 
         logoutButton: () => {
             currentUser = null;
+            sessionStorage.removeItem('sfmcUser');
+            console.log('User logged out, sessionStorage cleared');
             $('username').value = $('password').value = '';
             clr($('loginMessage')); 
             clr($('maisonSubmitMessage')); 
@@ -2698,9 +2705,21 @@ if ($('adminNotesViewModal')) {
         }
     });
 }
-
-
-// 初始化
-showPage($('loginPage'));
+// ===== 修改：检查是否有保存的登录信息（使用 sessionStorage） =====
+const savedUser = sessionStorage.getItem('sfmcUser');
+if (savedUser) {
+    try {
+        currentUser = JSON.parse(savedUser);
+        console.log('Auto login with saved user:', currentUser.username);
+        performLogin();
+    } catch (e) {
+        console.error('Failed to parse saved user data:', e);
+        sessionStorage.removeItem('sfmcUser');
+        showPage($('loginPage'));
+    }
+} else {
+    showPage($('loginPage'));
+}
+// ===== 修改结束 =====
 
 });
